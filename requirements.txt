@@ -1,0 +1,42 @@
+# Core Dependencies for Heterodyne Scattering Analysis Package
+# ============================================================
+# Generated from pyproject.toml [project.dependencies]
+# Last updated: v1.0.0 (2025-10-01)
+#
+# This file contains only the essential dependencies required for basic functionality.
+# For additional features, see:
+# - requirements-optional.txt (all optional features)
+# - requirements-dev.txt (development tools)
+
+# =============================================================================
+# Essential Scientific Computing Libraries
+# =============================================================================
+numpy>=2.1.0              # Core array operations and mathematical functions
+scipy>=1.14.0             # Scientific computing algorithms and optimization
+matplotlib>=3.9.0         # Basic plotting and visualization
+h5py>=3.12.0              # HDF5 file support for XPCS data loading
+
+# =============================================================================
+# Configuration and CLI Tools
+# =============================================================================
+pydantic>=2.9.0           # Data validation and settings management
+typer>=0.13.0             # Modern CLI framework with type hints
+rich>=13.9.0              # Rich terminal output and progress bars
+typing-extensions>=4.12.0 # Backport of latest typing features (Python <3.13)
+
+# =============================================================================
+# Core Features Enabled
+# =============================================================================
+# With these dependencies, you can use:
+# ✅ Classical optimization (Nelder-Mead algorithm)
+# ✅ Basic correlation function analysis
+# ✅ Static and laminar flow analysis modes
+# ✅ HDF5 data loading and I/O operations
+# ✅ Basic plotting and result visualization
+# ✅ Configuration management with validation
+# ✅ Modern CLI tools with rich output
+# ✅ Conditional angle subsampling (v1.0.0+)
+# ✅ Frame counting convention fixes (v1.0.0+)
+#
+# For additional optimization methods and features:
+# pip install -r requirements-optional.txt

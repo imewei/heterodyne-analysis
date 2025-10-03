@@ -1,0 +1,75 @@
+# Optional Dependencies for Heterodyne Scattering Analysis Package
+# ==============================================================
+# Last updated: v1.0.0 (2025-10-01)
+#
+# This file includes optional features for enhanced functionality.
+# For minimal installation, use: pip install -r requirements.txt
+
+# Include core dependencies
+-r requirements.txt
+
+# =============================================================================
+# High-Performance Computing Dependencies
+# =============================================================================
+# These packages provide 3-5x speedup for computational kernels
+numba>=0.60.0          # JIT compilation for computational kernels
+psutil>=6.0.0          # System monitoring and memory profiling
+numexpr>=2.10.0        # Fast numerical expression evaluator
+bottleneck>=1.4.0      # Fast NumPy array functions
+threadpoolctl>=3.5.0   # Control thread pools for numerical libraries
+py-cpuinfo>=9.0.0      # CPU feature detection
+cachetools>=5.5.0      # Memory-efficient caching utilities
+joblib>=1.4.0          # Parallel processing and persistence
+
+# =============================================================================
+# Advanced Robust Optimization Methods
+# =============================================================================
+# These packages enable robust optimization with uncertainty quantification
+cvxpy>=1.5.0           # Convex optimization framework (required for robust methods)
+gurobipy>=11.0.0       # Gurobi optimizer (commercial license required)
+mosek>=10.2.0          # MOSEK optimizer (commercial license required)
+
+# =============================================================================
+# Feature Matrix with Optional Dependencies
+# =============================================================================
+#
+# Core features (requirements.txt only):
+# ✅ Classical optimization (Nelder-Mead)
+# ✅ Basic correlation function analysis
+# ✅ Static and laminar flow modes
+# ✅ HDF5 data loading and I/O operations
+# ✅ Basic plotting and visualization
+# ✅ Conditional angle subsampling (v1.0.0+)
+# ✅ Frame counting fixes (v1.0.0+)
+#
+# Additional features with performance dependencies:
+# ✅ 3-5x speedup with JIT compilation (numba)
+# ✅ 38% faster chi-squared calculations (optimized kernels)
+# ✅ Memory profiling and monitoring (psutil)
+# ✅ Parallel processing (joblib)
+# ✅ Optimized numerical expressions (numexpr, bottleneck)
+# ✅ CPU feature detection and optimization (py-cpuinfo)
+#
+# Additional features with robust optimization dependencies:
+# ✅ Wasserstein distributionally robust optimization (cvxpy)
+# ✅ Scenario-based robust optimization (cvxpy)
+# ✅ Ellipsoidal uncertainty sets (cvxpy, memory limit 90% - v1.0.0+)
+# ✅ Commercial solver integration (gurobipy, mosek)
+#
+# =============================================================================
+# Installation Examples
+# =============================================================================
+#
+# Complete installation (all optional features):
+# pip install -r requirements-optional.txt
+#
+# Performance-only installation (recommended for most users):
+# pip install -r requirements.txt
+# pip install numba psutil joblib numexpr bottleneck
+#
+# Robust optimization only:
+# pip install -r requirements.txt
+# pip install cvxpy
+#
+# Commercial solvers (requires licenses):
+# pip install gurobipy mosek

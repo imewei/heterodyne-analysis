@@ -1,0 +1,100 @@
+# Package Manifest for Heterodyne Analysis
+# =======================================
+# Last updated: v1.0.0 (2025-10-01)
+#
+# Include the README and other documentation
+include README.md
+include LICENSE
+include CHANGELOG.md
+include DEVELOPMENT.md
+include DOCUMENTATION_SUMMARY.md
+include pyproject.toml
+include Makefile
+include requirements*.txt
+
+# Include type stubs for third-party libraries
+recursive-include heterodyne/typings *.pyi
+
+# Include configuration templates and data files
+recursive-include heterodyne *.json
+
+# Include advanced completion system
+recursive-include heterodyne/ui/completion *.py
+
+# Include performance analysis scripts (integrated into package)
+recursive-include heterodyne/performance *.py
+
+# Developer and CI scripts were consolidated into main package
+
+# Include documentation files (v1.0.0+ comprehensive docs)
+recursive-include docs *.md
+recursive-include docs *.rst
+recursive-include docs *.py
+include docs/Makefile
+include docs/conf.py
+recursive-include docs/_static *
+recursive-include docs/api *
+recursive-include docs/research *
+recursive-include docs/api-reference *
+recursive-include docs/dev *
+recursive-include docs/developer-guide *
+recursive-include docs/user-guide *
+
+# Include essential data files
+recursive-include heterodyne/data *.json
+recursive-include heterodyne/data *.npz
+
+# Exclude test files from the package
+recursive-exclude heterodyne/tests *
+recursive-exclude tests *
+
+# Exclude development and build files
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.so
+recursive-exclude * *.dylib
+exclude .DS_Store
+
+# Exclude version control and CI files
+recursive-exclude .git *
+exclude .gitignore
+exclude .github
+
+# Exclude development cache and build directories
+recursive-exclude .pytest_cache *
+recursive-exclude .mypy_cache *
+recursive-exclude .ruff_cache *
+recursive-exclude *.egg-info *
+recursive-exclude build *
+recursive-exclude dist *
+recursive-exclude .tox *
+recursive-exclude .venv *
+
+# Exclude coverage and test artifacts
+exclude .coverage
+exclude htmlcov
+exclude .pytest_cache
+exclude pytest.ini
+exclude tox.ini
+
+# Include pre-commit configuration for users who want to contribute
+include .pre-commit-config.yaml
+
+# Exclude development configuration files
+exclude benchmark_performance.py
+exclude my_config*.json
+exclude bandit_report.json
+exclude bandit_security_report.json
+
+# Exclude performance and analysis artifacts
+exclude *.json
+recursive-exclude performance_* *
+recursive-exclude *_results *
+recursive-exclude reports *
+
+# Exclude editor and IDE files
+exclude .vscode
+exclude .idea
+exclude *.swp
+exclude *.swo
+exclude *~
