@@ -27,7 +27,7 @@ applications to biological systems, colloids, and active matter under flow condi
 
 ### Analysis Capabilities
 
-- **Heterodyne Scattering Model** (11 parameters): Two-component heterodyne scattering with time-dependent fraction mixing
+- **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne scattering with time-dependent fraction mixing
   - **Diffusion** (3 params): D₀, α, D_offset
   - **Velocity** (3 params): v₀, β, v_offset
   - **Fraction** (4 params): f₀, f₁, f₂, f₃
@@ -65,7 +65,7 @@ applications to biological systems, colloids, and active matter under flow condi
 # Install
 pip install heterodyne-analysis[all]
 
-# Create heterodyne configuration (11 parameters)
+# Create heterodyne configuration (14 parameters)
 cp heterodyne/config/heterodyne_11param_example.json my_config.json
 # Edit my_config.json with your experimental parameters
 

@@ -2,10 +2,10 @@
 Unit tests for heterodyne correlation function implementation.
 
 This module tests the 2-component heterodyne scattering model with:
-- Reference and sample scattering contributions
+- Separate reference and sample field correlations (g1_ref and g1_sample)
 - Time-dependent fraction mixing f(t)
 - Velocity-dependent cross-correlation terms
-- 11-parameter optimization
+- 14-parameter optimization
 """
 
 import numpy as np
@@ -18,12 +18,16 @@ class TestHeterodyneCorrelationFunction:
 
     @pytest.fixture
     def heterodyne_params(self):
-        """Standard 11-parameter heterodyne configuration."""
+        """Standard 14-parameter heterodyne configuration."""
         return np.array([
-            # Diffusion parameters (3)
-            100.0,    # D0 - reference diffusion coefficient
-            -0.5,     # alpha - power-law exponent
-            10.0,     # D_offset - baseline diffusion
+            # Reference transport coefficient parameters (3)
+            100.0,    # D0_ref - reference transport coefficient
+            -0.5,     # alpha_ref - reference power-law exponent
+            10.0,     # D_offset_ref - reference baseline transport coefficient
+            # Sample transport coefficient parameters (3)
+            100.0,    # D0_sample - sample transport coefficient
+            -0.5,     # alpha_sample - sample power-law exponent
+            10.0,     # D_offset_sample - sample baseline transport coefficient
             # Velocity parameters (3)
             0.1,      # v0 - reference velocity
             0.0,      # beta - velocity power-law exponent
@@ -56,7 +60,7 @@ class TestHeterodyneCorrelationFunction:
     def test_fraction_calculation(self, simple_config, heterodyne_params):
         """Test time-dependent fraction f(t) calculation."""
         # Extract fraction parameters
-        f0, f1, f2, f3 = heterodyne_params[6:10]
+        f0, f1, f2, f3 = heterodyne_params[9:13]
 
         # Calculate f(t) for test times
         t = np.array([0, 25, 50, 75, 100])
@@ -69,7 +73,7 @@ class TestHeterodyneCorrelationFunction:
     def test_normalization_factor(self, heterodyne_params):
         """Test normalization factor f(t1,t2)² calculation."""
         # Extract fraction parameters
-        f0, f1, f2, f3 = heterodyne_params[6:10]
+        f0, f1, f2, f3 = heterodyne_params[9:13]
 
         # Time arrays
         t = np.linspace(0, 100, 50)
@@ -139,8 +143,8 @@ class TestHeterodyneCorrelationFunction:
     def test_velocity_cross_correlation(self, heterodyne_params):
         """Test velocity-dependent cross-correlation term."""
         # Extract velocity and angle parameters
-        v0, beta, v_offset = heterodyne_params[3:6]
-        phi0 = heterodyne_params[10]
+        v0, beta, v_offset = heterodyne_params[6:9]
+        phi0 = heterodyne_params[13]
 
         # Time-dependent velocity
         t = np.linspace(0.1, 100, 50)
@@ -164,16 +168,18 @@ class TestHeterodyneCorrelationFunction:
             assert np.all(cos_term <= 1), "Cosine term must be <= 1"
 
     def test_parameter_count_validation(self, heterodyne_params):
-        """Test that heterodyne requires exactly 11 parameters."""
-        assert len(heterodyne_params) == 11, "Heterodyne model requires 11 parameters"
+        """Test that heterodyne requires exactly 14 parameters."""
+        assert len(heterodyne_params) == 14, "Heterodyne model requires 14 parameters"
 
         # Verify parameter grouping
-        diffusion_params = heterodyne_params[0:3]
-        velocity_params = heterodyne_params[3:6]
-        fraction_params = heterodyne_params[6:10]
-        flow_angle = heterodyne_params[10]
+        diffusion_ref_params = heterodyne_params[0:3]
+        diffusion_sample_params = heterodyne_params[3:6]
+        velocity_params = heterodyne_params[6:9]
+        fraction_params = heterodyne_params[9:13]
+        flow_angle = heterodyne_params[13]
 
-        assert len(diffusion_params) == 3, "3 diffusion parameters required"
+        assert len(diffusion_ref_params) == 3, "3 reference transport parameters required"
+        assert len(diffusion_sample_params) == 3, "3 sample transport parameters required"
         assert len(velocity_params) == 3, "3 velocity parameters required"
         assert len(fraction_params) == 4, "4 fraction parameters required"
         assert isinstance(flow_angle, (int, float, np.number)), "Flow angle must be scalar"
@@ -181,7 +187,7 @@ class TestHeterodyneCorrelationFunction:
     def test_physical_constraints(self, heterodyne_params):
         """Test physical constraints on heterodyne parameters."""
         # Fraction constraint: f(t) must be in [0, 1]
-        f0, f1, f2, f3 = heterodyne_params[6:10]
+        f0, f1, f2, f3 = heterodyne_params[9:13]
         t = np.linspace(0, 100, 100)
         f_t = f0 * np.exp(f1 * (t - f2)) + f3
 
@@ -228,13 +234,13 @@ class TestHeterodyneIntegration:
         # heterodyne formula, not the old (g1 × sinc²)² formula
         pass
 
-    def test_11_parameter_optimization(self):
-        """Test that optimization works with 11 parameters."""
-        # Optimization engine should handle 11-dimensional parameter space
+    def test_14_parameter_optimization(self):
+        """Test that optimization works with 14 parameters."""
+        # Optimization engine should handle 14-dimensional parameter space
         pass
 
     def test_backward_compatibility_broken(self):
-        """Verify that 7-parameter configs are rejected."""
-        # Old 7-parameter configs should raise clear errors
-        # directing users to 11-parameter heterodyne model
+        """Verify that 7 and 11-parameter configs are rejected."""
+        # Old 7 and 11-parameter configs should raise clear errors
+        # directing users to 14-parameter heterodyne model
         pass

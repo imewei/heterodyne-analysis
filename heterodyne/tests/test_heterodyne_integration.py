@@ -20,7 +20,7 @@ class TestHeterodyneIntegration:
     def heterodyne_config_file(self, tmp_path):
         """Create a complete heterodyne configuration file."""
         config = {
-            "description": "Test 11-parameter heterodyne configuration",
+            "description": "Test 14-parameter heterodyne configuration",
             "model": "heterodyne",
             "version": "2.0",
             "initial_parameters": {
@@ -56,11 +56,11 @@ class TestHeterodyneIntegration:
         return str(config_file)
 
     def test_11_parameter_pipeline(self, heterodyne_config_file):
-        """Test complete pipeline with 11 parameters."""
+        """Test complete pipeline with 14 parameters."""
         # Initialize core analysis
         core = HeterodyneAnalysisCore(heterodyne_config_file)
 
-        # Verify 11-parameter configuration
+        # Verify 14-parameter configuration
         assert hasattr(core, 'config_manager')
 
         # Get active parameters (this is the source of truth)
@@ -75,7 +75,7 @@ class TestHeterodyneIntegration:
 
         # Verify count matches active parameters
         param_count = len(active_params)
-        assert param_count == 11, f"Expected 11 parameters, got {param_count}"
+        assert param_count == 11, f"Expected 14 parameters, got {param_count}"
 
     def test_heterodyne_correlation_calculation(self, heterodyne_config_file):
         """Test heterodyne correlation function calculation."""
@@ -181,7 +181,7 @@ class TestHeterodyneIntegration:
         # 7 parameters should fail validation
         legacy_params = np.array([1324.1, -0.014, -0.674, 0.003, -0.909, 0.0, 0.0])
 
-        with pytest.raises(ValueError, match="11 parameters"):
+        with pytest.raises(ValueError, match="14 parameters"):
             core.calculate_heterodyne_correlation(legacy_params, 0.0)
 
 
@@ -234,7 +234,7 @@ class TestHeterodyneOptimizationIntegration:
         return str(config_file)
 
     def test_optimization_with_11_parameters(self, optimization_config_file):
-        """Test that optimization works with 11 parameters."""
+        """Test that optimization works with 14 parameters."""
         from heterodyne.optimization.classical import ClassicalOptimizer
 
         core = HeterodyneAnalysisCore(optimization_config_file)
@@ -255,7 +255,7 @@ class TestHeterodyneOptimizationIntegration:
             initial_params, phi_angles
         )
 
-        # Run optimization (should accept 11 parameters)
+        # Run optimization (should accept 14 parameters)
         result = optimizer.run_optimization(
             initial_params=initial_params,
             phi_angles=phi_angles,
@@ -267,7 +267,7 @@ class TestHeterodyneOptimizationIntegration:
         assert len(result["parameters"]) == 11
 
     def test_default_parameter_fallback(self):
-        """Test that default 11-parameter fallback works."""
+        """Test that default 14-parameter fallback works."""
         from heterodyne.core.config import ConfigManager
 
         config_manager = ConfigManager()
