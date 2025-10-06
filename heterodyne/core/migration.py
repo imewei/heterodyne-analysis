@@ -1,8 +1,9 @@
 """
 Migration utilities for heterodyne model upgrade.
 
-Provides tools for migrating from legacy 7-parameter homodyne/laminar flow
-model to the new 11-parameter heterodyne model.
+Provides tools for migrating from legacy configurations:
+- 7-parameter homodyne/laminar flow → 14-parameter heterodyne
+- 11-parameter heterodyne (old) → 14-parameter heterodyne (new)
 """
 
 import json
@@ -31,7 +32,8 @@ class HeterodyneMigration:
         Returns
         -------
         str
-            One of: '3-param-static', '7-param-laminar', '11-param-heterodyne', 'unknown'
+            One of: '3-param-static', '7-param-laminar', '11-param-heterodyne',
+            '14-param-heterodyne', 'unknown'
         """
         # Check for static mode markers
         analysis_settings = config.get("analysis_settings", {})
@@ -48,6 +50,8 @@ class HeterodyneMigration:
             return "7-param-laminar"
         elif len(param_values) == 11:
             return "11-param-heterodyne"
+        elif len(param_values) == 14:
+            return "14-param-heterodyne"
 
         return "unknown"
 
@@ -99,6 +103,55 @@ class HeterodyneMigration:
         return [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]
 
     @staticmethod
+    def migrate_11_to_14_parameters(params_11: list[float]) -> list[float]:
+        """
+        Migrate 11-parameter heterodyne config to 14-parameter heterodyne.
+
+        Old 11-parameter model (single g1):
+        [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]
+
+        New 14-parameter model (separate g1_ref and g1_sample):
+        [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample,
+         v0, beta, v_offset, f0, f1, f2, f3, phi0]
+
+        Parameters
+        ----------
+        params_11 : list[float]
+            11 legacy heterodyne parameters
+
+        Returns
+        -------
+        list[float]
+            14 heterodyne parameters
+        """
+        if len(params_11) != 11:
+            raise ValueError(f"Expected 11 parameters, got {len(params_11)}")
+
+        # Extract legacy parameters
+        D0, alpha, D_offset = params_11[0:3]
+        v0, beta, v_offset = params_11[3:6]
+        f0, f1, f2, f3 = params_11[6:10]
+        phi0 = params_11[10]
+
+        # For backward compatibility, initialize sample parameters equal to reference
+        # This ensures g1_ref = g1_sample initially (same behavior as old model)
+        # During optimization, they will diverge as needed
+        D0_ref = D0
+        alpha_ref = alpha
+        D_offset_ref = D_offset
+        D0_sample = D0
+        alpha_sample = alpha
+        D_offset_sample = D_offset
+
+        return [
+            D0_ref, alpha_ref, D_offset_ref,
+            D0_sample, alpha_sample, D_offset_sample,
+            v0, beta, v_offset,
+            f0, f1, f2, f3,
+            phi0
+        ]
+
+    @staticmethod
     def migrate_config_file(
         input_path: str | Path, output_path: str | Path | None = None
     ) -> dict[str, Any]:
@@ -143,29 +196,51 @@ class HeterodyneMigration:
         # Migrate parameters based on version
         if version == "7-param-laminar":
             old_params = legacy_config["initial_parameters"]["values"]
-            new_params = HeterodyneMigration.migrate_7_to_11_parameters(old_params)
+            # Migrate 7→11 first
+            params_11 = HeterodyneMigration.migrate_7_to_11_parameters(old_params)
+            # Then migrate 11→14
+            new_params = HeterodyneMigration.migrate_11_to_14_parameters(params_11)
 
             migrated_config["initial_parameters"]["values"] = new_params
             migrated_config["initial_parameters"]["parameter_names"] = [
-                "D0", "alpha", "D_offset",
+                "D0_ref", "alpha_ref", "D_offset_ref",
+                "D0_sample", "alpha_sample", "D_offset_sample",
                 "v0", "beta", "v_offset",
                 "f0", "f1", "f2", "f3",
                 "phi0"
             ]
 
-            logger.info(f"Migrated parameters from 7 to 11: {old_params} -> {new_params}")
+            logger.info(f"Migrated parameters from 7 to 14: {old_params} -> {new_params}")
+
+        elif version == "11-param-heterodyne":
+            old_params = legacy_config["initial_parameters"]["values"]
+            new_params = HeterodyneMigration.migrate_11_to_14_parameters(old_params)
+
+            migrated_config["initial_parameters"]["values"] = new_params
+            migrated_config["initial_parameters"]["parameter_names"] = [
+                "D0_ref", "alpha_ref", "D_offset_ref",
+                "D0_sample", "alpha_sample", "D_offset_sample",
+                "v0", "beta", "v_offset",
+                "f0", "f1", "f2", "f3",
+                "phi0"
+            ]
+
+            logger.info(f"Migrated parameters from 11 to 14: {old_params} -> {new_params}")
+
+        elif version == "14-param-heterodyne":
+            logger.info("Config is already 14-parameter heterodyne, no migration needed")
 
         elif version == "3-param-static":
             raise ValueError(
                 "Cannot automatically migrate 3-parameter static configs. "
                 "Static mode has been removed. Please configure for heterodyne model "
-                "with 11 parameters manually."
+                "with 14 parameters manually."
             )
 
         # Add migration metadata
         migrated_config["migration_info"] = {
             "source_version": version,
-            "target_version": "11-param-heterodyne",
+            "target_version": "14-param-heterodyne",
             "source_file": str(input_path),
             "migration_note": (
                 "Migrated from legacy model to heterodyne. "

@@ -1047,7 +1047,8 @@ class ConfigManager:
                 f"Static submode '{raw_submode}' is no longer supported. "
                 "Static Isotropic and Static Anisotropic modes have been removed.\n"
                 "Please migrate to the heterodyne model which supports:\n"
-                "- 11-parameter optimization\n"
+                "- 14-parameter optimization\n"
+                "- Separate reference and sample transport coefficients\n"
                 "- Time-dependent fraction mixing\n"
                 "- Reference and sample scattering contributions\n"
                 "See migration guide for details."
@@ -1117,12 +1118,13 @@ class ConfigManager:
             if param_names:
                 active_params = param_names
             else:
-                # Ultimate fallback to heterodyne 11-parameter names
+                # Ultimate fallback to heterodyne 14-parameter names
                 active_params = [
-                    "D0", "alpha", "D_offset",           # Diffusion (3)
-                    "v0", "beta", "v_offset",            # Velocity (3)
-                    "f0", "f1", "f2", "f3",              # Fraction (4)
-                    "phi0"                               # Flow angle (1)
+                    "D0_ref", "alpha_ref", "D_offset_ref",        # Reference transport (3)
+                    "D0_sample", "alpha_sample", "D_offset_sample",  # Sample transport (3)
+                    "v0", "beta", "v_offset",                     # Velocity (3)
+                    "f0", "f1", "f2", "f3",                       # Fraction (4)
+                    "phi0"                                        # Flow angle (1)
                 ]
 
         return active_params
