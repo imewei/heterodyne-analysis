@@ -17,8 +17,8 @@ Installation
 
 .. code-block:: bash
 
-   # Create a configuration for isotropic analysis (fastest)
-   heterodyne-config --mode static_isotropic --sample my_sample
+   # Create an 11-parameter heterodyne configuration
+   heterodyne-config --mode heterodyne --sample my_sample
 
    # Tab completion works automatically in most shells:
    # heterodyne-config --mode <TAB>  (shows available modes)
@@ -61,8 +61,8 @@ Results are saved to the ``heterodyne_results/`` directory with organized subdir
 - **Robust** (``./robust/``): Noise-resistant optimization with method-specific directories (wasserstein, scenario, ellipsoidal)
 - **All methods**: Save experimental, fitted, and residuals data in consolidated ``fitted_data.npz`` files per method
 
-Python API Example
--------------------
+Python API Example (11-Parameter Heterodyne Model)
+---------------------------------------------------
 
 .. code-block:: python
 
@@ -73,11 +73,11 @@ Python API Example
    from heterodyne.optimization.robust import RobustHeterodyneOptimizer
    from heterodyne.data.xpcs_loader import load_xpcs_data
 
-   # Load configuration
-   with open("my_experiment.json", 'r') as f:
+   # Load 11-parameter heterodyne configuration
+   with open("my_heterodyne_config.json", 'r') as f:
        config = json.load(f)
 
-   # Initialize analysis core
+   # Initialize analysis core with 11-parameter model
    core = HeterodyneAnalysisCore(config)
 
    # Load experimental data
@@ -95,8 +95,13 @@ Python API Example
        c2_experimental=c2_data
    )
 
-   print(f"Optimal D₀: {params[0]:.3e} Å²/s")
-   print(f"Chi-squared: {results.chi_squared:.6e}")
+   # Display results for 11 parameters
+   param_names = ["D0", "alpha", "D_offset", "v0", "beta", "v_offset",
+                  "f0", "f1", "f2", "f3", "phi0"]
+   print("Optimized Parameters:")
+   for name, value in zip(param_names, params):
+       print(f"  {name}: {value:.4e}")
+   print(f"\nChi-squared: {results.chi_squared:.6e}")
    print(f"Best method: {results.best_method}")
 
    # For noisy data, use robust optimization
@@ -107,53 +112,56 @@ Python API Example
        method="wasserstein",  # Options: wasserstein, scenario, ellipsoidal
        epsilon=0.1  # Uncertainty radius
    )
-   print(f"Robust D₀: {robust_result['optimal_params'][0]:.3e} Å²/s")
+   print(f"\nRobust optimization complete:")
+   print(f"  D₀: {robust_result['optimal_params'][0]:.3e} Å²/s")
+   print(f"  v₀: {robust_result['optimal_params'][3]:.3e} nm/s")
+   print(f"  f₀: {robust_result['optimal_params'][6]:.3e}")
 
 
-Analysis Modes Quick Reference
-------------------------------
+Heterodyne Model Quick Reference
+----------------------------------
 
-Choose the appropriate mode for your system:
+The package uses an 11-parameter two-component heterodyne scattering model:
 
-**Static Isotropic (Fastest)**
+**Parameter Groups:**
 
-- Use when: System is isotropic, no angular dependencies
-- Parameters: 3 (D₀, α, D_offset)
-- Speed: ⭐⭐⭐
-- Command: ``--static-isotropic``
+- **Diffusion (3)**: D₀, α, D_offset - Controls diffusive dynamics
+- **Velocity (3)**: v₀, β, v_offset - Controls flow dynamics
+- **Fraction (4)**: f₀, f₁, f₂, f₃ - Controls time-dependent component mixing
+- **Flow Angle (1)**: φ₀ - Controls flow direction
 
-**Static Anisotropic**
+**Analysis Strategy:**
 
-- Use when: System has angular dependencies but no flow
-- Parameters: 3 (D₀, α, D_offset)
-- Speed: ⭐⭐
-- Command: ``--static-anisotropic``
-
-**Laminar Flow (Most Complete)**
-
-- Use when: System under flow conditions
-- Parameters: 7 (D₀, α, D_offset, γ̇₀, β, γ̇_offset, φ₀)
-- Speed: ⭐
-- Command: ``--laminar-flow``
+1. **Start Simple**: Activate 4-6 essential parameters (D₀, α, v₀, f₀)
+2. **Add Complexity**: Gradually add more parameters (β, f₁, f₂)
+3. **Full Analysis**: Optimize all relevant parameters
+4. **Robust Methods**: Use for noisy experimental data
 
 Configuration Tips
 ------------------
 
-**Quick Configuration:**
+**Quick 11-Parameter Heterodyne Configuration:**
 
 .. code-block:: javascript
 
    {
-     "analysis_settings": {
-       "static_mode": true,
-       "static_submode": "isotropic"
+     "metadata": {
+       "config_version": "2.0",
+       "analysis_mode": "heterodyne"
      },
      "file_paths": {
        "c2_data_file": "path/to/your/data.h5",
        "phi_angles_file": "path/to/angles.txt"
      },
      "initial_parameters": {
-       "values": [1000, -0.5, 100]
+       "parameter_names": [
+         "D0", "alpha", "D_offset",
+         "v0", "beta", "v_offset",
+         "f0", "f1", "f2", "f3",
+         "phi0"
+       ],
+       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "f0"]
      }
    }
 

@@ -315,14 +315,6 @@ if c2_experimental.shape[1] != self.time_length:
     self.time_array = np.linspace(0, self.dt * (self.time_length - 1), self.time_length)
 ```
 
-**Migration Guide:**
-
-For users with cache files created before v0.6.5:
-
-1. **Option 1 (Recommended)**: Delete old cache files and regenerate from raw data
-2. **Option 2**: Accept auto-adjustment (dimensions will match data, not config)
-3. **Verification**: Check that `time_length` matches your expectation
-
 #### Utility Functions
 
 Two centralized utility functions ensure consistency:

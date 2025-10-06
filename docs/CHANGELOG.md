@@ -6,153 +6,82 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ______________________________________________________________________
 
-## [2025-10-02] - GPU/JAX/MCMC Removal & Archive Consolidation
-
-### Removed
-
-- **JAX Backend References**: Removed all references to JAX automatic differentiation
-  and GPU acceleration
-- **GPU Acceleration**: Removed GPU-related configuration and future plans
-- **MCMC/PyMC References**: Removed all Markov Chain Monte Carlo and Bayesian inference
-  references
-- **Archive Files**: Consolidated and removed 8 historical archive files from
-  `docs/dev/archive/`
-
-### Changed
-
-- **Performance Documentation**: Updated to reflect CPU-only architecture with Numba JIT
-  and vectorized NumPy
-- **Computational Methods**: Replaced JAX autodiff examples with scipy numerical
-  gradient computation
-- **Architecture Guide**: Replaced PyMC sampling examples with ProcessPoolExecutor
-  parallel processing
-- **Installation Guide**: Removed JAX installation options, updated to performance-only
-  extras
-- **Completion System**: Updated method completion examples to reflect current
-  classical/robust/all methods
+## [2025-10-06] - Initial Release (v1.0.0)
 
 ### Added
 
-- **Documentation CHANGELOG**: Created this file to track documentation changes instead
-  of scattered archive files
-- **CPU Optimization Guide**: Enhanced CPU-specific optimization strategies by analysis
-  mode
-- **Performance Benchmarks**: Updated benchmarks to reflect CPU-only performance metrics
+- **Heterodyne Model (11 Parameters)**: Comprehensive documentation of the two-component heterodyne scattering model
+  - Model equation with reference and sample components
+  - Time-dependent fraction: `f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃`
+  - Complete parameter descriptions for all 11 parameters
+  - Physical constraint documentation: `0 ≤ f(t) ≤ 1`
+- **Comprehensive API Documentation**: Complete API reference for all modules
+  - Core analysis engine documentation
+  - Optimization methods (classical and robust)
+  - Configuration management
+  - I/O utilities and data handling
+- **Integration Testing**: Documentation of comprehensive test suite (9/9 tests passing, 100%)
 
-______________________________________________________________________
+- **Sphinx Documentation Structure**: Complete Sphinx documentation with professional theme
+  - Main index with comprehensive feature overview
+  - User guide (installation, quickstart, analysis modes, configuration)
+  - API reference with autodoc integration
+  - Developer guide for contributors
+  - Research documentation with theoretical framework
+- **User Guide - Analysis Modes (`docs/user-guide/analysis-modes.rst`)**:
+  - Comprehensive 11-parameter heterodyne model documentation
+  - Detailed parameter tables for diffusion, velocity, fraction, and flow angle
+  - Physical interpretation sections for each parameter group
+  - Configuration examples and workflow guidelines
+- **User Guide - Configuration (`docs/user-guide/configuration.rst`)**:
+  - Complete configuration guide for 11-parameter heterodyne model
+  - Parameter bounds tables for all 11 parameters
+  - Configuration templates and best practices
+  - Optimization method selection guide
+- **User Guide - Quick Start (`docs/user-guide/quickstart.rst`)**:
+  - 5-minute tutorial for getting started
+  - Python API examples with 11-parameter model
+  - Command-line interface guide
+  - Configuration tips and performance optimization
 
-## [2025-10-02] - Documentation Consolidation Planning
+### Features
 
-### Analyzed
+- **11-Parameter Model**: Native implementation of two-component heterodyne scattering
+  - Diffusion parameters (3): D₀, α, D_offset
+  - Velocity parameters (3): v₀, β, v_offset
+  - Fraction parameters (4): f₀, f₁, f₂, f₃
+  - Flow angle (1): φ₀
+- **Physical Constraints**: Automatic enforcement of ``0 ≤ f(t) ≤ 1`` and positive D(t), v(t)
+- **Multiple Optimization Methods**: Classical (Nelder-Mead, Powell) and Robust (Wasserstein, Scenario, Ellipsoidal)
+- **High Performance**: Numba JIT compilation, vectorized NumPy, optimized kernels
 
-- Documentation structure consolidation plan for 26 markdown files
-- Identified 11 files for consolidation or archiving (42% reduction)
-- Recommended structure with 15 active files and archived historical reports
+### Validation
 
-### Planned
-
-- Completion system documentation consolidation (3 → 1 file)
-- Optimization documentation consolidation (5 → 1 file)
-- Testing documentation consolidation (3 → 1 file)
-
-______________________________________________________________________
-
-## [2025-09-30] - Solver Optimization
-
-### Added
-
-- **CLARABEL Solver Integration**: Default solver for robust optimization with superior
-  performance
-- **Solver Fallback Chain**: Intelligent fallback sequence (CLARABEL → OSQP → ECOS →
-  SCS)
-- **Performance Improvements**: 2-10x speedup in robust optimization convergence
-
-### Changed
-
-- **Default Solver**: Changed from ECOS to CLARABEL for better numerical stability
-- **Solver Configuration**: Enhanced solver-specific parameter tuning
-- **Error Handling**: Improved solver failure detection and automatic fallback
-
-### Validated
-
-- Solver performance across 100+ test cases
-- Numerical accuracy verification (< 0.1% error tolerance)
-- Production readiness assessment
-
-______________________________________________________________________
-
-## [2025-09-26] - Research-Grade Documentation Enhancement
-
-### Added
-
-- **Research-Grade README**: Scientific abstract, theoretical framework, research
-  contributions
-- **Sphinx Documentation System**:
-  - Advanced mathematical rendering with MathJax
-  - Cross-references and bibliography support
-  - Publication-quality PDF generation
-- **Research Documentation Structure**:
-  - `docs/research/theoretical_framework.rst` - Mathematical foundations
-  - `docs/research/computational_methods.rst` - HPC architecture and algorithms
-  - `docs/research/publications.rst` - Citation and publication information
-- **API Documentation**: Comprehensive auto-generated API references
-- **Developer Guides**:
-  - Installation and setup procedures
-  - Testing and quality assurance
-  - Performance optimization strategies
-  - Troubleshooting guides
-
-### Changed
-
-- **Documentation Theme**: MyST for modern, responsive design
-- **Code Examples**: Enhanced with research-grade best practices
-- **Performance Benchmarks**: Detailed analysis with scientific validation
-
-______________________________________________________________________
-
-## [2025-08] - Parameter Synchronization & Constraints
-
-### Fixed
-
-- **Parameter Constraint Synchronization**: Aligned constraints across classical and
-  robust optimization
-- **Boundary Validation**: Consistent parameter bounds enforcement
-- **Initial Value Validation**: Improved initial parameter checking
-
-### Added
-
-- **Constraint Testing Framework**: Comprehensive parameter constraint validation tests
-- **Synchronization Reports**: Automated constraint consistency verification
-
-### Validated
-
-- Parameter constraint consistency across all analysis modes
-- Boundary condition enforcement in optimization routines
-- Initial value validation and error handling
+- **Sphinx Build**: Successfully builds with comprehensive documentation
+- **Documentation Coverage**: Complete coverage of all user-facing features
+- **Link Checking**: Internal cross-references verified
 
 ______________________________________________________________________
 
 ## Documentation Maintenance Notes
 
-### Archive Policy
+### Purpose
 
-Historical detailed implementation reports are consolidated into this CHANGELOG.
-Individual archive files are removed to reduce maintenance overhead while preserving key
-milestone information.
+This CHANGELOG tracks documentation updates and improvements for the heterodyne-analysis package. All documentation is built using Sphinx with the Read the Docs theme.
 
-### Version Correspondence
+### Documentation Structure
 
-Documentation changes correspond to package versions as follows:
+- **User Guide**: Installation, quickstart, configuration, analysis modes
+- **API Reference**: Complete API documentation with autodoc
+- **Developer Guide**: Contributing guidelines, testing, performance optimization
+- **Research Documentation**: Theoretical framework, computational methods, publications
 
-- **v1.0.0+**: CPU-only architecture, research-grade documentation
-- **v0.6.5+**: Performance optimizations, solver improvements
-- **v0.6.0+**: Core functionality stabilization
+### Quality Standards
 
-### Related Documentation
-
-- **Package CHANGELOG**: See root `CHANGELOG.md` for code changes
-- **API Documentation**: See `docs/` for comprehensive Sphinx documentation
-- **Developer Guide**: See `docs/developer-guide/` for implementation details
+- Research-grade documentation with mathematical rigor
+- Comprehensive code examples with scientific validation
+- Cross-referenced documentation with intersphinx
+- Automated testing and link checking
 
 ______________________________________________________________________
 
@@ -160,11 +89,10 @@ ______________________________________________________________________
 
 ### Planned Enhancements
 
-- Consolidate completion system documentation into single comprehensive guide
-- Merge optimization documentation into unified `OPTIMIZATION.md`
 - Create interactive examples and Jupyter notebooks
 - Add video tutorials for common workflows
 - Enhance troubleshooting guides with more examples
+- Expand research documentation with case studies
 
 ### Continuous Improvement
 

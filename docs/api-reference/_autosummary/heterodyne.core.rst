@@ -1,5 +1,5 @@
 heterodyne.core
-=============
+===============
 
 .. currentmodule:: heterodyne
 

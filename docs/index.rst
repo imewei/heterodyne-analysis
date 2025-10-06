@@ -20,8 +20,14 @@ Overview
 
 This package analyzes time-dependent intensity correlation functions c₂(φ,t₁,t₂) in complex fluids under nonequilibrium conditions, capturing the interplay between Brownian diffusion and advective shear flow. The implementation provides:
 
-- **Three analysis modes**: Static Isotropic (3 params), Static Anisotropic (3 params), Laminar Flow (7 params)
-- **Multiple optimization methods**: Classical (Nelder-Mead, Iterative Gurobi with Trust Regions), Robust (Wasserstein DRO, Scenario-based, Ellipsoidal)
+- **Heterodyne Scattering Model** (11 parameters): Two-component system with time-dependent fraction mixing
+
+  - Diffusion (3 params): D₀, α, D_offset
+  - Velocity (3 params): v₀, β, v_offset
+  - Fraction (4 params): f₀, f₁, f₂, f₃
+  - Flow angle (1 param): φ₀
+
+- **Multiple optimization methods**: Classical (Nelder-Mead, Powell), Robust (Wasserstein DRO, Scenario-based, Ellipsoidal)
 - **High performance**: Numba JIT compilation with 3-5x speedup, vectorized NumPy operations, comprehensive performance monitoring
 - **Scientific accuracy**: Automatic c₂ = offset + contrast × c₁ fitting for proper chi-squared calculations
 
@@ -73,19 +79,14 @@ Quick Start
 
 .. code-block:: bash
 
-   # Configuration generator
-   heterodyne-config --mode static_isotropic --sample protein_01
-   heterodyne-config --mode laminar_flow --sample microgel
+   # Create heterodyne configuration (11 parameters)
+   cp heterodyne/config/heterodyne_11param_example.json my_config.json
+   # Edit my_config.json with your experimental parameters
 
    # Main analysis command
-   heterodyne                                    # Default classical method
-   heterodyne --method robust                    # Robust optimization only
+   heterodyne --config my_config.json            # Run with 11-parameter heterodyne model
+   heterodyne --method robust                    # Robust optimization for noisy data
    heterodyne --method all --verbose             # All methods with debug logging
-
-   # Analysis mode control
-   heterodyne --static-isotropic                 # Force 3-parameter isotropic mode
-   heterodyne --static-anisotropic               # Force 3-parameter anisotropic mode
-   heterodyne --laminar-flow                     # Force 7-parameter flow mode
 
    # Data visualization
    heterodyne --plot-experimental-data           # Validate experimental data
@@ -96,83 +97,95 @@ Quick Start
    heterodyne --config my_config.json --output-dir ./results --verbose
    heterodyne --quiet                            # File logging only, no console output
 
-What's New in v1.0.0
---------------------
+Core Features
+-------------
 
-**Critical Bug Fixes:**
+**11-Parameter Heterodyne Model**
 
-* **Frame Counting Convention** - Fixed 1-based inclusive counting to 0-based Python slicing conversion
+* **Two-component heterodyne scattering**: Reference and sample components with time-dependent fraction mixing
+* **Comprehensive parameter set**: 11 parameters covering diffusion (3), velocity (3), fraction (4), and flow angle (1)
+* **Time-dependent fraction**: ``f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃`` with physical constraint ``0 ≤ f(t) ≤ 1``
+* **Physical constraint enforcement**: Automatic validation during optimization to ensure meaningful results
 
-  - Formula: ``time_length = end_frame - start_frame + 1`` (inclusive)
-  - Resolves NaN chi-squared values and cache dimension mismatches
-  - Applied across all 9 modules: analysis core, data loader, optimizers, CLI
+**Robust Data Handling**
 
-* **Conditional Angle Subsampling** - Preserve angular information when ``n_angles < 4``
+* **Frame counting convention**: 1-based inclusive counting with proper conversion to 0-based Python slicing
+* **Conditional angle subsampling**: Preserves angular information when ``n_angles < 4``
+* **Memory optimization**: Handles large datasets with 8M+ data points efficiently
+* **Smart caching**: Intelligent data caching with automatic dimension validation
 
-  - Prevents loss of critical angular information (e.g., 2 angles → 1 angle)
-  - Time subsampling still applied for performance (~16x reduction)
-  - Implemented in both classical and robust optimizers
+**High Performance**
 
-* **Memory Optimization** - Increased ellipsoidal optimization memory limit to 90%
+* **Numba JIT compilation**: 3-5x speedup for core calculations
+* **Vectorized operations**: Optimized NumPy array processing throughout
+* **Computational efficiency**: Optimized algorithms for large-scale XPCS data analysis
 
-  - Handles large datasets with 8M+ data points without overflow
-  - Fixed stacked decorator issue in robust optimization
+Heterodyne Model (11 Parameters)
+---------------------------------
 
-**Performance Improvements:**
+The heterodyne scattering model describes two-component systems with reference and sample scattering contributions mixed through a time-dependent fraction.
 
-* **Numba JIT Compilation** - 3-5x speedup for core calculations
-* **Vectorized Operations** - Optimized NumPy array processing throughout
-* **Smart Caching** - Intelligent data caching with automatic dimension validation
+**Model Equation:**
 
-Analysis Modes
---------------
+.. math::
+
+   g_2(t_1,t_2) = \frac{f_r^2 g_{1,r}^2 + f_s^2 g_{1,s}^2 + 2f_r f_s g_{1,r} g_{1,s} \cos(v\_term)}{f_{total}^2}
+
+where :math:`f_r(t) = 1 - f(t)` is the reference fraction, :math:`f_s(t) = f(t)` is the sample fraction, and :math:`f_{total} = f_r + f_s = 1`.
+
+**Parameter Categories:**
 
 .. list-table::
-   :widths: 20 15 25 25 15
+   :widths: 25 15 60
    :header-rows: 1
 
-   * - Mode
+   * - Category
+     - Count
      - Parameters
-     - Use Case
-     - Speed
-     - Command
-   * - **Static Isotropic**
+   * - **Diffusion**
      - 3
-     - Fastest, isotropic systems
-     - ⭐⭐⭐
-     - ``--static-isotropic``
-   * - **Static Anisotropic**
+     - D₀ (reference diffusion coefficient, nm²/s), α (power-law exponent), D_offset (baseline offset, nm²/s)
+   * - **Velocity**
      - 3
-     - Static with angular dependencies
-     - ⭐⭐
-     - ``--static-anisotropic``
-   * - **Laminar Flow**
-     - 7
-     - Flow & shear analysis
-     - ⭐
-     - ``--laminar-flow``
+     - v₀ (reference velocity, nm/s), β (power-law exponent), v_offset (baseline offset, nm/s)
+   * - **Fraction**
+     - 4
+     - f₀ (amplitude), f₁ (exponential rate, 1/s), f₂ (time offset, s), f₃ (baseline)
+   * - **Flow Angle**
+     - 1
+     - φ₀ (flow direction angle, degrees)
+
+**Time-Dependent Fraction:**
+
+.. math::
+
+   f(t) = f_0 \times \exp(f_1 \times (t - f_2)) + f_3
+
+with physical constraint :math:`0 \leq f(t) \leq 1` for all times (enforced during validation).
 
 Key Features
 ------------
 
-**Multiple Analysis Modes**
-   Static Isotropic (3 parameters), Static Anisotropic (3 parameters), and Laminar Flow (7 parameters)
-
-**High Performance**
-   Numba JIT compilation, smart angle filtering, and optimized computational kernels
-
-**Scientific Accuracy**
-   Automatic c₂ = offset + contrast × c₁ fitting for accurate chi-squared calculations
+**Heterodyne Scattering Model (11 Parameters)**
+   Two-component system with time-dependent fraction mixing, covering diffusion, velocity, fraction dynamics, and flow angle
 
 **Multiple Optimization Methods**
+   Classical (Nelder-Mead, Powell) and Robust (Wasserstein DRO, Scenario-based, Ellipsoidal) optimization with comprehensive parameter validation
+
+**High Performance**
+   Numba JIT compilation (3-5x speedup), vectorized NumPy operations, and optimized computational kernels
+
+**Scientific Accuracy**
+   Automatic c₂ = offset + contrast × c₁ fitting for accurate chi-squared calculations with physical constraint enforcement
 
 **Security and Code Quality**
    Comprehensive security scanning with Bandit, dependency vulnerability checking with pip-audit, and automated code quality tools
 
 **Comprehensive Validation**
-   Experimental data validation plots and quality control
+   Experimental data validation plots, quality control, and integration testing for all parameter configurations
 
 **Visualization Tools**
+   Experimental data validation plots, simulated correlation heatmaps, and method comparison visualizations
 
 **Performance Monitoring**
    Comprehensive performance testing, regression detection, and automated benchmarking

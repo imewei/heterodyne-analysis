@@ -110,7 +110,7 @@ Development Workflow
 
    - Detailed description of changes
    - Why the change was made
-   - Any breaking changes or migration notes"
+   - Any breaking changes or compatibility notes"
 
    # Push to your fork
    git push origin feature/your-feature-name

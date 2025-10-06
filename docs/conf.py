@@ -56,26 +56,14 @@ suppress_warnings = [
     "myst.xref_missing",  # Suppress missing cross-references in markdown files
 ]
 
-# Performance optimizations - mock heavy dependencies
+# Performance optimizations - mock only heavy dependencies that cause import issues
 autodoc_mock_imports = [
-    "numba",
-    "xpcs_viewer",
-    "h5py",
-    # Mock modules that don't exist but are referenced in docs
-    "io_utils",  # Missing module referenced in autosummary
-    "kernels",  # Missing module referenced in autosummary
-    "classical",  # Missing module referenced in autosummary
-    "config",  # Missing module referenced in autosummary
-    # Mock problematic heterodyne submodules temporarily
-    "heterodyne.analysis",
-    "heterodyne.analysis.core",
-    "heterodyne.core",
-    "heterodyne.core.config",
-    "heterodyne.core.kernels",
-    "heterodyne.core.io_utils",
-    "heterodyne.optimization",
-    "heterodyne.optimization.classical",
-    "heterodyne.plotting",
+    "numba",  # JIT compilation package - heavy import
+    "xpcs_viewer",  # External viewer package - may not be installed
+    "h5py",  # HDF5 package - C dependencies
+    "cupy",  # GPU package - not always available
+    "gurobipy",  # Commercial optimizer - not always licensed
+    "mosek",  # Commercial optimizer - not always licensed
 ]
 autodoc_preserve_defaults = True
 
@@ -84,7 +72,7 @@ templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "developer-guide/version-updates.md"]
 
 # The default language to highlight source code in.
 highlight_language = "python3"

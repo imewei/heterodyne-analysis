@@ -39,24 +39,31 @@ Quick Configuration
 
 .. code-block:: bash
 
-   # Create configuration for specific mode
-   heterodyne-config --mode static_isotropic --sample my_experiment
+   # Create 11-parameter heterodyne configuration
+   heterodyne-config --mode heterodyne --sample my_experiment
 
-**Basic Structure**:
+**Basic Structure** (11-Parameter Heterodyne Model):
 
 .. code-block:: javascript
 
    {
-     "analysis_settings": {
-       "static_mode": true,
-       "static_submode": "isotropic"
+     "metadata": {
+       "config_version": "2.0",
+       "analysis_mode": "heterodyne"
      },
      "file_paths": {
        "c2_data_file": "data/correlation_data.h5",
        "phi_angles_file": "data/phi_angles.txt"
      },
      "initial_parameters": {
-       "values": [1000, -0.5, 100]
+       "parameter_names": [
+         "D0", "alpha", "D_offset",
+         "v0", "beta", "v_offset",
+         "f0", "f1", "f2", "f3",
+         "phi0"
+       ],
+       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "f0"]
      }
    }
 
@@ -139,56 +146,75 @@ Specify input data locations:
 Initial Parameters
 ~~~~~~~~~~~~~~~~~~
 
-Starting values for optimization:
+Starting values for 11-parameter heterodyne model:
 
 .. code-block:: javascript
 
    {
      "initial_parameters": {
-       "parameter_names": ["D0", "alpha", "D_offset"],
-       "values": [1000, -0.5, 100],
-       "active_parameters": ["D0", "alpha", "D_offset"]  // Parameters to optimize
+       "parameter_names": [
+         "D0", "alpha", "D_offset",      // Diffusion (3)
+         "v0", "beta", "v_offset",       // Velocity (3)
+         "f0", "f1", "f2", "f3",         // Fraction (4)
+         "phi0"                          // Flow angle (1)
+       ],
+       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "f0"]  // Parameters to optimize
      }
    }
+
+**Active Parameters**: Control which parameters are optimized. Start with fewer parameters (4-6) and add more as needed.
 
 Parameter Bounds and Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Optimization constraints and parameter bounds:
+Optimization constraints for 11-parameter heterodyne model:
 
 .. code-block:: javascript
 
    {
      "parameter_space": {
        "bounds": [
-         {"name": "D0", "min": 100, "max": 10000, "type": "Normal"},
+         // Diffusion parameters
+         {"name": "D0", "min": 1.0, "max": 1000000, "type": "Normal"},
          {"name": "alpha", "min": -2.0, "max": 2.0, "type": "Normal"},
-         {"name": "D_offset", "min": 0, "max": 1000, "type": "Normal"}
+         {"name": "D_offset", "min": -100, "max": 100, "type": "Normal"},
+         // Velocity parameters
+         {"name": "v0", "min": 1e-5, "max": 10.0, "type": "Normal"},
+         {"name": "beta", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "v_offset", "min": -0.1, "max": 0.1, "type": "Normal"},
+         // Fraction parameters
+         {"name": "f0", "min": 0.0, "max": 1.0, "type": "Normal"},
+         {"name": "f1", "min": -1.0, "max": 1.0, "type": "Normal"},
+         {"name": "f2", "min": 0.0, "max": 200.0, "type": "Normal"},
+         {"name": "f3", "min": 0.0, "max": 1.0, "type": "Normal"},
+         // Flow angle
+         {"name": "phi0", "min": -10, "max": 10, "type": "Normal"}
        ]
      }
    }
 
 .. note::
-   **Parameter Bounds**: The ``type`` field specifies the parameter distribution type for bounds checking. All seven parameters (D0, alpha, D_offset, gamma_dot_t0, beta, gamma_dot_t_offset, phi0) use Normal distributions for bounds specification.
+   **Parameter Bounds**: The ``type`` field specifies the parameter distribution type. All 11 parameters use Normal distributions for bounds specification. The package automatically enforces physical constraints: D(t) ≥ 0, v(t) ≥ 0, 0 ≤ f(t) ≤ 1.
 
-Parameter Constraints and Ranges
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parameter Constraints and Ranges (11-Parameter Heterodyne Model)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The heterodyne package implements comprehensive physical constraints to ensure scientifically meaningful results:
+The heterodyne package implements comprehensive physical constraints for all 11 parameters:
 
-**Core Model Parameters**
+**Diffusion Parameters (3)**
 
 .. list-table::
    :header-rows: 1
-   :widths: 25 25 35 15
+   :widths: 20 25 30 25
 
    * - Parameter
      - Range
      - Distribution
      - Physical Constraint
    * - ``D0``
-     - [1.0, 1000000.0] Å²/s
-     - TruncatedNormal(μ=10000.0, σ=1000.0)
+     - [1.0, 1×10⁶] Å²/s
+     - TruncatedNormal(μ=1e4, σ=1000)
      - Must be positive
    * - ``alpha``
      - [-2.0, 2.0]
@@ -198,18 +224,67 @@ The heterodyne package implements comprehensive physical constraints to ensure s
      - [-100, 100] Å²/s
      - Normal(μ=0.0, σ=10.0)
      - none
-   * - ``gamma_dot_t0``
-     - [1e-06, 1.0] s⁻¹
-     - TruncatedNormal(μ=0.001, σ=0.01)
+
+**Velocity Parameters (3)**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 25 30 25
+
+   * - Parameter
+     - Range
+     - Distribution
+     - Physical Constraint
+   * - ``v0``
+     - [1×10⁻⁵, 10.0] nm/s
+     - TruncatedNormal(μ=0.01, σ=0.01)
      - Must be positive
    * - ``beta``
      - [-2.0, 2.0]
      - Normal(μ=0.0, σ=0.1)
      - none
-   * - ``gamma_dot_t_offset``
-     - [-0.01, 0.01] s⁻¹
-     - Normal(μ=0.0, σ=0.001)
+   * - ``v_offset``
+     - [-0.1, 0.1] nm/s
+     - Normal(μ=0.0, σ=0.01)
      - none
+
+**Fraction Parameters (4)**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 25 30 25
+
+   * - Parameter
+     - Range
+     - Distribution
+     - Physical Constraint
+   * - ``f0``
+     - [0.0, 1.0]
+     - TruncatedNormal(μ=0.5, σ=0.1)
+     - 0 ≤ f(t) ≤ 1
+   * - ``f1``
+     - [-1.0, 1.0] s⁻¹
+     - Normal(μ=0.0, σ=0.1)
+     - 0 ≤ f(t) ≤ 1
+   * - ``f2``
+     - [0.0, 200.0] s
+     - Normal(μ=50.0, σ=20.0)
+     - 0 ≤ f(t) ≤ 1
+   * - ``f3``
+     - [0.0, 1.0]
+     - TruncatedNormal(μ=0.3, σ=0.1)
+     - 0 ≤ f(t) ≤ 1
+
+**Flow Angle (1)**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 25 30 25
+
+   * - Parameter
+     - Range
+     - Distribution
+     - Physical Constraint
    * - ``phi0``
      - [-10, 10] degrees
      - Normal(μ=0.0, σ=5.0)
@@ -356,58 +431,45 @@ Optimize computation:
 Configuration Templates
 -----------------------
 
-**Static Isotropic Template**:
+**Complete 11-Parameter Heterodyne Template**:
 
 .. code-block:: javascript
 
    {
      "metadata": {
-       "config_version": "6.0",
-       "analysis_mode": "static_isotropic"
-     },
-     "analysis_settings": {
-       "static_mode": true,
-       "static_submode": "isotropic"
-     },
-     "file_paths": {
-       "c2_data_file": "data/correlation_data.h5"
-     },
-     "initial_parameters": {
-       "parameter_names": ["D0", "alpha", "D_offset"],
-       "values": [1000, -0.5, 100],
-       "active_parameters": ["D0", "alpha", "D_offset"]
-     },
-     "parameter_space": {
-       "bounds": [
-         {"name": "D0", "min": 100, "max": 10000, "type": "Normal"},
-         {"name": "alpha", "min": -2.0, "max": 2.0, "type": "Normal"},
-         {"name": "D_offset", "min": 0, "max": 1000, "type": "Normal"}
-       ]
-     }
-   }
-
-**Laminar Flow Template**:
-
-.. code-block:: javascript
-
-   {
-     "metadata": {
-       "config_version": "6.0",
-       "analysis_mode": "laminar_flow"
-     },
-     "analysis_settings": {
-       "static_mode": false,
-       "enable_angle_filtering": true,
-       "angle_filter_ranges": [[-5, 5], [175, 185]]
+       "config_version": "2.0",
+       "analysis_mode": "heterodyne",
+       "description": "Two-component heterodyne scattering analysis"
      },
      "file_paths": {
        "c2_data_file": "data/correlation_data.h5",
-       "phi_angles_file": "data/phi_angles.txt"
+       "phi_angles_file": "data/phi_angles.txt",
+       "output_directory": "heterodyne_results/"
      },
      "initial_parameters": {
-       "parameter_names": ["D0", "alpha", "D_offset", "gamma_dot_t0", "beta", "gamma_dot_t_offset", "phi0"],
-       "values": [1000, -0.5, 100, 10, 0.5, 1, 0],
-       "active_parameters": ["D0", "alpha", "D_offset", "gamma_dot_t0"]
+       "parameter_names": [
+         "D0", "alpha", "D_offset",
+         "v0", "beta", "v_offset",
+         "f0", "f1", "f2", "f3",
+         "phi0"
+       ],
+       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "beta", "f0", "f1"]
+     },
+     "parameter_space": {
+       "bounds": [
+         {"name": "D0", "min": 1.0, "max": 1000000, "type": "Normal"},
+         {"name": "alpha", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "D_offset", "min": -100, "max": 100, "type": "Normal"},
+         {"name": "v0", "min": 1e-5, "max": 10.0, "type": "Normal"},
+         {"name": "beta", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "v_offset", "min": -0.1, "max": 0.1, "type": "Normal"},
+         {"name": "f0", "min": 0.0, "max": 1.0, "type": "Normal"},
+         {"name": "f1", "min": -1.0, "max": 1.0, "type": "Normal"},
+         {"name": "f2", "min": 0.0, "max": 200.0, "type": "Normal"},
+         {"name": "f3", "min": 0.0, "max": 1.0, "type": "Normal"},
+         {"name": "phi0", "min": -10, "max": 10, "type": "Normal"}
+       ]
      },
      "optimization_config": {
        "classical_optimization": {
@@ -419,6 +481,38 @@ Configuration Templates
        "robust_optimization": {
          "enabled": true,
          "uncertainty_model": "wasserstein"
+       }
+     }
+   }
+
+**Simplified Heterodyne Template (Fewer Active Parameters)**:
+
+For initial exploration with reduced complexity:
+
+.. code-block:: javascript
+
+   {
+     "metadata": {
+       "config_version": "2.0",
+       "analysis_mode": "heterodyne"
+     },
+     "file_paths": {
+       "c2_data_file": "data/correlation_data.h5",
+       "phi_angles_file": "data/phi_angles.txt"
+     },
+     "initial_parameters": {
+       "parameter_names": [
+         "D0", "alpha", "D_offset",
+         "v0", "beta", "v_offset",
+         "f0", "f1", "f2", "f3",
+         "phi0"
+       ],
+       "values": [1000.0, -0.5, 0.0, 0.01, 0.0, 0.0, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "f0"]  // Only 4 active parameters
+     },
+     "optimization_config": {
+       "classical_optimization": {
+         "methods": ["Nelder-Mead"]
        }
      }
    }

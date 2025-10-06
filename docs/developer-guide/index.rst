@@ -14,7 +14,6 @@ This guide is for developers who want to contribute to the heterodyne package or
    testing
    testing-coverage
    troubleshooting
-   version-updates
    completion-features
    completion-comparison
 

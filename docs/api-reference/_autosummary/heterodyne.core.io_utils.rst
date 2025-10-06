@@ -1,6 +1,6 @@
 heterodyne.core.io\_utils
-=======================
+=========================
 
-.. currentmodule:: heterodyne.core
+.. currentmodule:: heterodyne.core.io_utils
 
-.. autodata:: io_utils
+.. automodule:: heterodyne.core.io_utils

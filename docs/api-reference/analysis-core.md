@@ -348,7 +348,6 @@ if c2_experimental.shape[1] != self.time_length:
 
 **Use Cases:**
 
-- Legacy cache files created with old frame counting formula
 - Cache files from different configurations
 - Partial data extraction for testing
 

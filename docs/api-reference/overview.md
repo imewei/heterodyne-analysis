@@ -321,32 +321,6 @@ pytest -v -m performance
 
 See individual module documentation for comprehensive test examples.
 
-## Migration Guide
-
-### From Version < 0.6.5
-
-If you have code using the old frame counting convention:
-
-```python
-# Old (incorrect) formula
-time_length = end_frame - start_frame  # Missing +1!
-
-# New (correct) formula
-time_length = end_frame - start_frame + 1
-
-# Better: Use utility function
-from heterodyne.core.io_utils import calculate_time_length
-time_length = calculate_time_length(start_frame, end_frame)
-```
-
-### Cached Data
-
-Old cache files may have incorrect dimensions:
-
-1. Delete old cache files
-2. Regenerate using the fixed conversion script
-3. Or accept auto-adjustment (the analysis core will auto-detect and adjust)
-
 ## See Also
 
 - **[User Guide](../user-guide/)**: Usage examples and tutorials

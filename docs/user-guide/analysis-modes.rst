@@ -1,240 +1,343 @@
-Analysis Modes
-==============
+Heterodyne Scattering Model
+============================
 
-The heterodyne package supports three analysis modes optimized for different experimental scenarios.
+The heterodyne package uses a two-component heterodyne scattering model with 11 parameters for comprehensive analysis of nonequilibrium soft matter systems.
 
-Mode Overview
--------------
+Heterodyne Model Overview
+--------------------------
 
-.. list-table:: Analysis Mode Comparison
-   :widths: 15 10 15 30 10 15
-   :header-rows: 1
-
-   * - Mode
-     - Parameters
-     - Angle Handling
-     - Use Case
-     - Speed
-     - Command
-   * - **Static Isotropic**
-     - 3
-     - Single dummy
-     - Fastest, isotropic systems
-     - ⭐⭐⭐
-     - ``--static-isotropic``
-   * - **Static Anisotropic**
-     - 3
-     - Filtering enabled
-     - Static with angular deps
-     - ⭐⭐
-     - ``--static-anisotropic``
-   * - **Laminar Flow**
-     - 7
-     - Full coverage
-     - Flow & shear analysis
-     - ⭐
-     - ``--laminar-flow``
-
-Static Isotropic Mode
----------------------
-
-**Physical Context**: Analysis of systems at equilibrium with isotropic scattering where results don't depend on scattering angle.
+The heterodyne scattering model describes two-component systems where a strong reference scattering combines with sample scattering to produce heterodyne correlations.
 
 **Model Equation**:
 
 .. math::
 
-   c_1(t_1,t_2) = \exp(-q^2 \int_{t_1}^{t_2} D(t) dt)
+   c_2(q, t, \phi) = \left| f(t) \cdot c_{1,\text{ref}}(q, t, \phi) + (1 - f(t)) \cdot c_{1,\text{sample}}(q, t, \phi) \right|^2
 
-where there is no angular dependence in the correlation function.
+where:
 
-**Parameters (3 total)**:
+- **f(t)**: Time-dependent fraction of reference component
+- **c₁,ref**: Reference component correlation (typically strong, static scattering)
+- **c₁,sample**: Sample component correlation (dynamic scattering from sample)
 
-- **D₀**: Effective diffusion coefficient
-- **α**: Time exponent characterizing dynamic scaling
-- **D_offset**: Baseline diffusion component
+**Time-Dependent Fraction**:
 
-**Key Features**:
+The fraction evolves according to:
 
-- **No angle filtering**: Automatically disabled regardless of configuration
-- **No phi_angles_file loading**: Uses single dummy angle
-- **Fastest analysis mode**: Minimal computational overhead
+.. math::
 
-**When to Use**:
+   f(t) = f_0 \times \exp(f_1 \times (t - f_2)) + f_3
 
-- Isotropic samples
-- Quick validation runs
-- Preliminary analysis
-- Systems where angular effects are negligible
+with physical constraint: :math:`0 \leq f(t) \leq 1` for all times.
 
-**Example Configuration**:
+11-Parameter System
+-------------------
 
-.. code-block:: javascript
+The model uses 11 parameters organized into four groups:
 
-   {
-     "analysis_settings": {
-       "static_mode": true,
-       "static_submode": "isotropic"
-     },
-     "initial_parameters": {
-       "parameter_names": ["D0", "alpha", "D_offset"],
-       "values": [1000, -0.5, 100]
-     }
-   }
+**Diffusion Parameters (3)**:
 
-Static Anisotropic Mode
+.. list-table::
+   :widths: 15 25 15 45
+   :header-rows: 1
+
+   * - Parameter
+     - Range
+     - Units
+     - Physical Meaning
+   * - **D₀**
+     - [1.0, 1×10⁶]
+     - Å²/s
+     - Reference diffusion coefficient at t=1s
+   * - **α**
+     - [-2.0, 2.0]
+     - dimensionless
+     - Diffusion time-scaling exponent
+   * - **D_offset**
+     - [-100, 100]
+     - Å²/s
+     - Baseline diffusion contribution
+
+**Velocity Parameters (3)**:
+
+.. list-table::
+   :widths: 15 25 15 45
+   :header-rows: 1
+
+   * - Parameter
+     - Range
+     - Units
+     - Physical Meaning
+   * - **v₀**
+     - [1×10⁻⁵, 10.0]
+     - nm/s
+     - Reference velocity at t=1s
+   * - **β**
+     - [-2.0, 2.0]
+     - dimensionless
+     - Velocity time-scaling exponent
+   * - **v_offset**
+     - [-0.1, 0.1]
+     - nm/s
+     - Baseline velocity contribution
+
+**Fraction Parameters (4)**:
+
+.. list-table::
+   :widths: 15 25 15 45
+   :header-rows: 1
+
+   * - Parameter
+     - Range
+     - Units
+     - Physical Meaning
+   * - **f₀**
+     - [0.0, 1.0]
+     - dimensionless
+     - Fraction amplitude
+   * - **f₁**
+     - [-1.0, 1.0]
+     - s⁻¹
+     - Exponential rate of fraction change
+   * - **f₂**
+     - [0.0, 200.0]
+     - s
+     - Time offset for fraction dynamics
+   * - **f₃**
+     - [0.0, 1.0]
+     - dimensionless
+     - Baseline fraction value
+
+**Flow Angle (1)**:
+
+.. list-table::
+   :widths: 15 25 15 45
+   :header-rows: 1
+
+   * - Parameter
+     - Range
+     - Units
+     - Physical Meaning
+   * - **φ₀**
+     - [-10, 10]
+     - degrees
+     - Flow direction angle
+
+Physical Interpretation
 -----------------------
 
-**Physical Context**: Analysis of systems at equilibrium with angular dependence but no flow effects.
+**Diffusion Contribution**:
 
-**Parameters**: D₀, α, D_offset (same as isotropic mode)
+The time-dependent diffusion coefficient is:
 
-**Key Features**:
+.. math::
 
-- **Angle filtering enabled**: For optimization efficiency
-- **phi_angles_file loaded**: For angle information
-- **Per-angle scaling optimization**: Accounts for angular variations
+   D(t) = D_0 \times t^\alpha + D_{\text{offset}}
 
-**When to Use**:
+This captures:
 
-- Systems with angular dependence
-- Static samples with anisotropic properties
-- When isotropic mode gives poor fits
-- Intermediate complexity analysis
+- **Anomalous diffusion**: α ≠ 0 indicates sub-diffusive (α < 0) or super-diffusive (α > 0) dynamics
+- **Aging effects**: Time-dependent dynamics in nonequilibrium systems
+- **Baseline diffusion**: Constant background diffusion contribution
 
-**Example Configuration**:
+**Velocity Contribution**:
+
+The time-dependent velocity is:
+
+.. math::
+
+   v(t) = v_0 \times t^\beta + v_{\text{offset}}
+
+This describes:
+
+- **Flow acceleration/deceleration**: β controls temporal evolution of flow
+- **Steady flow**: β = 0 with v₀ > 0 gives constant flow velocity
+- **Transient flow**: Non-zero β captures time-dependent flow dynamics
+
+**Fraction Dynamics**:
+
+The time-dependent fraction mixing describes:
+
+- **Component evolution**: How reference and sample contributions change over time
+- **Relaxation dynamics**: f₁ controls the rate of exponential relaxation
+- **Equilibrium state**: f₃ represents the long-time steady-state fraction
+- **Initial conditions**: f₀ and f₂ control the amplitude and temporal offset
+
+Configuration Examples
+-----------------------
+
+**Full 11-Parameter Heterodyne Configuration**:
 
 .. code-block:: javascript
 
    {
-     "analysis_settings": {
-       "static_mode": true,
-       "static_submode": "anisotropic",
-       "enable_angle_filtering": true,
-       "angle_filter_ranges": [[-5, 5], [175, 185]]
-     },
-     "file_paths": {
-       "phi_angles_file": "data/phi_angles.txt"
-     }
-   }
-
-Laminar Flow Mode
------------------
-
-**Physical Context**: Complete analysis of systems under flow conditions with both diffusion and shear contributions.
-
-**Model Equations**:
-
-The full expression combines diffusive and shear contributions:
-
-.. math::
-
-   c_{1,\text{total}}(t_1,t_2) = c_{1,\text{diffusion}}(t_1,t_2) \times c_{1,\text{shear}}(t_1,t_2)
-
-.. math::
-
-   c_{1,\text{shear}}(t_1,t_2) = \text{sinc}^2(\Phi)
-
-**Parameters (7 total)**:
-
-**Diffusion Parameters**:
-- **D₀**: Effective diffusion coefficient
-- **α**: Time exponent for diffusion scaling
-- **D_offset**: Baseline diffusion component
-
-**Shear Parameters**:
-- **γ̇₀**: Shear rate amplitude
-- **β**: Shear rate time exponent
-- **γ̇_offset**: Baseline shear rate
-- **φ₀**: Phase angle for shear/flow direction
-
-**Physical Interpretation**:
-
-The laminar flow mode captures:
-
-- **Brownian diffusion**: Random thermal motion characterized by D₀, α, D_offset
-- **Advective shear flow**: Systematic flow characterized by γ̇₀, β, γ̇_offset, φ₀
-- **Angular dependencies**: Full angular coverage with flow direction effects
-
-**Example Configuration**:
-
-.. code-block:: javascript
-
-   {
-     "analysis_settings": {
-       "static_mode": false,
-       "enable_angle_filtering": true
+     "metadata": {
+       "config_version": "2.0",
+       "analysis_mode": "heterodyne"
      },
      "initial_parameters": {
-       "parameter_names": ["D0", "alpha", "D_offset", "gamma_dot_t0", "beta", "gamma_dot_t_offset", "phi0"],
-       "values": [1000, -0.5, 100, 10, 0.5, 1, 0],
-       "active_parameters": ["D0", "alpha", "D_offset", "gamma_dot_t0"]
+       "parameter_names": [
+         "D0", "alpha", "D_offset",
+         "v0", "beta", "v_offset",
+         "f0", "f1", "f2", "f3",
+         "phi0"
+       ],
+       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "beta", "f0", "f1"]
+     },
+     "parameter_space": {
+       "bounds": [
+         {"name": "D0", "min": 1.0, "max": 1000000, "type": "Normal"},
+         {"name": "alpha", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "D_offset", "min": -100, "max": 100, "type": "Normal"},
+         {"name": "v0", "min": 1e-5, "max": 10.0, "type": "Normal"},
+         {"name": "beta", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "v_offset", "min": -0.1, "max": 0.1, "type": "Normal"},
+         {"name": "f0", "min": 0.0, "max": 1.0, "type": "Normal"},
+         {"name": "f1", "min": -1.0, "max": 1.0, "type": "Normal"},
+         {"name": "f2", "min": 0.0, "max": 200.0, "type": "Normal"},
+         {"name": "f3", "min": 0.0, "max": 1.0, "type": "Normal"},
+         {"name": "phi0", "min": -10, "max": 10, "type": "Normal"}
+       ]
      }
    }
 
-**When to Use**:
+**Simplified Configuration (Fewer Active Parameters)**:
 
-- Systems under flow conditions
-- Nonequilibrium conditions are present
-- Complete transport analysis is required
-- You have sufficient computational resources
+For initial exploration, you can fix some parameters:
 
-Progressive Analysis Strategy
------------------------------
+.. code-block:: javascript
 
-A recommended approach is to use progressive complexity:
+   {
+     "initial_parameters": {
+       "parameter_names": [
+         "D0", "alpha", "D_offset",
+         "v0", "beta", "v_offset",
+         "f0", "f1", "f2", "f3",
+         "phi0"
+       ],
+       "values": [1000.0, -0.5, 0.0, 0.01, 0.0, 0.0, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0", "alpha", "v0", "f0"]  // Optimize only 4 parameters
+     }
+   }
 
-1. **Exploration**: Start with isotropic mode for initial parameter estimates
-2. **Validation**: Compare with anisotropic mode to check for angular effects
-3. **Full Analysis**: Use laminar flow mode for complete characterization
+Analysis Workflow
+-----------------
 
-**Example Workflow**:
+**1. Initial Exploration**:
+
+Start with a subset of active parameters:
 
 .. code-block:: bash
 
-   # Step 1: Quick isotropic analysis
-   python run_heterodyne.py --static-isotropic --method classical
+   # Optimize only diffusion parameters
+   heterodyne --config config.json --method classical
 
-   # Step 2: Check for angular effects
-   python run_heterodyne.py --static-anisotropic --method classical
+**2. Incremental Complexity**:
 
-   # Step 3: Full flow analysis (if needed)
+Gradually add more parameters:
 
-Mode Selection Guidelines
--------------------------
+.. code-block:: bash
 
-**Choose Static Isotropic when**:
-- System is known to be isotropic
-- You need quick results
-- Doing preliminary data validation
-- Angular effects are negligible
+   # Add velocity parameters
+   # Edit config to include v0, beta in active_parameters
+   heterodyne --config config.json --method classical
 
-**Choose Static Anisotropic when**:
-- System shows angular dependence
-- No flow conditions present
-- Isotropic results are unsatisfactory
-- Need moderate complexity analysis
+**3. Full Optimization**:
 
-**Choose Laminar Flow when**:
-- System is under flow conditions
-- Nonequilibrium conditions are present
-- Complete transport analysis is required
-- You have sufficient computational resources
+Optimize all relevant parameters:
+
+.. code-block:: bash
+
+   # Full parameter optimization with robust methods
+   heterodyne --config config.json --method all
+
+**4. Robust Optimization for Noisy Data**:
+
+Use robust methods for experimental data with uncertainty:
+
+.. code-block:: bash
+
+   # Wasserstein DRO for outlier resistance
+   heterodyne --config config.json --method robust
+
+Parameter Selection Guidelines
+-------------------------------
+
+**Start with Essential Parameters**:
+
+- **D₀, α**: Core diffusion dynamics
+- **v₀**: Flow velocity (if flow present)
+- **f₀**: Reference/sample mixing amplitude
+
+**Add Complexity as Needed**:
+
+- **β**: If flow shows time-dependent behavior
+- **f₁, f₂**: If fraction mixing shows temporal dynamics
+- **D_offset, v_offset**: For baseline corrections
+- **f₃**: For steady-state fraction adjustment
+- **φ₀**: For flow direction refinement
+
+**Physical Constraints**:
+
+The package automatically enforces:
+
+- **D(t) ≥ 1×10⁻¹⁰**: Positive diffusion coefficient
+- **v(t) ≥ 1×10⁻¹⁰**: Positive velocity
+- **0 ≤ f(t) ≤ 1**: Valid fraction range
+
+Best Practices
+--------------
+
+**1. Validate Experimental Data**:
+
+.. code-block:: bash
+
+   heterodyne --config config.json --plot-experimental-data
+
+**2. Start Simple**:
+
+Begin with fewer active parameters and add complexity incrementally.
+
+**3. Check Convergence**:
+
+Monitor chi-squared values and parameter uncertainties in results.
+
+**4. Use Robust Methods for Noisy Data**:
+
+Wasserstein DRO, scenario-based, or ellipsoidal methods handle uncertainty better than classical optimization.
+
+**5. Physical Interpretation**:
+
+Ensure fitted parameters have physically meaningful values and interpretations.
 
 Troubleshooting
 ---------------
 
-**"Angle filtering enabled but static_isotropic mode detected"**:
-   This is expected behavior - angle filtering is automatically disabled in isotropic mode.
+**Poor Convergence**:
+   - Reduce number of active parameters
+   - Adjust initial parameter values
+   - Try different optimization methods
 
-**"phi_angles_file not found" in isotropic mode**:
-   This is normal - phi_angles_file is not used in isotropic mode.
+**Unphysical Parameters**:
+   - Check parameter bounds in configuration
+   - Verify experimental data quality
+   - Review fraction constraint: 0 ≤ f(t) ≤ 1
 
-**Poor convergence with angle filtering**:
-   Try adjusting ``angle_filter_ranges`` or disabling filtering temporarily.
+**High Chi-Squared**:
+   - Increase number of active parameters
+   - Use robust optimization methods
+   - Check for systematic errors in data
 
-**Results similar to isotropic mode**:
-   Your system may indeed be isotropic - compare chi-squared values.
+**Fraction Constraint Violations**:
+   - Adjust f₀, f₁, f₂, f₃ bounds
+   - Ensure f(t) stays within [0, 1] for all times
+   - Review fraction dynamics physical interpretation
 
-**Slow optimization**:
-   Enable angle filtering for 3-5x speedup with minimal accuracy loss.
+See Also
+--------
+
+- :doc:`configuration` - Detailed configuration guide
+- :doc:`../api-reference/analysis-core` - Core analysis API
+- :doc:`../developer-guide/optimization` - Optimization strategies
+- :doc:`quickstart` - Quick start tutorial

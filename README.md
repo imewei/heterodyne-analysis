@@ -27,14 +27,14 @@ applications to biological systems, colloids, and active matter under flow condi
 
 ### Analysis Capabilities
 
-- **Three analysis modes**: Static Isotropic (3 parameters), Static Anisotropic (3
-  parameters), Laminar Flow (7 parameters)
-- **Multiple optimization methods**: Classical (Nelder-Mead, Gurobi), Robust
+- **Heterodyne Scattering Model** (11 parameters): Two-component heterodyne scattering with time-dependent fraction mixing
+  - **Diffusion** (3 params): D₀, α, D_offset
+  - **Velocity** (3 params): v₀, β, v_offset
+  - **Fraction** (4 params): f₀, f₁, f₂, f₃
+  - **Flow angle** (1 param): φ₀
+- **Multiple optimization methods**: Classical (Nelder-Mead, Powell), Robust
   (Wasserstein DRO, Scenario-based, Ellipsoidal)
-- **Conditional angle subsampling**: Automatic preservation of angular information when
-  `n_angles < 4` for anisotropic analysis
-- **Frame counting convention**: Consistent 1-based inclusive counting with automatic
-  conversion to 0-based Python slicing
+- **Parameter validation**: Physical constraints ensure valid heterodyne parameters
 
 ### Performance
 
@@ -65,8 +65,9 @@ applications to biological systems, colloids, and active matter under flow condi
 # Install
 pip install heterodyne-analysis[all]
 
-# Create configuration
-heterodyne-config --mode laminar_flow --sample my_sample
+# Create heterodyne configuration (11 parameters)
+cp heterodyne/config/heterodyne_11param_example.json my_config.json
+# Edit my_config.json with your experimental parameters
 
 # Run analysis
 heterodyne --config my_config.json --method all
@@ -113,17 +114,7 @@ heterodyne --config my_config.json --method robust --verbose
 heterodyne --config my_config.json --method all
 ```
 
-**4. Fast Static Isotropic Analysis:**
-
-```bash
-# Generate isotropic config (3 parameters, fastest)
-heterodyne-config --mode static_isotropic --output fast_config.json
-
-# Run analysis
-heterodyne --config fast_config.json --static-isotropic
-```
-
-**5. Python API Usage:**
+**4. Python API Usage:**
 
 ```python
 import numpy as np
@@ -151,7 +142,7 @@ print(f"D₀ = {params[0]:.3e} Å²/s")
 print(f"χ² = {results.chi_squared:.6e}")
 ```
 
-**6. Troubleshooting:**
+**5. Troubleshooting:**
 
 ```bash
 # Enable verbose logging for debugging
@@ -162,6 +153,73 @@ pytest -v -m "not slow"
 
 # Check frame counting (v1.0.0 critical fix)
 pytest heterodyne/tests/test_time_length_calculation.py -v
+```
+
+## Heterodyne Model (11 Parameters)
+
+The heterodyne scattering model describes two-component systems with reference and sample scattering contributions mixed through a time-dependent fraction.
+
+### Model Equation
+
+```
+g₂(t₁,t₂) = [f_r²g₁_r² + f_s²g₁_s² + 2f_r f_s g₁_r g₁_s cos(v_term)] / f_total²
+```
+
+where:
+- `g₁_r`, `g₁_s` are field correlation functions for reference and sample
+- `f_r(t) = 1 - f(t)` is the reference fraction
+- `f_s(t) = f(t)` is the sample fraction
+- `f_total = f_r + f_s = 1`
+
+### Parameters
+
+**Diffusion (3 parameters):**
+- `D₀`: Reference diffusion coefficient (nm²/s), range [0, 1000]
+- `α`: Diffusion power-law exponent (dimensionless), range [-2, 2]
+- `D_offset`: Baseline diffusion offset (nm²/s), range [-100, 100]
+
+**Velocity (3 parameters):**
+- `v₀`: Reference velocity (nm/s), range [-10, 10]
+- `β`: Velocity power-law exponent (dimensionless), range [-2, 2]
+- `v_offset`: Baseline velocity offset (nm/s), range [-1, 1]
+
+**Fraction (4 parameters):**
+- `f₀`: Fraction amplitude (dimensionless), range [0, 1]
+- `f₁`: Fraction exponential rate (1/s), range [-1, 1]
+- `f₂`: Fraction time offset (s), range [0, 200]
+- `f₃`: Fraction baseline (dimensionless), range [0, 1]
+
+**Flow Angle (1 parameter):**
+- `φ₀`: Flow direction angle (degrees), range [-360, 360]
+
+### Time-Dependent Fraction
+
+The sample fraction follows:
+```
+f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
+```
+
+**Constraint**: `0 ≤ f(t) ≤ 1` for all times (enforced during validation)
+
+### Example Configuration
+
+```json
+{
+  "initial_parameters": {
+    "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
+    "parameter_names": [
+      "D0", "alpha", "D_offset",
+      "v0", "beta", "v_offset",
+      "f0", "f1", "f2", "f3",
+      "phi0"
+    ]
+  },
+  "analyzer_parameters": {
+    "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
+    "scattering": {"wavevector_q": 0.0054},
+    "geometry": {"stator_rotor_gap": 2000000}
+  }
+}
 ```
 
 ## Installation
@@ -404,13 +462,6 @@ if c2_experimental.shape[1] != self.time_length:
     logger.info(f"Auto-adjusting time_length to match cached data")
     self.time_length = c2_experimental.shape[1]
 ```
-
-**Migration for Existing Users:** If you have cached files created before v0.6.5, they
-may have incorrect dimensions:
-
-1. Delete old cache files
-2. Regenerate from raw data using the fixed conversion script
-3. Or accept auto-adjustment (dimensions will match data, not config)
 
 ### Utility Functions
 
