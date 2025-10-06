@@ -6,6 +6,7 @@ heterodyne_analysis_results.json
 run.log
 CLAUDE.md
 WARP.md
+.serena/
 my_conf*.json
 bandit*report.json
 detailed_cleanup_plan.md
