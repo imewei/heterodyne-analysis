@@ -34,8 +34,9 @@ def create_argument_parser():
         description="""
 Heterodyne Scattering Analysis for XPCS (X-ray Photon Correlation Spectroscopy)
 
-Analyzes 2-component heterodyne scattering with 11 parameters:
-  • Diffusion (3): D0, alpha, D_offset
+Analyzes 2-component heterodyne scattering with 14 parameters:
+  • Reference transport (3): D0_ref, alpha_ref, D_offset_ref
+  • Sample transport (3): D0_sample, alpha_sample, D_offset_sample
   • Velocity (3): v0, beta, v_offset
   • Fraction (4): f0, f1, f2, f3
   • Flow angle (1): phi0
@@ -53,12 +54,12 @@ Examples:
   %(prog)s --output-dir ./heterodyne_results --verbose   # Custom output directory with verbose logging
   %(prog)s --quiet                            # Run with file logging only (no console output)
 
-  Heterodyne Model (11 parameters):
+  Heterodyne Model (14 parameters):
   %(prog)s --method robust                    # Run heterodyne analysis with robust optimization
   %(prog)s --method all                       # Compare classical and robust methods
 
   Migration from Legacy Configs:
-  python -m heterodyne.core.migration old_config.json new_config.json  # Migrate 7→11 params
+  python -m heterodyne.core.migration old_config.json new_config.json  # Migrate 7→14 params
   python -m heterodyne.core.migration old_config.json --guide           # Show migration guide
 
   Visualization:

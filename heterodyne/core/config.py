@@ -1006,7 +1006,7 @@ class ConfigManager:
             if static_mode:
                 raise ValueError(
                     "Static mode has been removed. Please use the heterodyne model instead.\n"
-                    "The heterodyne model supports 11 parameters and provides more accurate "
+                    "The heterodyne model supports 14 parameters and provides more accurate "
                     "analysis for two-component systems.\n"
                     "See migration guide for converting legacy configurations."
                 )
@@ -1016,7 +1016,7 @@ class ConfigManager:
         if result:
             raise ValueError(
                 "Static mode has been removed. Please use the heterodyne model instead.\n"
-                "The heterodyne model supports 11 parameters and provides more accurate "
+                "The heterodyne model supports 14 parameters and provides more accurate "
                 "analysis for two-component systems.\n"
                 "See migration guide for converting legacy configurations."
             )
@@ -1149,12 +1149,12 @@ class ConfigManager:
         # Get active parameters from configuration
         active_params = self.get_active_parameters()
 
-        # Use active_parameters if specified, otherwise default to heterodyne 11-parameter model
+        # Use active_parameters if specified, otherwise default to heterodyne 14-parameter model
         if active_params:
             count = len(active_params)
         else:
-            # Heterodyne model uses 11 parameters by default
-            count = 11
+            # Heterodyne model uses 14 parameters by default
+            count = 14
 
         # Cache the result for performance
         if not hasattr(self, "_cached_values"):
@@ -1165,7 +1165,7 @@ class ConfigManager:
 
     def get_parameter_metadata(self) -> dict[str, dict[str, str]]:
         """
-        Get metadata for all 11 heterodyne parameters.
+        Get metadata for all 14 heterodyne parameters.
 
         Returns
         -------
@@ -1173,60 +1173,75 @@ class ConfigManager:
             Parameter metadata with units and descriptions
         """
         return {
-            "D0": {
+            "D0_ref": {
                 "unit": "nm²/s",
-                "description": "Reference transport coefficient J₀ (labeled 'D' for compatibility)",
+                "description": "Reference transport coefficient J₀_ref",
                 "index": 0
             },
-            "alpha": {
+            "alpha_ref": {
                 "unit": "dimensionless",
-                "description": "Transport coefficient time-scaling exponent",
+                "description": "Reference transport coefficient time-scaling exponent",
                 "index": 1
             },
-            "D_offset": {
+            "D_offset_ref": {
                 "unit": "nm²/s",
-                "description": "Baseline transport coefficient J_offset",
+                "description": "Reference baseline transport coefficient J_offset_ref",
                 "index": 2
+            },
+            "D0_sample": {
+                "unit": "nm²/s",
+                "description": "Sample transport coefficient J₀_sample",
+                "index": 3
+            },
+            "alpha_sample": {
+                "unit": "dimensionless",
+                "description": "Sample transport coefficient time-scaling exponent",
+                "index": 4
+            },
+            "D_offset_sample": {
+                "unit": "nm²/s",
+                "description": "Sample baseline transport coefficient J_offset_sample",
+                "index": 5
             },
             "v0": {
                 "unit": "nm/s",
                 "description": "Reference velocity",
-                "index": 3
+                "index": 6
             },
             "beta": {
                 "unit": "dimensionless",
                 "description": "Velocity power-law exponent",
-                "index": 4
+                "index": 7
             },
             "v_offset": {
                 "unit": "nm/s",
                 "description": "Baseline velocity offset",
-                "index": 5
+                "index": 8
             },
             "f0": {
                 "unit": "dimensionless",
                 "description": "Fraction amplitude",
-                "index": 6
+                "index": 9
             },
             "f1": {
                 "unit": "1/s",
                 "description": "Fraction exponential rate",
-                "index": 7
+                "index": 10
             },
             "f2": {
                 "unit": "s",
                 "description": "Fraction time offset",
-                "index": 8
+                "index": 11
             },
             "f3": {
                 "unit": "dimensionless",
                 "description": "Fraction baseline",
-                "index": 9
+                "index": 12
             },
             "phi0": {
                 "unit": "degrees",
                 "description": "Flow direction angle",
-                "index": 10
+                "index": 13
             }
         }
 

@@ -964,11 +964,12 @@ class HeterodyneAnalysisCore:
         np.ndarray
             Correlation matrix c2(t1, t2)
         """
-        # Validate 11-parameter input
-        if len(parameters) != 11:
+        # Validate 14-parameter input
+        if len(parameters) != 14:
             raise ValueError(
-                f"Heterodyne model requires 11 parameters, got {len(parameters)}. "
-                f"Expected: [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]"
+                f"Heterodyne model requires 14 parameters, got {len(parameters)}. "
+                f"Expected: [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample, "
+                f"v0, beta, v_offset, f0, f1, f2, f3, phi0]"
             )
         
         # Pre-compute velocity if not provided
@@ -1324,13 +1325,14 @@ class HeterodyneAnalysisCore:
         """
         Calculate heterodyne correlation function for all angles with parallel processing.
 
-        Uses the 2-component heterodyne scattering model with 11 parameters.
+        Uses the 2-component heterodyne scattering model with 14 parameters.
 
         Parameters
         ----------
         parameters : np.ndarray
-            11-parameter array for heterodyne model:
-            [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]
+            14-parameter array for heterodyne model:
+            [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample,
+             v0, beta, v_offset, f0, f1, f2, f3, phi0]
         phi_angles : np.ndarray
             Array of scattering angles
 
