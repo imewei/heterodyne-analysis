@@ -969,12 +969,14 @@ class HeterodyneAnalysisCore:
         precomputed_D_t: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Calculate correlation function for a single angle using heterodyne model.
+        Calculate heterodyne correlation function for a single angle.
+
+        Uses the 2-component heterodyne scattering model.
 
         Parameters
         ----------
         parameters : np.ndarray
-            Model parameters [D0, alpha, D_offset, gamma_dot_t0, beta, gamma_dot_t_offset, phi0]
+            11-parameter array for heterodyne model
         phi_angle : float
             Scattering angle in degrees
 
@@ -983,25 +985,166 @@ class HeterodyneAnalysisCore:
         np.ndarray
             Correlation matrix c2(t1, t2)
         """
-        # Extract parameters
-        diffusion_params = parameters[: self.num_diffusion_params]
-        shear_params = parameters[
-            self.num_diffusion_params : self.num_diffusion_params
-            + self.num_shear_rate_params
-        ]
-        phi_offset = parameters[-1]
+        # Validate 11-parameter input
+        if len(parameters) != 11:
+            raise ValueError(
+                f"Heterodyne model requires 11 parameters, got {len(parameters)}. "
+                f"Expected: [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]"
+            )
+        
+        # Pre-compute velocity if not provided
+        precomputed_v_t = None
+        if precomputed_D_t is None:
+            velocity_params = parameters[3:6]
+            precomputed_v_t = self.calculate_velocity_coefficient(velocity_params)
+        
+        return self.calculate_heterodyne_correlation(
+            parameters,
+            phi_angle,
+            precomputed_D_t=precomputed_D_t,
+            precomputed_v_t=precomputed_v_t,
+        )
 
-        # Calculate time-dependent quantities
-        param_hash = hash(tuple(parameters))
+    def validate_heterodyne_parameters(self, parameters: np.ndarray) -> None:
+        """
+        Validate physical constraints on heterodyne parameters.
+
+        Parameters
+        ----------
+        parameters : np.ndarray
+            11-parameter array for heterodyne model
+
+        Raises
+        ------
+        ValueError
+            If parameters violate physical constraints
+        """
+        if len(parameters) != 11:
+            raise ValueError(
+                f"Heterodyne model requires exactly 11 parameters, got {len(parameters)}"
+            )
+
+        # Extract parameters
+        D0, alpha, D_offset = parameters[0:3]
+        v0, beta, v_offset = parameters[3:6]
+        f0, f1, f2, f3 = parameters[6:10]
+        phi0 = parameters[10]
+
+        # Diffusion constraints
+        if D0 < 0:
+            raise ValueError(f"D0 must be non-negative, got {D0}")
+        if not (-2.0 <= alpha <= 2.0):
+            raise ValueError(
+                f"Power-law exponent alpha must be in [-2, 2], got {alpha}"
+            )
+        if D_offset < 0:
+            raise ValueError(f"D_offset must be non-negative, got {D_offset}")
+
+        # Velocity constraints (less strict - can be negative for flow direction)
+        if not (-2.0 <= beta <= 2.0):
+            raise ValueError(
+                f"Velocity exponent beta must be in [-2, 2], got {beta}"
+            )
+
+        # Fraction constraints - ensure f(t) stays in [0, 1] for all times
+        # Check at several time points
+        t_check = np.linspace(self.time_abs[0], self.time_abs[-1], 100)
+        f_check = f0 * np.exp(f1 * (t_check - f2)) + f3
+
+        if not (np.all(f_check >= 0) and np.all(f_check <= 1)):
+            raise ValueError(
+                f"Fraction parameters produce f(t) outside [0,1]. "
+                f"Range: [{f_check.min():.3f}, {f_check.max():.3f}]. "
+                f"Adjust f0={f0:.3f}, f1={f1:.3f}, f2={f2:.3f}, f3={f3:.3f}"
+            )
+
+        # Flow angle constraint
+        if not (-360 <= phi0 <= 360):
+            raise ValueError(
+                f"Flow angle phi0 should be in [-360, 360] degrees, got {phi0}"
+            )
+
+    def calculate_heterodyne_correlation(
+        self,
+        parameters: np.ndarray,
+        phi_angle: float,
+        precomputed_D_t: np.ndarray | None = None,
+        precomputed_v_t: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """
+        Calculate 2-component heterodyne correlation function.
+
+        Implements the heterodyne scattering model with reference and sample
+        components, time-dependent fraction mixing, and velocity cross-correlation.
+
+        Model equation:
+        g₂(t₁,t₂) = [f_r²g₁_r² + f_s²g₁_s² + 2f_r f_s g₁_r g₁_s cos(v_term)] / f_total²
+
+        Where:
+        - f_s(t) = sample fraction (time-dependent)
+        - f_r(t) = 1 - f_s(t) = reference fraction
+        - g₁_r, g₁_s = diffusion contributions for reference and sample
+        - f_total² = normalization factor
+        - v_term = velocity cross-correlation term
+
+        Parameters
+        ----------
+        parameters : np.ndarray
+            11-parameter array:
+            [D0, alpha, D_offset,  # diffusion params (3)
+             v0, beta, v_offset,    # velocity params (3)
+             f0, f1, f2, f3,        # fraction params (4)
+             phi0]                   # flow angle (1)
+        phi_angle : float
+            Scattering angle in degrees
+        precomputed_D_t : np.ndarray, optional
+            Pre-computed diffusion coefficient array
+        precomputed_v_t : np.ndarray, optional
+            Pre-computed velocity array
+
+        Returns
+        -------
+        np.ndarray
+            Heterodyne correlation matrix c2(t1, t2)
+        """
+        # Validate parameters
+        self.validate_heterodyne_parameters(parameters)
+
+        # Extract 11 parameters
+        diffusion_params = parameters[0:3]  # D0, alpha, D_offset
+        velocity_params = parameters[3:6]   # v0, beta, v_offset
+        fraction_params = parameters[6:10]  # f0, f1, f2, f3
+        phi0 = parameters[10]                # flow angle
+
+        # Calculate time-dependent diffusion coefficient
         if precomputed_D_t is not None:
             D_t = precomputed_D_t
         else:
             D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
 
+        # Calculate time-dependent velocity
+        if precomputed_v_t is not None:
+            v_t = precomputed_v_t
+        else:
+            v_t = self.calculate_velocity_coefficient(velocity_params)
+
+        # Calculate time-dependent fraction f(t)
+        f_t = self.calculate_fraction_coefficient(fraction_params)
+
+        # Create meshgrids for f(t1) and f(t2)
+        f1_sample, f2_sample = np.meshgrid(f_t, f_t)  # sample fractions
+        f1_ref = 1 - f1_sample  # reference fractions at t1
+        f2_ref = 1 - f2_sample  # reference fractions at t2
+
+        # Calculate normalization factor: f_total² = [f_s(t1)² + f_r(t1)²] × [f_s(t2)² + f_r(t2)²]
+        ftotal_squared = (f1_sample**2 + f1_ref**2) * (f2_sample**2 + f2_ref**2)
+
         # Create diffusion integral matrix
+        param_hash = hash(tuple(parameters))
         D_integral = self.create_time_integral_matrix_cached(f"D_{param_hash}", D_t)
 
         # Compute g1 correlation (diffusion contribution)
+        # Both reference and sample use same diffusion (can be different in extended model)
         if NUMBA_AVAILABLE:
             g1 = compute_g1_correlation_numba(
                 D_integral, self.wavevector_q_squared_half_dt
@@ -1009,25 +1152,77 @@ class HeterodyneAnalysisCore:
         else:
             g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
 
-        # Calculate shear contribution (heterodyne flow)
-        gamma_dot_t = self.calculate_shear_rate_optimized(shear_params)
-        gamma_integral = self.create_time_integral_matrix_cached(
-            f"gamma_{param_hash}", gamma_dot_t
+        g1_ref = g1  # Reference g1
+        g1_sample = g1  # Sample g1 (same for now)
+
+        # Create velocity integral matrix
+        v_integral = self.create_time_integral_matrix_cached(f"v_{param_hash}", v_t)
+
+        # Calculate velocity cross-correlation term
+        angle_rad = np.deg2rad(phi0 - phi_angle)
+        cos_phi = np.cos(angle_rad)
+        velocity_argument = self.wavevector_q * v_integral * self.dt * cos_phi
+
+        # Cosine term for cross-correlation
+        cos_velocity_term = np.cos(velocity_argument)
+
+        # Calculate heterodyne correlation components
+        # Reference term: (f_r × g1_r)²
+        ref_term = (f1_ref * f2_ref * g1_ref) ** 2
+
+        # Sample term: (f_s × g1_s)²
+        sample_term = (f1_sample * f2_sample * g1_sample) ** 2
+
+        # Cross-correlation term: 2 × f_r(t1) × f_s(t1) × f_r(t2) × f_s(t2) × g1_r × g1_s × cos(v_term)
+        cross_term = (
+            2 * f1_sample * f2_sample * f1_ref * f2_ref
+            * cos_velocity_term * g1_sample * g1_ref
         )
 
-        # Compute sinc² (shear contribution)
-        angle_rad = np.deg2rad(phi_offset - phi_angle)
-        cos_phi = np.cos(angle_rad)
-        prefactor = self.sinc_prefactor * cos_phi
+        # Total heterodyne correlation with normalization
+        g2_heterodyne = (ref_term + sample_term + cross_term) / ftotal_squared
 
-        if NUMBA_AVAILABLE:
-            sinc2 = compute_sinc_squared_numba(gamma_integral, prefactor)
-        else:
-            arg = prefactor * gamma_integral
-            sinc2 = np.sinc(arg) ** 2
+        return g2_heterodyne
 
-        # Combine contributions: c2 = (g1 × sinc²)²
-        return (sinc2 * g1) ** 2
+    def calculate_velocity_coefficient(self, velocity_params: np.ndarray) -> np.ndarray:
+        """
+        Calculate time-dependent velocity coefficient v(t).
+
+        Model: v(t) = v₀ × t^β + v_offset
+
+        Parameters
+        ----------
+        velocity_params : np.ndarray
+            [v0, beta, v_offset]
+
+        Returns
+        -------
+        np.ndarray
+            Velocity array v(t)
+        """
+        v0, beta, v_offset = velocity_params
+        return v0 * (self.time_abs ** beta) + v_offset
+
+    def calculate_fraction_coefficient(self, fraction_params: np.ndarray) -> np.ndarray:
+        """
+        Calculate time-dependent fraction coefficient f(t).
+
+        Model: f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
+
+        Physical constraint: 0 ≤ f(t) ≤ 1
+
+        Parameters
+        ----------
+        fraction_params : np.ndarray
+            [f0, f1, f2, f3]
+
+        Returns
+        -------
+        np.ndarray
+            Fraction array f(t)
+        """
+        f0, f1, f2, f3 = fraction_params
+        return f0 * np.exp(f1 * (self.time_abs - f2)) + f3
 
     def _calculate_c2_single_angle_fast(
         self,
@@ -1107,17 +1302,15 @@ class HeterodyneAnalysisCore:
         self, parameters: np.ndarray, phi_angles: np.ndarray
     ) -> np.ndarray:
         """
-        Calculate correlation function for all angles with parallel processing.
+        Calculate heterodyne correlation function for all angles with parallel processing.
 
-        Performance Optimizations (v0.6.1+):
-        - Memory pooling: Pre-allocated result arrays to avoid repeated allocations
-        - Precomputed integrals: Cached shear integrals to eliminate redundant computation
-        - Algorithm selection: Optimized heterodyne flow processing
+        Uses the 2-component heterodyne scattering model with 11 parameters.
 
         Parameters
         ----------
         parameters : np.ndarray
-            Model parameters
+            11-parameter array for heterodyne model:
+            [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]
         phi_angles : np.ndarray
             Array of scattering angles
 
@@ -1133,6 +1326,13 @@ class HeterodyneAnalysisCore:
                 "parallel_execution", True
             )
 
+        # Pre-compute time-dependent coefficients once
+        diffusion_params = parameters[0:3]
+        velocity_params = parameters[3:6]
+        
+        D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
+        v_t = self.calculate_velocity_coefficient(velocity_params)
+
         # Avoid threading conflicts with Numba parallel operations
         if (
             self.num_threads == 1
@@ -1140,21 +1340,7 @@ class HeterodyneAnalysisCore:
             or not use_parallel
             or NUMBA_AVAILABLE
         ):
-            # Sequential processing (Numba will handle internal parallelization)
-            # Pre-calculate common values once to avoid redundant computation
-            diffusion_params = parameters[: self.num_diffusion_params]
-            shear_params = parameters[
-                self.num_diffusion_params : self.num_diffusion_params
-                + self.num_shear_rate_params
-            ]
-
-            # Pre-compute parameter hash and diffusion coefficient
-            param_hash = hash(tuple(parameters))
-            D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
-            D_integral = self.create_time_integral_matrix_cached(f"D_{param_hash}", D_t)
-
-            # Heterodyne flow case: use pre-allocated memory pool for better
-            # performance
+            # Sequential processing (Numba handles internal parallelization)
             need_new_pool = (
                 self._c2_results_pool is None
                 or self._c2_results_pool.shape
@@ -1169,34 +1355,22 @@ class HeterodyneAnalysisCore:
                     (num_angles, self.time_length, self.time_length),
                     dtype=np.float64,
                 )
-            # At this point, _c2_results_pool is guaranteed to be not None
+            
             assert self._c2_results_pool is not None
             c2_results = self._c2_results_pool
 
-            # Pre-compute shear integrals
-            gamma_dot_t = self.calculate_shear_rate_optimized(shear_params)
-            gamma_integral = self.create_time_integral_matrix_cached(
-                f"gamma_{param_hash}", gamma_dot_t
-            )
-
+            # Calculate heterodyne correlation for each angle
             for i in range(num_angles):
-                c2_results[i] = self._calculate_c2_single_angle_fast(
+                c2_results[i] = self.calculate_heterodyne_correlation(
                     parameters,
                     phi_angles[i],
-                    D_integral,
-                    False,  # is_static always False (no longer supported)
-                    shear_params,
-                    gamma_integral,
+                    precomputed_D_t=D_t,
+                    precomputed_v_t=v_t,
                 )
 
-            return c2_results.copy()  # Return copy to avoid mutation
+            return c2_results.copy()
 
-        # Parallel processing (only when Numba not available)
-        # Pre-calculate diffusion coefficient once to avoid redundant
-        # computation
-        diffusion_params = parameters[: self.num_diffusion_params]
-        D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
-
+        # Parallel processing (when Numba not available)
         use_threading = True
         if self.config is not None:
             use_threading = self.config.get("performance_settings", {}).get(
@@ -1207,10 +1381,11 @@ class HeterodyneAnalysisCore:
         with Executor(max_workers=self.num_threads) as executor:
             futures = [
                 executor.submit(
-                    self.calculate_c2_single_angle_optimized,
+                    self.calculate_heterodyne_correlation,
                     parameters,
                     angle,
-                    D_t,  # Pass precomputed diffusion coefficient
+                    D_t,
+                    v_t,
                 )
                 for angle in phi_angles
             ]
