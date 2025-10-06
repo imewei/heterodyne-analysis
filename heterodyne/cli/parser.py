@@ -31,7 +31,17 @@ def create_argument_parser():
         argparse.ArgumentParser: Configured argument parser
     """
     parser = argparse.ArgumentParser(
-        description="Run heterodyne scattering analysis for XPCS under nonequilibrium conditions",
+        description="""
+Heterodyne Scattering Analysis for XPCS (X-ray Photon Correlation Spectroscopy)
+
+Analyzes 2-component heterodyne scattering with 11 parameters:
+  • Diffusion (3): D0, alpha, D_offset
+  • Velocity (3): v0, beta, v_offset
+  • Fraction (4): f0, f1, f2, f3
+  • Flow angle (1): phi0
+
+Replaces legacy 7-parameter homodyne/laminar flow model.
+        """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -43,9 +53,13 @@ Examples:
   %(prog)s --output-dir ./heterodyne_results --verbose   # Custom output directory with verbose logging
   %(prog)s --quiet                            # Run with file logging only (no console output)
 
-  Heterodyne Analysis:
-  %(prog)s --method robust                    # Run heterodyne model with robust methods
-  %(prog)s --method all                       # Run all methods with heterodyne model
+  Heterodyne Model (11 parameters):
+  %(prog)s --method robust                    # Run heterodyne analysis with robust optimization
+  %(prog)s --method all                       # Compare classical and robust methods
+
+  Migration from Legacy Configs:
+  python -m heterodyne.core.migration old_config.json new_config.json  # Migrate 7→11 params
+  python -m heterodyne.core.migration old_config.json --guide           # Show migration guide
 
   Visualization:
   %(prog)s --plot-simulated-data                  # Plot with default scaling: fitted = 1.0 * theory + 0.0
