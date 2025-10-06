@@ -1,116 +1,216 @@
 Theoretical Framework
 =====================
 
-This section provides a comprehensive mathematical foundation for the heterodyne scattering analysis
-implemented in the package, based on the theoretical framework developed by He et al. (2024).
+This section provides the comprehensive mathematical foundation for the heterodyne scattering analysis
+implemented in this package, based on the theoretical framework by He et al. (2024) [1]_.
 
-Mathematical Foundation
------------------------
+.. [1] He, H., Liang, H., Chu, M., et al. (2024). Transport coefficient approach for characterizing
+   nonequilibrium dynamics in soft matter. *Proceedings of the National Academy of Sciences*,
+   121(31), e2401162121. https://doi.org/10.1073/pnas.2401162121
 
-Nonequilibrium Correlation Functions
+General N-Component Heterogeneous System
+-----------------------------------------
+
+Fundamental Correlation Function (Equation 14)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For a heterogeneous system combining or mixing N components (such as in shear banding scenarios),
+each component exhibits time-dependent properties indexed by *n*:
+
+* **Fraction**: :math:`x_n(t)` - time-dependent component fraction
+* **Transport coefficient**: :math:`J_n(t)` - characterizes diffusive dynamics
+* **Mean velocity**: :math:`\mathbb{E}[v_n(t)]` - advective transport
+* **Flow angle**: :math:`\phi_n(t)` - direction relative to scattering vector
+
+The two-time intensity correlation function is given by:
+
+.. math::
+
+   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f(t_1,t_2)^2} \sum_{n=1}^{N} \sum_{m=1}^{N} \Bigg[
+   x_n(t_1)x_n(t_2)x_m(t_1)x_m(t_2) \times \\
+   \exp\left(-\frac{1}{2}q^2 \int_{t_1}^{t_2} [J_n(t)+J_m(t)] dt\right) \times \\
+   \cos\left[q \int_{t_1}^{t_2} \mathbb{E}[v_n(t)]\cos(\phi_n(t)) - \mathbb{E}[v_m(t)]\cos(\phi_m(t)) dt\right]
+   \Bigg]
+
+where the normalization factor is:
+
+.. math::
+
+   f(t_1,t_2)^2 = \sum_{n=1}^{N} x_n(t_1)^2 \sum_{n=1}^{N} x_n(t_2)^2
+
+This general framework describes complex multi-component systems with heterogeneous dynamics.
+
+Two-Component Heterodyne Scattering
+------------------------------------
+
+Specialized Model (Equations S-95 to S-98)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For practical implementation, we consider the widely-used two-component heterodyne configuration
+(SI Appendix, Section F.2) where:
+
+* **Reference component (r)**: Static scatterers providing reference signal
+* **Sample component (s)**: Dynamic scatterers exhibiting flow and diffusion
+
+The correlation function simplifies to (Equation S-95):
+
+.. math::
+
+   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f^2} \Bigg[
+   [x_r(t_1)x_r(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_r(t) dt} + \\
+   [x_s(t_1)x_s(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_s(t) dt} + \\
+   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2)e^{-\frac{1}{2}q^2 \int_{t_1}^{t_2} [J_s(t)+J_r(t)] dt}
+   \cos\left[q \cos(\phi) \int_{t_1}^{t_2} \mathbb{E}[v] dt\right]
+   \Bigg]
+
+where:
+
+.. math::
+
+   f^2 = [x_s(t_1)^2 + x_r(t_1)^2][x_s(t_2)^2 + x_r(t_2)^2]
+
+Equilibrium Wiener Process Form (Equation S-96)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For equilibrium conditions where all parameters are time-independent and the transport coefficient
+follows the Wiener process :math:`J_n(t) = 6D_n`, the equation simplifies to:
+
+.. math::
+
+   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f^2} \Bigg[
+   x_r^4 e^{-6q^2 D_r \tau} + x_s^4 e^{-6q^2 D_s \tau} + \\
+   2x_r^2 x_s^2 e^{-3q^2(D_r+D_s)\tau} \cos[q \cos(\phi)\mathbb{E}[v]\tau]
+   \Bigg]
+
+where :math:`\tau = t_2 - t_1` is the delay time and:
+
+.. math::
+
+   f^2 = [x_s^2 + x_r^2]^2
+
+One-Time Correlation Form (Equation S-98)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defining the composition fraction :math:`x = \frac{I_s}{I_s + I_r} = \frac{x_s^2 \mathbb{E}[I]}{x_s^2\mathbb{E}[I] + x_r^2\mathbb{E}[I]} = \frac{x_s^2}{f}`,
+the **commonly used heterodyne equation** becomes:
+
+.. math::
+
+   g_2(\vec{q}, \tau) = 1 + \beta \Bigg[
+   (1-x)^2 e^{-6q^2 D_r \tau} + x^2 e^{-6q^2 D_s \tau} + \\
+   2x(1-x)e^{-3q^2(D_r+D_s)\tau} \cos[q \cos(\phi)\mathbb{E}[v]\tau]
+   \Bigg]
+
+This form (Equation S-98) has been widely applied in heterodyne X-ray photon correlation spectroscopy (XPCS) studies.
+
+11-Parameter Nonequilibrium Extension
+--------------------------------------
+
+Time-Dependent Parameterization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This package implements a generalization of Equation S-98 to **nonequilibrium conditions** where
+system parameters evolve with time. The model uses 11 parameters organized into four groups:
+
+**1. Diffusion Dynamics (3 parameters)**
+
+.. math::
+
+   D(t) = D_0 \cdot (t-t_0)^{\alpha} + D_{\text{offset}}
+
+* :math:`D_0` [Å²/s]: Reference diffusion coefficient
+* :math:`\alpha` [dimensionless]: Time-scaling exponent
+* :math:`D_{\text{offset}}` [Å²/s]: Baseline diffusion component
+
+**2. Velocity Dynamics (3 parameters)**
+
+.. math::
+
+   v(t) = v_0 \cdot (t-t_0)^{\beta} + v_{\text{offset}}
+
+* :math:`v_0` [nm/s]: Reference velocity
+* :math:`\beta` [dimensionless]: Velocity scaling exponent
+* :math:`v_{\text{offset}}` [nm/s]: Baseline velocity component
+
+**3. Time-Dependent Fraction (4 parameters)**
+
+.. math::
+
+   f(t) = f_0 \cdot \exp[f_1(t - f_2)] + f_3
+
+with constraint :math:`0 \leq f(t) \leq 1`
+
+* :math:`f_0` [dimensionless]: Amplitude of exponential component
+* :math:`f_1` [1/s]: Exponential rate constant
+* :math:`f_2` [s]: Time shift parameter
+* :math:`f_3` [dimensionless]: Constant offset
+
+**4. Flow Geometry (1 parameter)**
+
+* :math:`\phi_0` [degrees]: Flow direction angle relative to scattering vector
+
+Nonequilibrium Correlation Function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The fundamental quantity analyzed is the time-dependent intensity correlation function for systems
-under flow conditions:
+The two-time correlation function for nonequilibrium heterodyne scattering becomes:
 
 .. math::
 
-   c_2(\vec{q}, t_1, t_2) = 1 + \beta\left[e^{-q^2\int_{t_1}^{t_2} J(t)dt}\right] \times
-   \text{sinc}^2\left[\frac{1}{2\pi} qh \int_{t_1}^{t_2}\dot{\gamma}(t)\cos(\phi(t))dt\right]
+   c_2(\vec{q}, t_1, t_2) = 1 + \beta \Bigg[
+   [1-f(t_1)][1-f(t_2)] e^{-q^2 \int_{t_1}^{t_2} 6D_r(t) dt} + \\
+   f(t_1)f(t_2) e^{-q^2 \int_{t_1}^{t_2} 6D_s(t) dt} + \\
+   2\sqrt{f(t_1)f(t_2)[1-f(t_1)][1-f(t_2)]} e^{-q^2 \int_{t_1}^{t_2} 3[D_r(t)+D_s(t)] dt} \times \\
+   \cos\left[q \cos(\phi_0) \int_{t_1}^{t_2} v(t) dt\right]
+   \Bigg]
 
-where the correlation function captures both diffusive and advective contributions to the dynamics.
+This formulation captures:
 
-Time-Dependent Transport Coefficients
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Diffusion Coefficient**
-
-The time-dependent diffusion coefficient follows a power-law parameterization:
-
-.. math::
-
-   D(t) = D_0 \cdot t^{\alpha} + D_{\text{offset}}
-
-where:
-  * :math:`D_0`: baseline diffusion coefficient [Å²/s]
-  * :math:`\alpha`: diffusion scaling exponent (dimensionless)
-  * :math:`D_{\text{offset}}`: additive offset [Å²/s]
-
-**Shear Rate**
-
-The time-dependent shear rate is parameterized as:
-
-.. math::
-
-   \dot{\gamma}(t) = \dot{\gamma}_0 \cdot t^{\beta} + \dot{\gamma}_{\text{offset}}
-
-where:
-  * :math:`\dot{\gamma}_0`: baseline shear rate [s⁻¹]
-  * :math:`\beta`: shear rate scaling exponent (dimensionless)
-  * :math:`\dot{\gamma}_{\text{offset}}`: additive offset [s⁻¹]
-
-Integral Functions
-~~~~~~~~~~~~~~~~~~
-
-**Diffusion Integral**
-
-.. math::
-
-   J(t_1, t_2) = \int_{t_1}^{t_2} D(t) dt = \frac{D_0}{1+\alpha}(t_2^{1+\alpha} - t_1^{1+\alpha}) + D_{\text{offset}}(t_2 - t_1)
-
-**Shear Integral**
-
-.. math::
-
-   \Gamma(t_1, t_2) = \int_{t_1}^{t_2} \dot{\gamma}(t) dt = \frac{\dot{\gamma}_0}{1+\beta}(t_2^{1+\beta} - t_1^{1+\beta}) + \dot{\gamma}_{\text{offset}}(t_2 - t_1)
+* **Aging dynamics**: Power-law time dependence of transport coefficients
+* **Transient flow**: Time-evolving velocity fields
+* **Component evolution**: Dynamic changes in composition fractions
+* **Nonequilibrium structure**: Departure from equilibrium Wiener process
 
 Physical Interpretation
------------------------
+------------------------
 
-Analysis Modes
-~~~~~~~~~~~~~~
+Transport Coefficient Approach
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The package implements three distinct analysis modes based on the physical system:
+The transport coefficient :math:`J(t)` generalizes the diffusion coefficient to nonequilibrium
+conditions. For standard Brownian motion, :math:`J(t) = 6D`, but under nonequilibrium conditions
+(aging, yielding, shear banding), :math:`J(t)` can exhibit complex time dependence.
 
-**1. Static Isotropic Mode (3 parameters)**
+**Key Features:**
 
-For systems at equilibrium without flow or angular dependence:
+* **Aging systems**: :math:`\alpha < 0` indicates slowing dynamics (approaching glass transition)
+* **Rejuvenation**: :math:`\alpha > 0` indicates accelerating dynamics (shear rejuvenation)
+* **Steady state**: :math:`\alpha = 0` recovers time-independent diffusion
 
-.. math::
+Component Mixing Dynamics
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   c_2(\vec{q}, t_1, t_2) = 1 + \beta e^{-q^2 J(t_1, t_2)}
+The time-dependent fraction :math:`f(t)` describes the evolution of the intensity ratio between
+reference and sample components:
 
-Parameters: :math:`D_0, \alpha, D_{\text{offset}}`
+* **Shear banding**: Rapid changes in :math:`f(t)` indicate band formation/destruction
+* **Steady shear**: Constant :math:`f(t)` indicates stable two-phase flow
+* **Yielding transition**: Monotonic change in :math:`f(t)` tracks yield dynamics
 
-**2. Static Anisotropic Mode (3 parameters)**
+Flow Orientation
+~~~~~~~~~~~~~~~~
 
-For static systems with angular dependence but no flow:
+The angle :math:`\phi_0` characterizes the flow direction relative to the scattering geometry:
 
-.. math::
-
-   c_2(\vec{q}, \phi, t_1, t_2) = 1 + \beta e^{-q^2 J(t_1, t_2)} \cdot f(\phi)
-
-where :math:`f(\phi)` captures angular variations without flow contributions.
-
-Parameters: :math:`D_0, \alpha, D_{\text{offset}}`
-
-**3. Laminar Flow Mode (7 parameters)**
-
-For systems under flow with full nonequilibrium dynamics:
-
-.. math::
-
-   c_2(\vec{q}, \phi, t_1, t_2) = 1 + \beta e^{-q^2 J(t_1, t_2)} \times
-   \text{sinc}^2\left[\frac{qh}{2\pi} \Gamma(t_1, t_2) \cos(\phi - \phi_0)\right]
-
-Parameters: :math:`D_0, \alpha, D_{\text{offset}}, \dot{\gamma}_0, \beta, \dot{\gamma}_{\text{offset}}, \phi_0`
+* :math:`\phi_0 = 0°`: Flow parallel to scattering vector (maximum Doppler effect)
+* :math:`\phi_0 = 90°`: Flow perpendicular to scattering vector (no advective contribution)
 
 Scattering Geometry
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
-**Wavevector Definition**
+Wavevector Definition
+~~~~~~~~~~~~~~~~~~~~~
 
-The scattering wavevector magnitude is related to the scattering angle:
+The scattering wavevector magnitude is:
 
 .. math::
 
@@ -118,16 +218,15 @@ The scattering wavevector magnitude is related to the scattering angle:
 
 where :math:`\lambda` is the X-ray wavelength and :math:`\theta` is the scattering angle.
 
-**Angular Dependence**
+Multi-Angle Analysis
+~~~~~~~~~~~~~~~~~~~~~
 
-The angle :math:`\phi` represents the orientation between the flow direction and the
-scattering wavevector:
+The correlation function is measured at multiple scattering angles :math:`\phi_i` to capture
+the angular dependence of the dynamics. This enables:
 
-.. math::
-
-   \phi(t) = \phi_0 + \omega t
-
-where :math:`\phi_0` is the initial flow direction and :math:`\omega` is the rotation frequency.
+* **Flow characterization**: Extracting velocity magnitude and direction
+* **Anisotropy quantification**: Measuring directional variations in dynamics
+* **Component separation**: Distinguishing reference and sample contributions
 
 Optimization Framework
 ----------------------
@@ -135,22 +234,33 @@ Optimization Framework
 Parameter Estimation
 ~~~~~~~~~~~~~~~~~~~~
 
-The optimal parameters are determined by minimizing the chi-squared objective function:
+Optimal parameters are determined by minimizing the chi-squared objective:
 
 .. math::
 
    \chi^2(\boldsymbol{\theta}) = \sum_{i,j} \frac{[c_2^{\text{exp}}(\phi_i, t_j) - c_2^{\text{model}}(\phi_i, t_j; \boldsymbol{\theta})]^2}{\sigma_{ij}^2}
 
 where:
-  * :math:`\boldsymbol{\theta}` is the parameter vector
-  * :math:`c_2^{\text{exp}}` is the experimental correlation function
-  * :math:`c_2^{\text{model}}` is the theoretical model
-  * :math:`\sigma_{ij}` is the measurement uncertainty
+
+* :math:`\boldsymbol{\theta}` = [D₀, α, D_offset, v₀, β, v_offset, f₀, f₁, f₂, f₃, φ₀] is the 11-parameter vector
+* :math:`c_2^{\text{exp}}` is experimental data
+* :math:`c_2^{\text{model}}` is the theoretical prediction
+* :math:`\sigma_{ij}` is measurement uncertainty
+
+Classical Optimization Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The package implements multiple optimization algorithms:
+
+* **Nelder-Mead**: Derivative-free simplex method for robust convergence
+* **L-BFGS-B**: Quasi-Newton method with box constraints for efficiency
+* **Basin-hopping**: Global optimization to avoid local minima
+* **Differential Evolution**: Evolutionary algorithm for complex landscapes
 
 Robust Optimization
 ~~~~~~~~~~~~~~~~~~~
 
-For noisy experimental data, robust optimization methods are employed:
+For noisy experimental data, robust methods provide stability:
 
 **Distributionally Robust Optimization (DRO)**
 
@@ -158,38 +268,25 @@ For noisy experimental data, robust optimization methods are employed:
 
    \min_{\boldsymbol{\theta}} \max_{\mathbb{P} \in \mathcal{U}} \mathbb{E}_{\mathbb{P}}[\chi^2(\boldsymbol{\theta}, \boldsymbol{\xi})]
 
-where :math:`\mathcal{U}` is the Wasserstein uncertainty set and :math:`\boldsymbol{\xi}` represents data uncertainty.
+where :math:`\mathcal{U}` is a Wasserstein uncertainty set.
 
-**Scenario-Based Optimization**
+**Scenario-Based Robust Optimization**
 
 .. math::
 
    \min_{\boldsymbol{\theta}} \max_{s \in S} \chi^2(\boldsymbol{\theta}, \boldsymbol{\xi}_s)
 
-where :math:`S` is a set of scenarios generated by bootstrap resampling.
-
-Boundary Conditions and Constraints
------------------------------------
+using bootstrap-generated scenarios :math:`S`.
 
 Physical Constraints
 ~~~~~~~~~~~~~~~~~~~~
 
-The optimization is subject to physically meaningful constraints:
+Optimization is subject to physical constraints:
 
-**Positivity Constraints**
-  * :math:`D_0 > 0`: positive baseline diffusion
-  * :math:`\dot{\gamma}_0 \geq 0`: non-negative baseline shear rate
-
-**Scaling Exponent Bounds**
-  * :math:`0.1 \leq \alpha \leq 2.0`: physically reasonable diffusion scaling
-  * :math:`0.1 \leq \beta \leq 2.0`: physically reasonable shear scaling
-
-**Angular Constraints**
-  * :math:`0° \leq \phi_0 < 360°`: flow direction angle
-
-**Offset Bounds**
-  * :math:`|D_{\text{offset}}| \leq 10^{-12}`: small diffusion corrections
-  * :math:`|\dot{\gamma}_{\text{offset}}| \leq 10^{-3}`: small shear corrections
+* **Positivity**: :math:`D_0 > 0`, :math:`f_0 \geq 0`
+* **Fraction bounds**: :math:`0 \leq f(t) \leq 1` for all :math:`t`
+* **Angular range**: :math:`0° \leq \phi_0 < 360°`
+* **Scaling bounds**: :math:`-2 \leq \alpha, \beta \leq 2` for physical time dependence
 
 Numerical Implementation
 ------------------------
@@ -197,101 +294,107 @@ Numerical Implementation
 Computational Kernels
 ~~~~~~~~~~~~~~~~~~~~~
 
-The package implements optimized computational kernels for:
+The package uses JIT-compiled Numba kernels for performance:
 
-**1. Correlation Function Evaluation**
-
-.. code-block:: python
-
-   @numba.jit(nopython=True, fastmath=True)
-   def compute_g1_correlation_numba(phi_angles, time_points, params):
-       """Compute g1 correlation function with JIT compilation."""
-       # Vectorized computation of correlation functions
-       return correlation_values
-
-**2. Integral Computation**
+**1. Integral Computation**
 
 .. code-block:: python
 
    @numba.jit(nopython=True, fastmath=True)
-   def create_time_integral_matrix_numba(time_points, D0, alpha, D_offset):
-       """Create diffusion integral matrix efficiently."""
-       # Optimized integral evaluation
-       return integral_matrix
+   def compute_transport_integral(t1, t2, D0, alpha, D_offset):
+       """Compute ∫[t1 to t2] D(t) dt analytically."""
+       return D0/(1+alpha) * (t2**(1+alpha) - t1**(1+alpha)) + D_offset*(t2-t1)
 
-**3. Chi-Squared Calculation**
+**2. Correlation Function**
 
 .. code-block:: python
 
-   @numba.jit(nopython=True, fastmath=True)
-   def compute_chi_squared_fast(experimental_data, model_data, weights):
-       """Fast chi-squared computation with error weighting."""
-       # Vectorized chi-squared calculation
-       return chi_squared_value
+   @numba.jit(nopython=True, parallel=True)
+   def compute_heterodyne_correlation(time_grid, phi_angles, params):
+       """Vectorized heterodyne correlation computation."""
+       # Parallel evaluation over angles and time points
+       return c2_matrix
+
+**3. Chi-Squared Objective**
+
+.. code-block:: python
+
+   @numba.jit(nopython=True)
+   def chi_squared_objective(params, experimental_data, phi_angles, time_grid):
+       """Fast chi-squared evaluation for optimization."""
+       # Optimized residual calculation
+       return chi_squared
 
 Performance Optimizations
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Memory Access Patterns**
-  * Contiguous array layouts for cache efficiency
-  * Vectorized operations to utilize SIMD instructions
-  * Memory pooling to reduce allocation overhead
+* **Vectorization**: SIMD operations for array computations
+* **Memory layout**: Contiguous arrays for cache efficiency
+* **Parallel execution**: Multi-threaded angle evaluations
+* **Smart caching**: Precomputed matrices for repeated calculations
 
-**Algorithmic Optimizations**
-  * Precomputed integral matrices for repeated evaluations
-  * Sparse matrix representations for angle filtering
-  * Adaptive step size control in optimization
+Error Analysis
+--------------
 
-Error Analysis and Uncertainty Quantification
----------------------------------------------
+Parameter Uncertainties
+~~~~~~~~~~~~~~~~~~~~~~~
 
-Statistical Framework
-~~~~~~~~~~~~~~~~~~~~~
-
-**Parameter Uncertainties**
-
-Confidence intervals are computed using:
+Confidence intervals computed from the Hessian matrix:
 
 .. math::
 
    \boldsymbol{\theta}_{\text{CI}} = \boldsymbol{\theta}_{\text{opt}} \pm t_{\alpha/2} \sqrt{\text{diag}(\mathbf{H}^{-1})}
 
-where :math:`\mathbf{H}` is the Hessian matrix and :math:`t_{\alpha/2}` is the critical t-value.
+where :math:`\mathbf{H}` is the Hessian at the optimum.
 
-**Goodness of Fit**
+Goodness of Fit
+~~~~~~~~~~~~~~~
 
-The reduced chi-squared statistic assesses fit quality:
+Reduced chi-squared assesses fit quality:
 
 .. math::
 
    \chi^2_{\text{red}} = \frac{\chi^2}{N - p}
 
-where :math:`N` is the number of data points and :math:`p` is the number of parameters.
+where :math:`N` is the number of data points and :math:`p = 11` is the number of parameters.
 
-**Residual Analysis**
+Residual Analysis
+~~~~~~~~~~~~~~~~~
 
-Systematic deviations are identified through residual analysis:
+Normalized residuals identify systematic deviations:
 
 .. math::
 
    r_{ij} = \frac{c_2^{\text{exp}}(\phi_i, t_j) - c_2^{\text{model}}(\phi_i, t_j)}{\sigma_{ij}}
 
+Well-distributed residuals (:math:`|r_{ij}| < 3`) indicate good model fit.
+
 Validation Protocols
+--------------------
+
+Cross-Validation
+~~~~~~~~~~~~~~~~
+
+* **K-fold validation**: Assess parameter stability across data subsets
+* **Leave-one-out**: Validate with small datasets
+
+Bootstrap Analysis
+~~~~~~~~~~~~~~~~~~
+
+* **Non-parametric bootstrap**: Quantify parameter uncertainties
+* **Parametric bootstrap**: Test model assumptions
+
+Sensitivity Analysis
 ~~~~~~~~~~~~~~~~~~~~
 
-**Cross-Validation**
-  * K-fold cross-validation for parameter stability assessment
-  * Leave-one-out validation for small datasets
-
-**Bootstrap Analysis**
-  * Non-parametric bootstrap for uncertainty quantification
-  * Parametric bootstrap for model validation
-
-**Sensitivity Analysis**
-  * Parameter perturbation studies
-  * Robustness assessment against data quality variations
+* **Parameter perturbation**: Measure response to small changes
+* **Robustness testing**: Evaluate stability against noise levels
 
 References
 ----------
 
-See :doc:`publications` for complete citation information.
+.. [1] He, H., Liang, H., Chu, M., et al. (2024). Transport coefficient approach for characterizing
+   nonequilibrium dynamics in soft matter. *Proceedings of the National Academy of Sciences*,
+   121(31), e2401162121. https://doi.org/10.1073/pnas.2401162121
+
+See :doc:`publications` for additional references and applications.

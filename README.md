@@ -157,19 +157,27 @@ pytest heterodyne/tests/test_time_length_calculation.py -v
 
 ## Heterodyne Model (11 Parameters)
 
-The heterodyne scattering model describes two-component systems with reference and sample scattering contributions mixed through a time-dependent fraction.
+The package implements the two-component heterodyne scattering model from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) (Equations S-95 to S-98), generalized to nonequilibrium conditions with time-dependent transport coefficients.
 
-### Model Equation
+### Model Foundation (Equation S-98)
+
+The commonly used heterodyne equation for equilibrium systems:
 
 ```
-g₂(t₁,t₂) = [f_r²g₁_r² + f_s²g₁_s² + 2f_r f_s g₁_r g₁_s cos(v_term)] / f_total²
+g₂(q⃗,τ) = 1 + β[(1-x)²e^(-6q²Dᵣτ) + x²e^(-6q²Dₛτ) + 2x(1-x)e^(-3q²(Dᵣ+Dₛ)τ)cos(q cos(φ)𝔼[v]τ)]
 ```
 
 where:
-- `g₁_r`, `g₁_s` are field correlation functions for reference and sample
-- `f_r(t) = 1 - f(t)` is the reference fraction
-- `f_s(t) = f(t)` is the sample fraction
-- `f_total = f_r + f_s = 1`
+- **x**: Composition fraction (sample intensity ratio)
+- **Dᵣ, Dₛ**: Diffusion coefficients for reference and sample components
+- **𝔼[v]**: Mean velocity of sample component
+- **φ**: Angle between scattering vector and flow direction
+- **τ = t₂ - t₁**: Delay time
+- **β**: Contrast factor
+
+### Nonequilibrium Extension (11-Parameter Model)
+
+This package extends Equation S-98 to **time-dependent nonequilibrium dynamics** where transport coefficients evolve with time, capturing aging, yielding, and shear banding phenomena.
 
 ### Parameters
 
@@ -282,9 +290,6 @@ heterodyne [OPTIONS]
 - `--output-dir DIR` - Output directory (default: ./heterodyne_results)
 - `--verbose` - Debug logging
 - `--quiet` - File logging only
-- `--static-isotropic` - Force 3-parameter isotropic mode
-- `--static-anisotropic` - Force 3-parameter anisotropic mode
-- `--laminar-flow` - Force 7-parameter flow mode
 - `--plot-experimental-data` - Generate data validation plots
 - `--plot-simulated-data` - Plot theoretical correlations
 
@@ -295,10 +300,6 @@ heterodyne [OPTIONS]
 heterodyne --method classical
 heterodyne --method robust --verbose
 heterodyne --method all
-
-# Force analysis modes
-heterodyne --static-isotropic --method classical
-heterodyne --laminar-flow --method all
 
 # Data validation
 heterodyne --plot-experimental-data

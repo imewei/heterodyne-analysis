@@ -1,24 +1,29 @@
 Heterodyne Scattering Model
 ============================
 
-The heterodyne package uses a two-component heterodyne scattering model with 11 parameters for comprehensive analysis of nonequilibrium soft matter systems.
+The heterodyne package implements the two-component heterodyne scattering model from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ (Equations S-95 to S-98), generalized to nonequilibrium conditions with time-dependent transport coefficients.
 
-Heterodyne Model Overview
---------------------------
+Theoretical Foundation
+----------------------
 
-The heterodyne scattering model describes two-component systems where a strong reference scattering combines with sample scattering to produce heterodyne correlations.
+The package uses the **commonly used heterodyne equation** (Equation S-98 from He et al. PNAS 2024) for equilibrium systems:
 
-**Model Equation**:
+**Model Equation (Equation S-98)**:
 
 .. math::
 
-   c_2(q, t, \phi) = \left| f(t) \cdot c_{1,\text{ref}}(q, t, \phi) + (1 - f(t)) \cdot c_{1,\text{sample}}(q, t, \phi) \right|^2
+   g_2(\vec{q}, \tau) = 1 + \beta \left[(1-x)^2 e^{-6q^2 D_r \tau} + x^2 e^{-6q^2 D_s \tau} + 2x(1-x)e^{-3q^2(D_r+D_s)\tau} \cos(q \cos(\phi)\mathbb{E}[v]\tau)\right]
 
 where:
 
-- **f(t)**: Time-dependent fraction of reference component
-- **c₁,ref**: Reference component correlation (typically strong, static scattering)
-- **c₁,sample**: Sample component correlation (dynamic scattering from sample)
+- **x**: Composition fraction (sample intensity ratio)
+- **Dᵣ, Dₛ**: Diffusion coefficients for reference and sample components
+- **𝔼[v]**: Mean velocity of sample component
+- **φ**: Angle between scattering vector and flow direction
+- **τ = t₂ - t₁**: Delay time
+- **β**: Contrast factor
+
+**Nonequilibrium Extension**: This package extends Equation S-98 to time-dependent nonequilibrium dynamics where transport coefficients evolve with time, capturing aging, yielding, and shear banding phenomena in soft matter systems.
 
 **Time-Dependent Fraction**:
 

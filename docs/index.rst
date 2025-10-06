@@ -100,9 +100,10 @@ Quick Start
 Core Features
 -------------
 
-**11-Parameter Heterodyne Model**
+**11-Parameter Heterodyne Model (PNAS 2024)**
 
-* **Two-component heterodyne scattering**: Reference and sample components with time-dependent fraction mixing
+* **Two-component heterodyne scattering**: Based on He et al. PNAS 2024 (Equations S-95 to S-98) with reference and sample components
+* **Nonequilibrium extension**: Time-dependent transport coefficients capturing aging, yielding, and shear banding
 * **Comprehensive parameter set**: 11 parameters covering diffusion (3), velocity (3), fraction (4), and flow angle (1)
 * **Time-dependent fraction**: ``f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃`` with physical constraint ``0 ≤ f(t) ≤ 1``
 * **Physical constraint enforcement**: Automatic validation during optimization to ensure meaningful results
@@ -123,15 +124,28 @@ Core Features
 Heterodyne Model (11 Parameters)
 ---------------------------------
 
-The heterodyne scattering model describes two-component systems with reference and sample scattering contributions mixed through a time-dependent fraction.
+The package implements the two-component heterodyne scattering model from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ (Equations S-95 to S-98), generalized to nonequilibrium conditions with time-dependent transport coefficients.
 
-**Model Equation:**
+**Model Equation (Equation S-98):**
+
+The commonly used heterodyne equation for equilibrium systems:
 
 .. math::
 
-   g_2(t_1,t_2) = \frac{f_r^2 g_{1,r}^2 + f_s^2 g_{1,s}^2 + 2f_r f_s g_{1,r} g_{1,s} \cos(v\_term)}{f_{total}^2}
+   g_2(\vec{q}, \tau) = 1 + \beta \left[(1-x)^2 e^{-6q^2 D_r \tau} + x^2 e^{-6q^2 D_s \tau} + 2x(1-x)e^{-3q^2(D_r+D_s)\tau} \cos(q \cos(\phi)\mathbb{E}[v]\tau)\right]
 
-where :math:`f_r(t) = 1 - f(t)` is the reference fraction, :math:`f_s(t) = f(t)` is the sample fraction, and :math:`f_{total} = f_r + f_s = 1`.
+where:
+
+* :math:`x` - Composition fraction (sample intensity ratio)
+* :math:`D_r, D_s` - Diffusion coefficients for reference and sample components
+* :math:`\mathbb{E}[v]` - Mean velocity of sample component
+* :math:`\phi` - Angle between scattering vector and flow direction
+* :math:`\tau = t_2 - t_1` - Delay time
+* :math:`\beta` - Contrast factor
+
+**Nonequilibrium Extension:**
+
+This package extends Equation S-98 to time-dependent nonequilibrium dynamics where transport coefficients evolve with time, capturing aging, yielding, and shear banding phenomena.
 
 **Parameter Categories:**
 

@@ -163,11 +163,20 @@ class HeterodyneAnalysisCore:
     """
     Core analysis engine for heterodyne scattering data.
 
-    This class provides the fundamental analysis capabilities including:
+    Implements the two-component heterodyne scattering model from He et al. PNAS 2024
+    (https://doi.org/10.1073/pnas.2401162121, Equations S-95 to S-98), generalized
+    to nonequilibrium conditions with time-dependent transport coefficients.
+
+    The model captures heterodyne scattering between reference and sample components,
+    where transport coefficients evolve with time to describe aging, yielding, and
+    shear banding in soft matter systems.
+
+    Key capabilities:
+    - 11-parameter heterodyne model with time-dependent fraction mixing
     - Configuration-driven parameter management
     - Experimental data loading with intelligent caching
-    - Correlation function calculations with performance optimizations
-    - Time-dependent diffusion and shear rate modeling
+    - Optimized correlation function calculations (Numba JIT-compiled)
+    - Time-dependent diffusion, velocity, and fraction dynamics
     """
 
     def __init__(
@@ -1084,18 +1093,14 @@ class HeterodyneAnalysisCore:
         """
         Calculate 2-component heterodyne correlation function.
 
-        Implements the heterodyne scattering model with reference and sample
-        components, time-dependent fraction mixing, and velocity cross-correlation.
+        Implements the heterodyne scattering model from He et al. PNAS 2024 (Equation S-98),
+        extended to time-dependent nonequilibrium conditions:
 
-        Model equation:
-        g₂(t₁,t₂) = [f_r²g₁_r² + f_s²g₁_s² + 2f_r f_s g₁_r g₁_s cos(v_term)] / f_total²
+        g₂(q⃗,τ) = 1 + β[(1-x)²e^(-6q²Dᵣτ) + x²e^(-6q²Dₛτ) +
+                        2x(1-x)e^(-3q²(Dᵣ+Dₛ)τ)cos(q cos(φ)𝔼[v]τ)]
 
-        Where:
-        - f_s(t) = sample fraction (time-dependent)
-        - f_r(t) = 1 - f_s(t) = reference fraction
-        - g₁_r, g₁_s = diffusion contributions for reference and sample
-        - f_total² = normalization factor
-        - v_term = velocity cross-correlation term
+        This implementation generalizes to time-dependent transport coefficients D(t), v(t),
+        and composition fraction x(t) to capture nonequilibrium dynamics.
 
         Parameters
         ----------

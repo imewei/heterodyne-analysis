@@ -121,7 +121,7 @@ Python API Example (11-Parameter Heterodyne Model)
 Heterodyne Model Quick Reference
 ----------------------------------
 
-The package uses an 11-parameter two-component heterodyne scattering model:
+The package uses an 11-parameter two-component heterodyne scattering model based on `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ (Equations S-95 to S-98):
 
 **Parameter Groups:**
 

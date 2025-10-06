@@ -1,8 +1,12 @@
 """
 High-Performance Computational Kernels for Heterodyne Scattering Analysis
 
-This module provides Numba-accelerated computational kernels for the core
-mathematical operations in heterodyne scattering calculations.
+This module provides Numba-accelerated computational kernels implementing the
+two-component heterodyne scattering model from He et al. PNAS 2024
+(https://doi.org/10.1073/pnas.2401162121, Equations S-95 to S-98).
+
+The kernels compute correlation functions, transport integrals, and chi-squared
+objectives for time-dependent nonequilibrium heterodyne scattering systems.
 
 Created for: Rheo-SAXS-XPCS Heterodyne Analysis
 Authors: Wei Chen, Hongrui He
