@@ -43,15 +43,12 @@ Examples:
   %(prog)s --output-dir ./heterodyne_results --verbose   # Custom output directory with verbose logging
   %(prog)s --quiet                            # Run with file logging only (no console output)
 
-  Analysis Modes:
-  %(prog)s --static-isotropic                 # Force static mode (zero shear, 3 parameters)
-  %(prog)s --laminar-flow --method robust     # Force laminar flow mode with robust methods
-  %(prog)s --static-isotropic --method robust # Run robust methods in static mode
-  %(prog)s --static-isotropic --method all    # Run all methods in static mode
+  Heterodyne Analysis:
+  %(prog)s --method robust                    # Run heterodyne model with robust methods
+  %(prog)s --method all                       # Run all methods with heterodyne model
 
   Visualization:
   %(prog)s --plot-simulated-data                  # Plot with default scaling: fitted = 1.0 * theory + 0.0
-  %(prog)s --plot-simulated-data --static-isotropic   # Plot simulated data in static mode
   %(prog)s --plot-simulated-data --contrast 1.5 --offset 0.1  # Plot scaled data: fitted = 1.5 * theory + 0.1
   %(prog)s --plot-simulated-data --phi-angles "0,45,90,135"  # Plot with custom phi angles
   %(prog)s --plot-simulated-data --phi-angles "30,60,90" --contrast 1.2 --offset 0.05  # Custom angles with scaling
@@ -61,7 +58,6 @@ Examples:
   %(prog)s --distributed --backend ray        # Use Ray for cluster computing
   %(prog)s --distributed --backend mpi --workers 8  # Use MPI with 8 processes
   %(prog)s --distributed --workers 4          # Limit to 4 workers (any backend)
-  %(prog)s --distributed --laminar-flow       # Distributed optimization for complex 7-parameter analysis
 
   ML Acceleration (2-5x faster convergence):
   %(prog)s --ml-accelerated                   # Enable ML with auto training data collection
@@ -70,7 +66,7 @@ Examples:
 
   Combined High-Performance Computing:
   %(prog)s --distributed --ml-accelerated     # Maximum speedup: distributed + ML acceleration
-  %(prog)s --distributed --ml-accelerated --laminar-flow --method robust  # Full feature analysis
+  %(prog)s --distributed --ml-accelerated --method robust  # Full feature analysis
   %(prog)s --distributed --backend ray --ml-accelerated --workers 16      # Cluster + ML acceleration
 
 Method Quality Assessment:
@@ -125,24 +121,6 @@ Method Quality Assessment:
         "--quiet",
         action="store_true",
         help="Disable console logging (file logging remains enabled)",
-    )
-
-    # Analysis mode selection
-    mode_group = parser.add_mutually_exclusive_group()
-    mode_group.add_argument(
-        "--static-isotropic",
-        action="store_true",
-        help="Force static isotropic mode analysis (3 parameters, no angle selection)",
-    )
-    mode_group.add_argument(
-        "--static-anisotropic",
-        action="store_true",
-        help="Force static anisotropic mode analysis (3 parameters, with angle selection)",
-    )
-    mode_group.add_argument(
-        "--laminar-flow",
-        action="store_true",
-        help="Force laminar flow mode analysis (7 parameters: all diffusion and shear parameters)",
     )
 
     # Plotting options

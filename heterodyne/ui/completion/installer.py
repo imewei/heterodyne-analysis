@@ -575,8 +575,6 @@ def get_heterodyne_flags():
         "--help", "--version",
         "--method", "--config", "--data", "--output", "--output-dir",
         "--verbose", "--quiet",
-        # Analysis mode selection
-        "--static-isotropic", "--static-anisotropic", "--laminar-flow",
         # Plotting options
         "--plot-experimental-data", "--plot-simulated-data",
         "--contrast", "--offset", "--phi-angles",

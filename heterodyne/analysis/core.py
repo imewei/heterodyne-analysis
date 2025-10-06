@@ -410,67 +410,6 @@ class HeterodyneAnalysisCore:
             f"  • Optimizations: {'Numba JIT' if current_numba_available else 'Pure Python'}"
         )
 
-    def is_static_mode(self) -> bool:
-        """
-        Check if the analysis is configured for static (no-flow) mode.
-
-        In static mode:
-        - Shear rate γ̇ = 0
-        - Shear exponent β = 0
-        - Shear offset γ̇_offset = 0
-        - sinc² function = 1 (no shear decorrelation)
-        - Only diffusion contribution g₁_diff remains
-
-        Returns
-        -------
-        bool
-            True if static mode is enabled in configuration
-        """
-        if self.config is None:
-            return False
-
-        # Check for static mode flag in configuration
-        analysis_settings = self.config.get("analysis_settings", {})
-        return analysis_settings.get("static_mode", False)
-
-    def is_static_parameters(self, shear_params: np.ndarray) -> bool:
-        """
-        Check if shear parameters correspond to static conditions.
-
-        In static conditions:
-        - gamma_dot_t0 (shear_params[0]) ≈ 0
-        - beta (shear_params[1]) = 0 (no time dependence)
-        - gamma_dot_offset (shear_params[2]) ≈ 0
-
-        Parameters
-        ----------
-        shear_params : np.ndarray
-            Shear rate parameters [gamma_dot_t0, beta, gamma_dot_offset]
-
-        Returns
-        -------
-        bool
-            True if parameters indicate static conditions
-        """
-        if len(shear_params) < 3:
-            # If we don't have enough shear parameters, assume static
-            # conditions
-            return True
-
-        gamma_dot_t0 = shear_params[0]
-        beta = shear_params[1]
-        gamma_dot_offset = shear_params[2]
-
-        # Define small threshold for "effectively zero"
-        threshold = 1e-10
-
-        # Check if all shear parameters are effectively zero
-        return bool(
-            abs(gamma_dot_t0) < threshold
-            and abs(beta) < threshold
-            and abs(gamma_dot_offset) < threshold
-        )
-
     def get_effective_parameter_count(self) -> int:
         """
         Get the effective number of parameters based on analysis mode.
@@ -1030,17 +969,12 @@ class HeterodyneAnalysisCore:
         precomputed_D_t: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Calculate correlation function for a single angle.
-
-        Supports both laminar flow and static (no-flow) cases:
-        - Laminar flow: Full 7-parameter model with diffusion and shear contributions
-        - Static case: Only diffusion contribution (sinc² = 1), φ₀ irrelevant and set to 0
+        Calculate correlation function for a single angle using heterodyne model.
 
         Parameters
         ----------
         parameters : np.ndarray
             Model parameters [D0, alpha, D_offset, gamma_dot_t0, beta, gamma_dot_t_offset, phi0]
-            In static mode: only first 3 diffusion parameters are used, others ignored/set to 0
         phi_angle : float
             Scattering angle in degrees
 
@@ -1049,9 +983,6 @@ class HeterodyneAnalysisCore:
         np.ndarray
             Correlation matrix c2(t1, t2)
         """
-        # Check if we're in static mode
-        static_mode = self.is_static_mode()
-
         # Extract parameters
         diffusion_params = parameters[: self.num_diffusion_params]
         shear_params = parameters[
@@ -1078,31 +1009,22 @@ class HeterodyneAnalysisCore:
         else:
             g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
 
-        # Handle shear contribution based on mode
-        if static_mode or self.is_static_parameters(shear_params):
-            # Static case: sinc² = 1 (no shear contribution)
-            # g₁(t₁,t₂) = g₁_diff(t₁,t₂) = exp[-q²/2 ∫|t₂-t₁| D(t')dt']
-            # g₂(t₁,t₂) = [g₁(t₁,t₂)]²
-            # Note: φ₀ is irrelevant in static mode since shear term is not
-            # used
-            sinc2 = np.ones_like(g1)
+        # Calculate shear contribution (heterodyne flow)
+        gamma_dot_t = self.calculate_shear_rate_optimized(shear_params)
+        gamma_integral = self.create_time_integral_matrix_cached(
+            f"gamma_{param_hash}", gamma_dot_t
+        )
+
+        # Compute sinc² (shear contribution)
+        angle_rad = np.deg2rad(phi_offset - phi_angle)
+        cos_phi = np.cos(angle_rad)
+        prefactor = self.sinc_prefactor * cos_phi
+
+        if NUMBA_AVAILABLE:
+            sinc2 = compute_sinc_squared_numba(gamma_integral, prefactor)
         else:
-            # Laminar flow case: calculate full sinc² contribution
-            gamma_dot_t = self.calculate_shear_rate_optimized(shear_params)
-            gamma_integral = self.create_time_integral_matrix_cached(
-                f"gamma_{param_hash}", gamma_dot_t
-            )
-
-            # Compute sinc² (shear contribution)
-            angle_rad = np.deg2rad(phi_offset - phi_angle)
-            cos_phi = np.cos(angle_rad)
-            prefactor = self.sinc_prefactor * cos_phi
-
-            if NUMBA_AVAILABLE:
-                sinc2 = compute_sinc_squared_numba(gamma_integral, prefactor)
-            else:
-                arg = prefactor * gamma_integral
-                sinc2 = np.sinc(arg) ** 2
+            arg = prefactor * gamma_integral
+            sinc2 = np.sinc(arg) ** 2
 
         # Combine contributions: c2 = (g1 × sinc²)²
         return (sinc2 * g1) ** 2
@@ -1181,44 +1103,6 @@ class HeterodyneAnalysisCore:
         # Combine contributions: c2 = (g1 × sinc²)²
         return (sinc2 * g1) ** 2
 
-    def _calculate_c2_vectorized_static(
-        self, D_integral: np.ndarray, num_angles: int
-    ) -> np.ndarray:
-        """
-        Ultra-fast vectorized correlation calculation for static case.
-
-        In static mode, all angles produce identical correlation functions,
-        so we compute once and broadcast to all angles.
-
-        Parameters
-        ----------
-        D_integral : np.ndarray
-            Pre-computed diffusion integral matrix
-        num_angles : int
-            Number of angles to replicate
-
-        Returns
-        -------
-        np.ndarray
-            3D array of correlation matrices [angles, time, time]
-        """
-        # Compute g1 correlation once (diffusion contribution)
-        if NUMBA_AVAILABLE:
-            g1 = compute_g1_correlation_numba(
-                D_integral, self.wavevector_q_squared_half_dt
-            )
-        else:
-            g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
-
-        # Static case: c2 = g1² (sinc² = 1)
-        c2_single = g1**2
-
-        # Broadcast to all angles using memory-efficient approach
-        if num_angles == 1:
-            return c2_single.reshape(1, self.time_length, self.time_length)
-        # Use efficient tile for multiple angles
-        return np.tile(c2_single, (num_angles, 1, 1))
-
     def calculate_c2_nonequilibrium_laminar_parallel(
         self, parameters: np.ndarray, phi_angles: np.ndarray
     ) -> np.ndarray:
@@ -1227,9 +1111,8 @@ class HeterodyneAnalysisCore:
 
         Performance Optimizations (v0.6.1+):
         - Memory pooling: Pre-allocated result arrays to avoid repeated allocations
-        - Static case optimization: Enhanced vectorized broadcasting for identical functions
         - Precomputed integrals: Cached shear integrals to eliminate redundant computation
-        - Algorithm selection: Improved static vs laminar flow detection and handling
+        - Algorithm selection: Optimized heterodyne flow processing
 
         Parameters
         ----------
@@ -1265,22 +1148,12 @@ class HeterodyneAnalysisCore:
                 + self.num_shear_rate_params
             ]
 
-            # Pre-compute static conditions
-            static_mode = self.is_static_mode()
-            is_static_params = self.is_static_parameters(shear_params)
-            is_static = static_mode or is_static_params
-
             # Pre-compute parameter hash and diffusion coefficient
             param_hash = hash(tuple(parameters))
             D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
             D_integral = self.create_time_integral_matrix_cached(f"D_{param_hash}", D_t)
 
-            # Use vectorized processing for maximum performance
-            if is_static:
-                # Static case: all angles have identical correlation (no angle
-                # dependence)
-                return self._calculate_c2_vectorized_static(D_integral, num_angles)
-            # Laminar flow case: use pre-allocated memory pool for better
+            # Heterodyne flow case: use pre-allocated memory pool for better
             # performance
             need_new_pool = (
                 self._c2_results_pool is None
@@ -1300,22 +1173,18 @@ class HeterodyneAnalysisCore:
             assert self._c2_results_pool is not None
             c2_results = self._c2_results_pool
 
-            # Pre-compute shear integrals once if applicable
-            param_hash = hash(tuple(parameters))
-            if not is_static_params:
-                gamma_dot_t = self.calculate_shear_rate_optimized(shear_params)
-                gamma_integral = self.create_time_integral_matrix_cached(
-                    f"gamma_{param_hash}", gamma_dot_t
-                )
-            else:
-                gamma_integral = None
+            # Pre-compute shear integrals
+            gamma_dot_t = self.calculate_shear_rate_optimized(shear_params)
+            gamma_integral = self.create_time_integral_matrix_cached(
+                f"gamma_{param_hash}", gamma_dot_t
+            )
 
             for i in range(num_angles):
                 c2_results[i] = self._calculate_c2_single_angle_fast(
                     parameters,
                     phi_angles[i],
                     D_integral,
-                    is_static,
+                    False,  # is_static always False (no longer supported)
                     shear_params,
                     gamma_integral,
                 )

@@ -986,82 +986,100 @@ class ConfigManager:
     def is_static_mode_enabled(self) -> bool:
         """
         Check if static mode is enabled in configuration.
+        
+        DEPRECATED: Static mode has been removed in favor of the heterodyne model.
+        This method now raises an error if static mode is detected.
 
         Returns
         -------
         bool
-            True if static mode is enabled, False otherwise
+            Always returns False (static mode no longer supported)
+            
+        Raises
+        ------
+        ValueError
+            If static mode configuration is detected
         """
         # Use cached value for performance
         if hasattr(self, "_cached_values") and "static_mode" in self._cached_values:
-            return bool(self._cached_values["static_mode"])
+            static_mode = bool(self._cached_values["static_mode"])
+            if static_mode:
+                raise ValueError(
+                    "Static mode has been removed. Please use the heterodyne model instead.\n"
+                    "The heterodyne model supports 11 parameters and provides more accurate "
+                    "analysis for two-component systems.\n"
+                    "See migration guide for converting legacy configurations."
+                )
+            return False
 
         result = self.get("analysis_settings", "static_mode", default=False)
-        return bool(result)
+        if result:
+            raise ValueError(
+                "Static mode has been removed. Please use the heterodyne model instead.\n"
+                "The heterodyne model supports 11 parameters and provides more accurate "
+                "analysis for two-component systems.\n"
+                "See migration guide for converting legacy configurations."
+            )
+        return False
 
     def get_static_submode(self) -> str | None:
         """
         Get the static sub-mode for analysis.
+        
+        DEPRECATED: Static submodes have been removed.
 
         Returns
         -------
         str | None
-            "isotropic", "anisotropic", or None if static mode is disabled
+            Always returns None (static modes no longer supported)
+            
+        Raises
+        ------
+        ValueError
+            If static submode configuration is detected
         """
-        # Return None if static mode is not enabled
-        if not self.is_static_mode_enabled():
-            return None
-
-        # Use cached value for performance
-        if hasattr(self, "_cached_values") and "static_submode" in self._cached_values:
-            cached_value = self._cached_values["static_submode"]
-            return str(cached_value) if cached_value is not None else None
-
-        # Get submode from configuration (case-insensitive)
+        # Check for deprecated static_submode parameter
         raw_submode = self.get(
-            "analysis_settings", "static_submode", default="anisotropic"
+            "analysis_settings", "static_submode", default=None
         )
-        if raw_submode is None:
-            submode = "anisotropic"  # Default for backward compatibility
-        else:
-            submode_str = str(raw_submode).lower().strip()
-            if submode_str in ["isotropic", "iso"]:
-                submode = "isotropic"
-            elif submode_str in ["anisotropic", "aniso"]:
-                submode = "anisotropic"
-            else:
-                logger.warning(
-                    f"Invalid static_submode '{raw_submode}', defaulting to 'anisotropic'"
-                )
-                submode = "anisotropic"
-
-        return submode
+        if raw_submode is not None:
+            raise ValueError(
+                f"Static submode '{raw_submode}' is no longer supported. "
+                "Static Isotropic and Static Anisotropic modes have been removed.\n"
+                "Please migrate to the heterodyne model which supports:\n"
+                "- 11-parameter optimization\n"
+                "- Time-dependent fraction mixing\n"
+                "- Reference and sample scattering contributions\n"
+                "See migration guide for details."
+            )
+        
+        return None
 
     def is_static_isotropic_enabled(self) -> bool:
         """
         Check if static isotropic mode is enabled.
+        
+        DEPRECATED: Static isotropic mode has been removed.
 
         Returns
         -------
         bool
-            True if analysis mode is static isotropic, False otherwise
+            Always returns False (static isotropic mode no longer supported)
         """
-        return (
-            self.is_static_mode_enabled() and self.get_static_submode() == "isotropic"
-        )
+        return False
 
     def is_static_anisotropic_enabled(self) -> bool:
         """
         Check if static anisotropic mode is enabled.
+        
+        DEPRECATED: Static anisotropic mode has been removed.
 
         Returns
         -------
         bool
-            True if analysis mode is static anisotropic, False otherwise
+            Always returns False (static anisotropic mode no longer supported)
         """
-        return (
-            self.is_static_mode_enabled() and self.get_static_submode() == "anisotropic"
-        )
+        return False
 
     def get_analysis_mode(self) -> str:
         """
