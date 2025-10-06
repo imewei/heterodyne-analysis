@@ -240,6 +240,7 @@ class HeterodyneAnalysisCore:
         self.time_length = (
             self.end_frame - self.start_frame + 1
         )  # +1 for inclusive counting (includes t=0)
+        self.n_time = self.time_length  # Alias for tests and external use
 
         # Physical parameters
         self.wavevector_q = params["scattering"]["wavevector_q"]
@@ -267,6 +268,9 @@ class HeterodyneAnalysisCore:
             self.time_length,
             dtype=np.float64,
         )
+
+        # Alias for backward compatibility and heterodyne model
+        self.time_abs = self.time_array
 
         # Memory pool for correlation calculations
         self._c2_results_pool: np.ndarray | None = None

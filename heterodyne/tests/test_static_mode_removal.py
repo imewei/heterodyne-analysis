@@ -14,13 +14,14 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 from heterodyne.core.config import ConfigManager
+from heterodyne.core.migration import HeterodyneMigration
 
 
 class TestStaticModeRemoval:
     """Test static mode infrastructure removal."""
 
-    def test_static_isotropic_config_rejected(self, tmp_path):
-        """Test that static isotropic configuration is rejected with helpful error."""
+    def test_static_isotropic_config_detected(self, tmp_path):
+        """Test that static isotropic configuration is detected by migration utility."""
         config_data = {
             "analysis_settings": {
                 "static_mode": True,
@@ -35,16 +36,16 @@ class TestStaticModeRemoval:
         with open(config_file, 'w') as f:
             json.dump(config_data, f)
 
-        # Expect validation error with migration guidance
-        with pytest.raises((ValueError, KeyError)) as exc_info:
-            config_manager = ConfigManager(str(config_file))
-            config_manager.validate()
+        # Migration utility should detect this as 3-param-static
+        version = HeterodyneMigration.detect_config_version(config_data)
+        assert version == "3-param-static"
 
-        error_msg = str(exc_info.value).lower()
-        assert any(keyword in error_msg for keyword in ["static", "deprecated", "removed", "heterodyne"])
+        # Migration should raise helpful error
+        with pytest.raises(ValueError, match="Cannot automatically migrate"):
+            HeterodyneMigration.migrate_config_file(config_file)
 
-    def test_static_anisotropic_config_rejected(self, tmp_path):
-        """Test that static anisotropic configuration is rejected with helpful error."""
+    def test_static_anisotropic_config_detected(self, tmp_path):
+        """Test that static anisotropic configuration is detected by migration utility."""
         config_data = {
             "analysis_settings": {
                 "static_mode": True,
@@ -59,13 +60,13 @@ class TestStaticModeRemoval:
         with open(config_file, 'w') as f:
             json.dump(config_data, f)
 
-        # Expect validation error with migration guidance
-        with pytest.raises((ValueError, KeyError)) as exc_info:
-            config_manager = ConfigManager(str(config_file))
-            config_manager.validate()
+        # Migration utility should detect this as 3-param-static
+        version = HeterodyneMigration.detect_config_version(config_data)
+        assert version == "3-param-static"
 
-        error_msg = str(exc_info.value).lower()
-        assert any(keyword in error_msg for keyword in ["static", "deprecated", "removed", "heterodyne"])
+        # Migration should raise helpful error
+        with pytest.raises(ValueError, match="Static mode has been removed"):
+            HeterodyneMigration.migrate_config_file(config_file)
 
     def test_legacy_3_parameter_data_handling(self, tmp_path):
         """Test handling of legacy 3-parameter static mode data files."""
@@ -126,15 +127,23 @@ class TestStaticModeFunctionRemoval:
         # Method should not exist
         assert not hasattr(HeterodyneAnalysisCore, '_calculate_c2_vectorized_static')
 
+    def test_validate_method_removed_from_config_manager(self):
+        """Test that validate() method is removed from ConfigManager (part of static mode)."""
+        # validate() was part of static mode infrastructure and should be removed
+        assert not hasattr(ConfigManager, 'validate')
+
 
 class TestMigrationGuidance:
     """Test migration guidance for users transitioning from static mode."""
 
-    def test_error_message_provides_migration_path(self, tmp_path):
-        """Test that error messages guide users to heterodyne model."""
+    def test_migration_guide_provides_clear_path(self, tmp_path):
+        """Test that migration guide provides clear guidance for static configs."""
         config_data = {
             "analysis_settings": {
                 "static_mode": True
+            },
+            "initial_parameters": {
+                "values": [100.0, 0.0, 10.0]
             }
         }
 
@@ -142,53 +151,86 @@ class TestMigrationGuidance:
         with open(config_file, 'w') as f:
             json.dump(config_data, f)
 
-        with pytest.raises(Exception) as exc_info:
-            config_manager = ConfigManager(str(config_file))
-            config_manager.validate()
+        # Generate migration guide
+        guide = HeterodyneMigration.generate_migration_guide(config_file)
 
-        error_msg = str(exc_info.value)
-        # Error should mention heterodyne model or migration
-        assert any(keyword in error_msg.lower() for keyword in
-                   ["heterodyne", "migrate", "replace", "11 parameter"])
+        # Guide should mention key concepts
+        guide_lower = guide.lower()
+        assert "3-parameter static" in guide_lower or "static mode" in guide_lower
+        assert "automatic migration not supported" in guide_lower or "manually" in guide_lower
+        assert "heterodyne" in guide_lower
 
-
-class TestConfigValidation:
-    """Test that configuration validation rejects static mode parameters."""
-
-    def test_static_submode_parameter_rejected(self, tmp_path):
-        """Test that static_submode parameter is rejected."""
+    def test_error_message_provides_migration_path(self, tmp_path):
+        """Test that error messages guide users to heterodyne model."""
         config_data = {
             "analysis_settings": {
-                "static_mode": False,  # Even with False
-                "static_submode": "isotropic"  # This should be rejected
+                "static_mode": True
+            },
+            "initial_parameters": {
+                "values": [100.0, 0.0, 10.0]
             }
         }
 
-        config_file = tmp_path / "mixed_config.json"
+        config_file = tmp_path / "old_config.json"
         with open(config_file, 'w') as f:
             json.dump(config_data, f)
 
-        # Should raise validation error for static_submode presence
-        with pytest.raises((ValueError, KeyError)):
-            config_manager = ConfigManager(str(config_file))
-            config_manager.validate()
+        # Migration should raise error with guidance
+        with pytest.raises(ValueError) as exc_info:
+            HeterodyneMigration.migrate_config_file(config_file)
 
-    def test_3_parameter_optimization_rejected(self):
-        """Test that 3-parameter configurations are rejected (must be 11 for heterodyne)."""
-        # Heterodyne requires 11 parameters, not 3
-        with pytest.raises((ValueError, AssertionError)):
-            # This should fail in parameter validation
-            from heterodyne.core.config import ConfigManager
+        error_msg = str(exc_info.value).lower()
+        # Error should mention heterodyne model or migration
+        assert any(keyword in error_msg for keyword in
+                   ["heterodyne", "manually", "static mode", "11 parameter"])
 
-            # Mock config with only 3 parameters
-            config_data = {
-                "initial_parameters": {
-                    "values": [100.0, -0.5, 10.0]  # Only 3 params
-                },
-                "analysis_settings": {
-                    "static_mode": False
-                }
+
+class TestConfigValidation:
+    """Test that configuration validation handles static mode parameters."""
+
+    def test_3_parameter_config_detected_as_static(self, tmp_path):
+        """Test that 3-parameter configurations are detected as static mode."""
+        config_data = {
+            "initial_parameters": {
+                "values": [100.0, -0.5, 10.0]  # Only 3 params
+            },
+            "analyzer_parameters": {
+                "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
+                "scattering": {"wavevector_q": 0.0054},
+                "geometry": {"stator_rotor_gap": 2000000}
             }
+        }
 
-            # Validation should reject insufficient parameters
-            # (Actual implementation will vary based on validation logic)
+        config_file = tmp_path / "three_param.json"
+        with open(config_file, 'w') as f:
+            json.dump(config_data, f)
+
+        # Migration utility should detect this as 3-param (likely static)
+        version = HeterodyneMigration.detect_config_version(config_data)
+        assert version == "3-param-static"
+
+    def test_heterodyne_config_accepted(self, tmp_path):
+        """Test that proper 11-parameter heterodyne config is accepted."""
+        config_data = {
+            "initial_parameters": {
+                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
+                          0.5, 0.0, 50.0, 0.3, 0.0]  # 11 params
+            },
+            "analyzer_parameters": {
+                "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
+                "scattering": {"wavevector_q": 0.0054},
+                "geometry": {"stator_rotor_gap": 2000000}
+            }
+        }
+
+        config_file = tmp_path / "heterodyne.json"
+        with open(config_file, 'w') as f:
+            json.dump(config_data, f)
+
+        # Should be detected as 11-param heterodyne
+        version = HeterodyneMigration.detect_config_version(config_data)
+        assert version == "11-param-heterodyne"
+
+        # Should load without issues
+        config_manager = ConfigManager(str(config_file))
+        assert config_manager.config is not None

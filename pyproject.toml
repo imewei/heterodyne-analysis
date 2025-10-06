@@ -11,7 +11,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "heterodyne-analysis"
 dynamic = ["version"]
-description = "High-performance Python package for analyzing heterodyne scattering in X-ray Photon Correlation Spectroscopy (XPCS) with frame counting fixes (v1.0.0+) and conditional angle subsampling for preserving angular information"
+description = "High-performance Python package for analyzing heterodyne scattering in X-ray Photon Correlation Spectroscopy (XPCS) with 11-parameter two-component model, automatic migration from legacy configs, and comprehensive parameter validation (v2.0.0)"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
