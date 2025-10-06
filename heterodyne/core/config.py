@@ -1117,15 +1117,12 @@ class ConfigManager:
             if param_names:
                 active_params = param_names
             else:
-                # Ultimate fallback to standard parameter names
+                # Ultimate fallback to heterodyne 11-parameter names
                 active_params = [
-                    "D0",
-                    "alpha",
-                    "D_offset",
-                    "gamma_dot_t0",
-                    "beta",
-                    "gamma_dot_t_offset",
-                    "phi0",
+                    "D0", "alpha", "D_offset",           # Diffusion (3)
+                    "v0", "beta", "v_offset",            # Velocity (3)
+                    "f0", "f1", "f2", "f3",              # Fraction (4)
+                    "phi0"                               # Flow angle (1)
                 ]
 
         return active_params
@@ -1152,12 +1149,12 @@ class ConfigManager:
         # Get active parameters from configuration
         active_params = self.get_active_parameters()
 
-        # Use active_parameters if specified, otherwise fall back to mode-based
-        # logic
+        # Use active_parameters if specified, otherwise default to heterodyne 11-parameter model
         if active_params:
             count = len(active_params)
         else:
-            count = 3 if self.is_static_mode_enabled() else 7
+            # Heterodyne model uses 11 parameters by default
+            count = 11
 
         # Cache the result for performance
         if not hasattr(self, "_cached_values"):
@@ -1165,6 +1162,119 @@ class ConfigManager:
         self._cached_values["effective_param_count"] = count
 
         return count
+
+    def get_parameter_metadata(self) -> dict[str, dict[str, str]]:
+        """
+        Get metadata for all 11 heterodyne parameters.
+
+        Returns
+        -------
+        dict[str, dict[str, str]]
+            Parameter metadata with units and descriptions
+        """
+        return {
+            "D0": {
+                "unit": "nm²/s",
+                "description": "Reference diffusion coefficient",
+                "index": 0
+            },
+            "alpha": {
+                "unit": "dimensionless",
+                "description": "Diffusion power-law exponent",
+                "index": 1
+            },
+            "D_offset": {
+                "unit": "nm²/s",
+                "description": "Baseline diffusion offset",
+                "index": 2
+            },
+            "v0": {
+                "unit": "nm/s",
+                "description": "Reference velocity",
+                "index": 3
+            },
+            "beta": {
+                "unit": "dimensionless",
+                "description": "Velocity power-law exponent",
+                "index": 4
+            },
+            "v_offset": {
+                "unit": "nm/s",
+                "description": "Baseline velocity offset",
+                "index": 5
+            },
+            "f0": {
+                "unit": "dimensionless",
+                "description": "Fraction amplitude",
+                "index": 6
+            },
+            "f1": {
+                "unit": "1/s",
+                "description": "Fraction exponential rate",
+                "index": 7
+            },
+            "f2": {
+                "unit": "s",
+                "description": "Fraction time offset",
+                "index": 8
+            },
+            "f3": {
+                "unit": "dimensionless",
+                "description": "Fraction baseline",
+                "index": 9
+            },
+            "phi0": {
+                "unit": "degrees",
+                "description": "Flow direction angle",
+                "index": 10
+            }
+        }
+
+    def get_parameter_bounds(self) -> list[tuple[float, float]]:
+        """
+        Get recommended bounds for all 11 heterodyne parameters.
+
+        Returns
+        -------
+        list[tuple[float, float]]
+            List of (min, max) bounds for each parameter
+        """
+        return [
+            (0, 1000),      # D0: positive diffusion
+            (-2, 2),        # alpha: power-law range
+            (0, 100),       # D_offset: positive offset
+            (-10, 10),      # v0: velocity (can be negative)
+            (-2, 2),        # beta: power-law range
+            (-1, 1),        # v_offset: small offset
+            (0, 1),         # f0: fraction amplitude
+            (-1, 1),        # f1: exponential rate
+            (0, 200),       # f2: time offset
+            (0, 1),         # f3: baseline fraction
+            (-360, 360)     # phi0: angle in degrees
+        ]
+
+    def get_default_11_parameters(self) -> list[float]:
+        """
+        Get default values for 11-parameter heterodyne model.
+
+        Returns
+        -------
+        list[float]
+            Default parameter values
+        """
+        return [
+            100.0,   # D0
+            -0.5,    # alpha
+            10.0,    # D_offset
+            0.1,     # v0
+            0.0,     # beta
+            0.01,    # v_offset
+            0.5,     # f0
+            0.0,     # f1
+            50.0,    # f2
+            0.3,     # f3
+            0.0      # phi0
+        ]
 
     def list_available_templates(self) -> list[str]:
         """

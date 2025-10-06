@@ -205,9 +205,10 @@ class ClassicalOptimizer:
                 default_params = {
                     3: [1e-3, 0.9, 1e-4],
                     7: [1e-3, 0.9, 1e-4, 0.01, 0.8, 0.001, 0.0],
+                    11: [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
                 }
                 result_dict["initial_parameters"] = default_params.get(
-                    effective_param_count, default_params[7]
+                    effective_param_count, default_params[11]
                 )
 
         return result_dict
