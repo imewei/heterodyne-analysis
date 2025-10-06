@@ -113,9 +113,9 @@
     "units": "MODE_DEPENDENT: [Å²/s,dimensionless,Å²/s] for static, [Å²/s,dimensionless,Å²/s,s⁻¹,dimensionless,s⁻¹,degrees] for laminar_flow",
     "physical_meaning": {
       "_common_to_all_modes": {
-        "D0": "Reference diffusion coefficient",
-        "alpha": "Power-law exponent for D(t) evolution",
-        "D_offset": "Baseline diffusion coefficient"
+        "D0": "Reference transport coefficient J₀ (labeled 'D' for compatibility)",
+        "alpha": "Transport coefficient time-scaling exponent",
+        "D_offset": "Baseline transport coefficient J_offset"
       },
       "_laminar_flow_additional": {
         "gamma0": "Reference shear rate",

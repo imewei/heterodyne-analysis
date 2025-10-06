@@ -1175,17 +1175,17 @@ class ConfigManager:
         return {
             "D0": {
                 "unit": "nm²/s",
-                "description": "Reference diffusion coefficient",
+                "description": "Reference transport coefficient J₀ (labeled 'D' for compatibility)",
                 "index": 0
             },
             "alpha": {
                 "unit": "dimensionless",
-                "description": "Diffusion power-law exponent",
+                "description": "Transport coefficient time-scaling exponent",
                 "index": 1
             },
             "D_offset": {
                 "unit": "nm²/s",
-                "description": "Baseline diffusion offset",
+                "description": "Baseline transport coefficient J_offset",
                 "index": 2
             },
             "v0": {

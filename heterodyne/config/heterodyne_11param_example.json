@@ -31,9 +31,9 @@
       "phi0"
     ],
     "parameter_descriptions": {
-      "D0": "Reference diffusion coefficient (nm²/s)",
-      "alpha": "Diffusion power-law exponent (dimensionless)",
-      "D_offset": "Baseline diffusion offset (nm²/s)",
+      "D0": "Reference transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)",
+      "alpha": "Transport coefficient time-scaling exponent (dimensionless)",
+      "D_offset": "Baseline transport coefficient J_offset [Å²/s]",
       "v0": "Reference velocity (nm/s)",
       "beta": "Velocity power-law exponent (dimensionless)",
       "v_offset": "Baseline velocity offset (nm/s)",

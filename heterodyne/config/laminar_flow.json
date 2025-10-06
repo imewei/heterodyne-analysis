@@ -114,9 +114,9 @@
       "degrees"
     ],
     "physical_meaning": {
-      "D0": "Reference diffusion coefficient",
-      "alpha": "Power-law exponent for D(t) evolution",
-      "D_offset": "Baseline diffusion coefficient",
+      "D0": "Reference transport coefficient J₀ (labeled 'D' for compatibility)",
+      "alpha": "Transport coefficient time-scaling exponent",
+      "D_offset": "Baseline transport coefficient J_offset",
       "gamma0": "Reference shear rate",
       "beta": "Power-law exponent for shear rate evolution",
       "gamma_offset": "Baseline shear rate",

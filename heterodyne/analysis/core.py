@@ -28,20 +28,24 @@ Shear Contribution:
     Φ(φ,t₁,t₂) = (1/2π) q L cos(φ₀-φ) ∫|t₂-t₁| γ̇(t')dt'
 
 Time-Dependent Transport Coefficients:
-    D(t) = D₀ t^α + D_offset    (anomalous diffusion)
+    J(t) = J₀ t^α + J_offset    (transport coefficient, labeled D for compatibility)
     γ̇(t) = γ̇₀ t^β + γ̇_offset   (time-dependent shear rate)
+
+Note: Parameters labeled "D₀", "α", "D_offset" are actually transport coefficient
+parameters (J₀, α, J_offset) following He et al. PNAS 2024 Equation S-95.
+For equilibrium Wiener processes: J = 6D where D is traditional diffusion.
 
 Parameter Models:
 Static Mode (3 parameters):
-- D₀: Reference diffusion coefficient [Å²/s]
-- α: Diffusion time-dependence exponent [-]
-- D_offset: Baseline diffusion [Å²/s]
+- D₀: Reference transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
+- α: Transport coefficient time-scaling exponent [-]
+- D_offset: Baseline transport coefficient J_offset [Å²/s]
 (γ̇₀, β, γ̇_offset, φ₀ = 0 - automatically set and irrelevant)
 
 Laminar Flow Mode (7 parameters):
-- D₀: Reference diffusion coefficient [Å²/s]
-- α: Diffusion time-dependence exponent [-]
-- D_offset: Baseline diffusion [Å²/s]
+- D₀: Reference transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
+- α: Transport coefficient time-scaling exponent [-]
+- D_offset: Baseline transport coefficient J_offset [Å²/s]
 - γ̇₀: Reference shear rate [s⁻¹]
 - β: Shear rate time-dependence exponent [-]
 - γ̇_offset: Baseline shear rate [s⁻¹]

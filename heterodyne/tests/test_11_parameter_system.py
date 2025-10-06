@@ -88,9 +88,9 @@ class Test11ParameterDefaults:
     def test_parameter_names_metadata(self):
         """Test parameter names and units."""
         param_metadata = {
-            "D0": {"unit": "nm²/s", "description": "Reference diffusion coefficient"},
-            "alpha": {"unit": "dimensionless", "description": "Diffusion power-law exponent"},
-            "D_offset": {"unit": "nm²/s", "description": "Baseline diffusion offset"},
+            "D0": {"unit": "nm²/s", "description": "Reference transport coefficient J₀ (labeled 'D' for compatibility)"},
+            "alpha": {"unit": "dimensionless", "description": "Transport coefficient time-scaling exponent"},
+            "D_offset": {"unit": "nm²/s", "description": "Baseline transport coefficient J_offset"},
             "v0": {"unit": "nm/s", "description": "Reference velocity"},
             "beta": {"unit": "dimensionless", "description": "Velocity power-law exponent"},
             "v_offset": {"unit": "nm/s", "description": "Baseline velocity offset"},

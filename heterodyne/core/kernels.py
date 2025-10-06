@@ -884,23 +884,26 @@ compute_sinc_squared_numba = compute_sinc_squared_numba_flexible
 
 def calculate_diffusion_coefficient_numba(t, D0, alpha, D_offset):
     """
-    Calculate time-dependent diffusion coefficient.
+    Calculate time-dependent transport coefficient.
+
+    Note: Function name retained for API compatibility, but calculates
+    transport coefficient J(t), not traditional diffusion coefficient D.
 
     Parameters
     ----------
     t : float or array
         Time (can be scalar or array)
     D0 : float
-        Reference diffusion coefficient
+        Reference transport coefficient J₀ (labeled 'D0' for compatibility)
     alpha : float
-        Time-dependence exponent
+        Transport coefficient time-scaling exponent
     D_offset : float
-        Baseline diffusion
+        Baseline transport coefficient J_offset
 
     Returns
     -------
     float or array
-        D(t) = D0 * t^alpha + D_offset
+        J(t) = J₀ * t^alpha + J_offset (labeled as D(t) for compatibility)
 
     Notes
     -----
