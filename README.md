@@ -157,34 +157,43 @@ pytest heterodyne/tests/test_time_length_calculation.py -v
 
 ## Heterodyne Model (11 Parameters)
 
-The package implements the two-component heterodyne scattering model from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) (Equations S-95 to S-98), generalized to nonequilibrium conditions with time-dependent transport coefficients.
+The package implements the **general two-component heterodyne scattering model** from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**, which uses time-dependent transport coefficients J(t) for nonequilibrium dynamics.
 
-### Model Foundation (Equation S-98)
+### Model Foundation (Equation S-95)
 
-The commonly used heterodyne equation for equilibrium systems:
+This implementation uses **Equation S-95** (general time-dependent form) with transport coefficients:
 
 ```
-g₂(q⃗,τ) = 1 + β[(1-x)²e^(-6q²Dᵣτ) + x²e^(-6q²Dₛτ) + 2x(1-x)e^(-3q²(Dᵣ+Dₛ)τ)cos(q cos(φ)𝔼[v]τ)]
+c₂(q⃗, t₁, t₂) = 1 + β/f² [
+  [xᵣ(t₁)xᵣ(t₂)]² exp(-q² ∫[t₁ to t₂] J(t) dt) +
+  [xₛ(t₁)xₛ(t₂)]² exp(-q² ∫[t₁ to t₂] J(t) dt) +
+  2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-q² ∫[t₁ to t₂] J(t) dt) cos(...)
+]
 ```
 
 where:
-- **x**: Composition fraction (sample intensity ratio)
-- **Dᵣ, Dₛ**: Diffusion coefficients for reference and sample components
-- **𝔼[v]**: Mean velocity of sample component
+- **J(t)**: Time-dependent transport coefficient [Å²/s]
+- **x_n(t)**: Time-dependent fraction of component n (reference/sample)
+- **𝔼[v(t)]**: Time-dependent mean velocity
 - **φ**: Angle between scattering vector and flow direction
-- **τ = t₂ - t₁**: Delay time
 - **β**: Contrast factor
+- **f²**: Normalization factor
 
-### Nonequilibrium Extension (11-Parameter Model)
+**Relationship to Equilibrium Form (Equation S-98):**
+For equilibrium Wiener processes, the transport coefficient reduces to J = 6D, where D is the traditional diffusion coefficient. Equation S-98 is this equilibrium simplification. This package implements the more general S-95 with time-dependent J(t).
 
-This package extends Equation S-98 to **time-dependent nonequilibrium dynamics** where transport coefficients evolve with time, capturing aging, yielding, and shear banding phenomena.
+### Nonequilibrium Implementation (11-Parameter Model)
+
+This package parameterizes J(t) as **J(t) = J₀·t^α + J_offset** to capture nonequilibrium dynamics including aging, yielding, and shear banding phenomena. Note that parameters labeled "D" in the code (D₀, α, D_offset) are actually transport coefficient parameters (J₀, α, J_offset) for historical compatibility.
 
 ### Parameters
 
-**Diffusion (3 parameters):**
-- `D₀`: Reference diffusion coefficient (nm²/s), range [0, 1000]
-- `α`: Diffusion power-law exponent (dimensionless), range [-2, 2]
-- `D_offset`: Baseline diffusion offset (nm²/s), range [-100, 100]
+**Transport Coefficients (3 parameters):**
+- `D₀`: Reference transport coefficient J₀ [Å²/s], range [1.0, 1×10⁶] (labeled "D" for historical compatibility)
+- `α`: Transport coefficient time-scaling exponent (dimensionless), range [-2, 2]
+- `D_offset`: Baseline transport coefficient J_offset [Å²/s], range [-100, 100]
+
+**Note:** For equilibrium Wiener processes, J = 6D where D is the traditional diffusion coefficient. This implementation uses J(t) directly for nonequilibrium dynamics.
 
 **Velocity (3 parameters):**
 - `v₀`: Reference velocity (nm/s), range [-10, 10]

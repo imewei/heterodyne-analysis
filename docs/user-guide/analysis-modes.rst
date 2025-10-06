@@ -6,24 +6,30 @@ The heterodyne package implements the two-component heterodyne scattering model 
 Theoretical Foundation
 ----------------------
 
-The package uses the **commonly used heterodyne equation** (Equation S-98 from He et al. PNAS 2024) for equilibrium systems:
+The package implements **Equation S-95** (general time-dependent form) from He et al. PNAS 2024, which uses transport coefficients J(t) for nonequilibrium dynamics.
 
-**Model Equation (Equation S-98)**:
+**Model Equation (Equation S-95)**:
 
 .. math::
 
-   g_2(\vec{q}, \tau) = 1 + \beta \left[(1-x)^2 e^{-6q^2 D_r \tau} + x^2 e^{-6q^2 D_s \tau} + 2x(1-x)e^{-3q^2(D_r+D_s)\tau} \cos(q \cos(\phi)\mathbb{E}[v]\tau)\right]
+   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f^2} \left[
+   [x_r(t_1)x_r(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
+   [x_s(t_1)x_s(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
+   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2) \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) \cos(...)
+   \right]
 
 where:
 
-- **x**: Composition fraction (sample intensity ratio)
-- **Dᵣ, Dₛ**: Diffusion coefficients for reference and sample components
-- **𝔼[v]**: Mean velocity of sample component
+- **J(t)**: Time-dependent transport coefficient [Å²/s]
+- **x_n(t)**: Time-dependent fraction of component n (reference/sample)
+- **𝔼[v(t)]**: Time-dependent mean velocity
 - **φ**: Angle between scattering vector and flow direction
-- **τ = t₂ - t₁**: Delay time
 - **β**: Contrast factor
+- **f²**: Normalization factor
 
-**Nonequilibrium Extension**: This package extends Equation S-98 to time-dependent nonequilibrium dynamics where transport coefficients evolve with time, capturing aging, yielding, and shear banding phenomena in soft matter systems.
+**Relationship to Equilibrium Form**: For equilibrium Wiener processes, J = 6D where D is the traditional diffusion coefficient. The "commonly used heterodyne equation" (Equation S-98) is this equilibrium simplification. This package implements the more general S-95.
+
+**Nonequilibrium Implementation**: This package parameterizes J(t) = J₀·t^α + J_offset to capture nonequilibrium dynamics including aging, yielding, and shear banding phenomena. Parameters labeled "D" (D₀, α, D_offset) are actually transport coefficient parameters (J₀, α, J_offset) for historical compatibility.
 
 **Time-Dependent Fraction**:
 
@@ -40,7 +46,7 @@ with physical constraint: :math:`0 \leq f(t) \leq 1` for all times.
 
 The model uses 11 parameters organized into four groups:
 
-**Diffusion Parameters (3)**:
+**Transport Coefficient Parameters (3)**:
 
 .. list-table::
    :widths: 15 25 15 45
@@ -53,15 +59,17 @@ The model uses 11 parameters organized into four groups:
    * - **D₀**
      - [1.0, 1×10⁶]
      - Å²/s
-     - Reference diffusion coefficient at t=1s
+     - Reference transport coefficient J₀ at t=1s (labeled "D" for historical compatibility)
    * - **α**
      - [-2.0, 2.0]
      - dimensionless
-     - Diffusion time-scaling exponent
+     - Transport coefficient time-scaling exponent
    * - **D_offset**
      - [-100, 100]
      - Å²/s
-     - Baseline diffusion contribution
+     - Baseline transport coefficient J_offset
+
+**Note**: For equilibrium Wiener processes, J = 6D where D is the traditional diffusion coefficient. This implementation uses J(t) directly for nonequilibrium dynamics.
 
 **Velocity Parameters (3)**:
 
@@ -131,19 +139,20 @@ The model uses 11 parameters organized into four groups:
 Physical Interpretation
 -----------------------
 
-**Diffusion Contribution**:
+**Transport Coefficient Contribution**:
 
-The time-dependent diffusion coefficient is:
+The time-dependent transport coefficient is:
 
 .. math::
 
-   D(t) = D_0 \times t^\alpha + D_{\text{offset}}
+   J(t) = J_0 \times t^\alpha + J_{\text{offset}}
 
 This captures:
 
-- **Anomalous diffusion**: α ≠ 0 indicates sub-diffusive (α < 0) or super-diffusive (α > 0) dynamics
-- **Aging effects**: Time-dependent dynamics in nonequilibrium systems
-- **Baseline diffusion**: Constant background diffusion contribution
+- **Anomalous transport**: α ≠ 0 indicates sub-diffusive (α < 0) or super-diffusive (α > 0) dynamics
+- **Aging effects**: Time-dependent transport in nonequilibrium systems
+- **Baseline transport**: Constant background transport contribution
+- **Equilibrium limit**: J = 6D for Wiener processes
 
 **Velocity Contribution**:
 

@@ -103,24 +103,77 @@ the **commonly used heterodyne equation** becomes:
 
 This form (Equation S-98) has been widely applied in heterodyne X-ray photon correlation spectroscopy (XPCS) studies.
 
+Package Implementation: Equation S-95 with Transport Coefficients
+-------------------------------------------------------------------
+
+What This Package Implements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This package implements **Equation S-95** (the general time-dependent two-component form), NOT the equilibrium
+Equation S-98. The key differences are:
+
+**Equation S-95 (Implemented):**
+   Uses time-dependent transport coefficients :math:`J(t)` with integrals :math:`\int J(t) dt`
+
+**Equation S-98 (Reference form):**
+   Uses equilibrium diffusion coefficients :math:`D` with :math:`J = 6D` relationship
+
+Transport Coefficient vs Diffusion Coefficient
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Transport Coefficient J(t):**
+   - General parameterization for nonequilibrium dynamics
+   - Units: [Å²/s] (same as diffusion)
+   - Direct implementation: :math:`\exp(-q^2 \int J(t) dt)`
+   - Code uses: :math:`J(t) = J_0 \cdot t^\alpha + J_{\text{offset}}`
+
+**Diffusion Coefficient D:**
+   - Traditional equilibrium concept
+   - For Wiener process: :math:`J = 6D`
+   - Equilibrium form: :math:`\exp(-6q^2 D \tau)`
+
+**Important:** Parameters labeled "D₀", "α", "D_offset" in the code are actually transport coefficient
+parameters (J₀, α, J_offset) for historical compatibility.
+
+Implementation Simplification: Single Transport Coefficient
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The full Equation S-95 allows different transport coefficients for reference and sample:
+
+.. math::
+
+   J_r(t) \neq J_s(t)
+
+This package implements a **simplified version** where both components share the same transport coefficient:
+
+.. math::
+
+   J_r(t) = J_s(t) = J(t)
+
+This means all three exponential terms use the same :math:`\exp(-q^2 \int J(t) dt)` factor,
+which is computationally efficient and appropriate for many experimental systems.
+
 11-Parameter Nonequilibrium Extension
 --------------------------------------
 
 Time-Dependent Parameterization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This package implements a generalization of Equation S-98 to **nonequilibrium conditions** where
-system parameters evolve with time. The model uses 11 parameters organized into four groups:
+As described above, this package implements **Equation S-95** with **time-dependent transport coefficients**.
+The model uses 11 parameters organized into four groups:
 
-**1. Diffusion Dynamics (3 parameters)**
+**1. Transport Coefficient Dynamics (3 parameters)**
 
 .. math::
 
-   D(t) = D_0 \cdot (t-t_0)^{\alpha} + D_{\text{offset}}
+   J(t) = J_0 \cdot (t-t_0)^{\alpha} + J_{\text{offset}}
 
-* :math:`D_0` [Å²/s]: Reference diffusion coefficient
+* :math:`J_0` [Å²/s]: Reference transport coefficient (labeled as "D₀" in code for compatibility)
 * :math:`\alpha` [dimensionless]: Time-scaling exponent
-* :math:`D_{\text{offset}}` [Å²/s]: Baseline diffusion component
+* :math:`J_{\text{offset}}` [Å²/s]: Baseline transport component (labeled as "D_offset" in code)
+
+**Note:** For equilibrium Wiener processes, :math:`J = 6D` where D is the traditional diffusion coefficient.
+This implementation uses J(t) directly for nonequilibrium dynamics.
 
 **2. Velocity Dynamics (3 parameters)**
 
@@ -149,25 +202,31 @@ with constraint :math:`0 \leq f(t) \leq 1`
 
 * :math:`\phi_0` [degrees]: Flow direction angle relative to scattering vector
 
-Nonequilibrium Correlation Function
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Nonequilibrium Correlation Function (As Implemented)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The two-time correlation function for nonequilibrium heterodyne scattering becomes:
+The implemented two-time correlation function uses **Equation S-95** with a **single transport coefficient**
+:math:`J(t)` for both components (:math:`J_r(t) = J_s(t) = J(t)`):
 
 .. math::
 
    c_2(\vec{q}, t_1, t_2) = 1 + \beta \Bigg[
-   [1-f(t_1)][1-f(t_2)] e^{-q^2 \int_{t_1}^{t_2} 6D_r(t) dt} + \\
-   f(t_1)f(t_2) e^{-q^2 \int_{t_1}^{t_2} 6D_s(t) dt} + \\
-   2\sqrt{f(t_1)f(t_2)[1-f(t_1)][1-f(t_2)]} e^{-q^2 \int_{t_1}^{t_2} 3[D_r(t)+D_s(t)] dt} \times \\
+   [1-f(t_1)][1-f(t_2)] e^{-q^2 \int_{t_1}^{t_2} J(t) dt} + \\
+   f(t_1)f(t_2) e^{-q^2 \int_{t_1}^{t_2} J(t) dt} + \\
+   2\sqrt{f(t_1)f(t_2)[1-f(t_1)][1-f(t_2)]} e^{-q^2 \int_{t_1}^{t_2} J(t) dt} \times \\
    \cos\left[q \cos(\phi_0) \int_{t_1}^{t_2} v(t) dt\right]
    \Bigg]
 
-This formulation captures:
+where :math:`J(t) = J_0 \cdot t^\alpha + J_{\text{offset}}`.
 
-* **Aging dynamics**: Power-law time dependence of transport coefficients
-* **Transient flow**: Time-evolving velocity fields
-* **Component evolution**: Dynamic changes in composition fractions
+**Key Implementation Features:**
+
+* **Transport coefficient J(t)**: Direct implementation (not 6D relationship)
+* **Single J for both components**: Computational efficiency and appropriate for many systems
+* **Time-dependent fraction**: :math:`f(t) = f_0 \cdot \exp[f_1(t - f_2)] + f_3`
+* **Aging dynamics**: Power-law time dependence of transport coefficient J(t)
+* **Transient flow**: Time-evolving velocity fields v(t)
+* **Component evolution**: Dynamic changes in composition fractions f(t)
 * **Nonequilibrium structure**: Departure from equilibrium Wiener process
 
 Physical Interpretation

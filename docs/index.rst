@@ -102,9 +102,9 @@ Core Features
 
 **11-Parameter Heterodyne Model (PNAS 2024)**
 
-* **Two-component heterodyne scattering**: Based on He et al. PNAS 2024 (Equations S-95 to S-98) with reference and sample components
-* **Nonequilibrium extension**: Time-dependent transport coefficients capturing aging, yielding, and shear banding
-* **Comprehensive parameter set**: 11 parameters covering diffusion (3), velocity (3), fraction (4), and flow angle (1)
+* **Two-component heterodyne scattering**: Implements He et al. PNAS 2024 **Equation S-95** (general time-dependent form) with transport coefficients
+* **Transport coefficient approach**: Uses J(t) directly for nonequilibrium dynamics (J = 6D for equilibrium Wiener processes)
+* **Comprehensive parameter set**: 11 parameters covering transport (3), velocity (3), fraction (4), and flow angle (1)
 * **Time-dependent fraction**: ``f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃`` with physical constraint ``0 ≤ f(t) ≤ 1``
 * **Physical constraint enforcement**: Automatic validation during optimization to ensure meaningful results
 
@@ -124,28 +124,36 @@ Core Features
 Heterodyne Model (11 Parameters)
 ---------------------------------
 
-The package implements the two-component heterodyne scattering model from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ (Equations S-95 to S-98), generalized to nonequilibrium conditions with time-dependent transport coefficients.
+The package implements the **general two-component heterodyne scattering model** from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ **Equation S-95**, which uses time-dependent transport coefficients J(t) for nonequilibrium dynamics.
 
-**Model Equation (Equation S-98):**
+**Model Equation (Equation S-95):**
 
-The commonly used heterodyne equation for equilibrium systems:
+The implementation uses Equation S-95 (general time-dependent form) with transport coefficients:
 
 .. math::
 
-   g_2(\vec{q}, \tau) = 1 + \beta \left[(1-x)^2 e^{-6q^2 D_r \tau} + x^2 e^{-6q^2 D_s \tau} + 2x(1-x)e^{-3q^2(D_r+D_s)\tau} \cos(q \cos(\phi)\mathbb{E}[v]\tau)\right]
+   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f^2} \left[
+   [x_r(t_1)x_r(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
+   [x_s(t_1)x_s(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
+   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2) \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) \cos(...)
+   \right]
 
 where:
 
-* :math:`x` - Composition fraction (sample intensity ratio)
-* :math:`D_r, D_s` - Diffusion coefficients for reference and sample components
-* :math:`\mathbb{E}[v]` - Mean velocity of sample component
+* :math:`J(t)` - Time-dependent transport coefficient [Å²/s]
+* :math:`x_n(t)` - Time-dependent fraction of component n (reference/sample)
+* :math:`\mathbb{E}[v(t)]` - Time-dependent mean velocity
 * :math:`\phi` - Angle between scattering vector and flow direction
-* :math:`\tau = t_2 - t_1` - Delay time
 * :math:`\beta` - Contrast factor
+* :math:`f^2` - Normalization factor
 
-**Nonequilibrium Extension:**
+**Relationship to Equilibrium Form (Equation S-98):**
 
-This package extends Equation S-98 to time-dependent nonequilibrium dynamics where transport coefficients evolve with time, capturing aging, yielding, and shear banding phenomena.
+For equilibrium Wiener processes, the transport coefficient reduces to J = 6D, where D is the traditional diffusion coefficient. Equation S-98 is the equilibrium simplification. This package implements the more general S-95.
+
+**Nonequilibrium Implementation:**
+
+This package parameterizes J(t) as :math:`J(t) = J_0 \cdot t^\alpha + J_{offset}` to capture nonequilibrium dynamics including aging, yielding, and shear banding phenomena. Parameters labeled "D" in the code (D₀, α, D_offset) are actually transport coefficient parameters (J₀, α, J_offset) for historical compatibility.
 
 **Parameter Categories:**
 

@@ -121,14 +121,16 @@ Python API Example (11-Parameter Heterodyne Model)
 Heterodyne Model Quick Reference
 ----------------------------------
 
-The package uses an 11-parameter two-component heterodyne scattering model based on `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ (Equations S-95 to S-98):
+The package implements **Equation S-95** (general time-dependent form) from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_, using transport coefficients J(t) for nonequilibrium dynamics:
 
 **Parameter Groups:**
 
-- **Diffusion (3)**: D₀, α, D_offset - Controls diffusive dynamics
+- **Transport Coefficients (3)**: D₀, α, D_offset - Controls transport dynamics (labeled "D" for historical compatibility; actually J₀, α, J_offset)
 - **Velocity (3)**: v₀, β, v_offset - Controls flow dynamics
 - **Fraction (4)**: f₀, f₁, f₂, f₃ - Controls time-dependent component mixing
 - **Flow Angle (1)**: φ₀ - Controls flow direction
+
+**Note**: For equilibrium Wiener processes, J = 6D where D is traditional diffusion. This implementation uses J(t) directly for nonequilibrium.
 
 **Analysis Strategy:**
 
@@ -347,15 +349,15 @@ Common First-Time Issues
    * - ``D0``
      - TruncatedNormal(μ=1e4, σ=1000.0, lower=1.0)
      - [Å²/s]
-     - Reference diffusion coefficient
+     - Reference transport coefficient J₀ (labeled "D" for compatibility)
    * - ``alpha``
      - Normal(μ=-1.5, σ=0.1)
      - [dimensionless]
-     - Time dependence exponent
+     - Transport coefficient time-scaling exponent
    * - ``D_offset``
      - Normal(μ=0.0, σ=10.0)
      - [Å²/s]
-     - Baseline diffusion component
+     - Baseline transport coefficient J_offset
    * - ``gamma_dot_t0``
      - TruncatedNormal(μ=1e-3, σ=1e-2, lower=1e-6)
      - [s⁻¹]

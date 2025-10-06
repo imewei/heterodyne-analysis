@@ -163,20 +163,26 @@ class HeterodyneAnalysisCore:
     """
     Core analysis engine for heterodyne scattering data.
 
-    Implements the two-component heterodyne scattering model from He et al. PNAS 2024
-    (https://doi.org/10.1073/pnas.2401162121, Equations S-95 to S-98), generalized
-    to nonequilibrium conditions with time-dependent transport coefficients.
+    Implements **Equation S-95** (general time-dependent two-component form) from
+    He et al. PNAS 2024 (https://doi.org/10.1073/pnas.2401162121), using time-dependent
+    transport coefficients J(t) for nonequilibrium dynamics.
 
     The model captures heterodyne scattering between reference and sample components,
-    where transport coefficients evolve with time to describe aging, yielding, and
+    where transport coefficients J(t) evolve with time to describe aging, yielding, and
     shear banding in soft matter systems.
+
+    **Implementation Notes:**
+    - Uses transport coefficients J(t) directly (not traditional diffusion coefficients D)
+    - For equilibrium Wiener processes: J = 6D
+    - Parameters labeled "D" (D₀, α, D_offset) are transport coefficient parameters (J₀, α, J_offset)
+    - Implements S-95 with J_r = J_s (single transport coefficient for both components)
 
     Key capabilities:
     - 11-parameter heterodyne model with time-dependent fraction mixing
     - Configuration-driven parameter management
     - Experimental data loading with intelligent caching
     - Optimized correlation function calculations (Numba JIT-compiled)
-    - Time-dependent diffusion, velocity, and fraction dynamics
+    - Time-dependent transport, velocity, and fraction dynamics
     """
 
     def __init__(
@@ -1093,27 +1099,33 @@ class HeterodyneAnalysisCore:
         """
         Calculate 2-component heterodyne correlation function.
 
-        Implements the heterodyne scattering model from He et al. PNAS 2024 (Equation S-98),
-        extended to time-dependent nonequilibrium conditions:
+        Implements **Equation S-95** (general time-dependent form) from He et al. PNAS 2024,
+        using transport coefficients J(t) for nonequilibrium dynamics:
 
-        g₂(q⃗,τ) = 1 + β[(1-x)²e^(-6q²Dᵣτ) + x²e^(-6q²Dₛτ) +
-                        2x(1-x)e^(-3q²(Dᵣ+Dₛ)τ)cos(q cos(φ)𝔼[v]τ)]
+        c₂(q⃗,t₁,t₂) = 1 + β/f² [
+            [xᵣ(t₁)xᵣ(t₂)]² exp(-q² ∫J(t)dt) +
+            [xₛ(t₁)xₛ(t₂)]² exp(-q² ∫J(t)dt) +
+            2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-q² ∫J(t)dt) cos(...)
+        ]
 
-        This implementation generalizes to time-dependent transport coefficients D(t), v(t),
-        and composition fraction x(t) to capture nonequilibrium dynamics.
+        **Implementation Notes:**
+        - Uses transport coefficient J(t) = J₀·t^α + J_offset
+        - For equilibrium: J = 6D (Wiener process)
+        - Parameters labeled "D" are actually J (transport coefficients)
+        - Uses single J for both components (J_r = J_s = J)
 
         Parameters
         ----------
         parameters : np.ndarray
             11-parameter array:
-            [D0, alpha, D_offset,  # diffusion params (3)
+            [D0, alpha, D_offset,  # transport coefficient params J₀, α, J_offset (3)
              v0, beta, v_offset,    # velocity params (3)
              f0, f1, f2, f3,        # fraction params (4)
              phi0]                   # flow angle (1)
         phi_angle : float
             Scattering angle in degrees
         precomputed_D_t : np.ndarray, optional
-            Pre-computed diffusion coefficient array
+            Pre-computed transport coefficient array (labeled "D" for compatibility)
         precomputed_v_t : np.ndarray, optional
             Pre-computed velocity array
 
