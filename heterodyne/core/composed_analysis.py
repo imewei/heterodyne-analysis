@@ -68,11 +68,10 @@ class ComposedHeterodyneAnalysis:
         Callable[[np.ndarray], Result[np.ndarray]]
             Validation workflow function
         """
-        # Get analysis mode to determine validation rules
+        # Get analysis mode (laminar flow)
         self.analyzer.config_manager.get_analysis_mode()
-        is_static = self.analyzer.is_static_mode()
 
-        # Build validation pipeline based on mode
+        # Build validation pipeline for laminar flow mode
         validator = ParameterValidator()
 
         # Common validations
@@ -82,13 +81,12 @@ class ComposedHeterodyneAnalysis:
             .add_range_check("alpha", -2.0, 2.0)
         )
 
-        # Mode-specific validations
-        if not is_static:  # Laminar flow mode
-            validator = (
-                validator.add_positivity_check("gamma_dot_t0")
-                .add_range_check("beta", -2.0, 2.0)
-                .add_range_check("phi0", -15.0, 15.0)
-            )
+        # Laminar flow mode validations
+        validator = (
+            validator.add_positivity_check("gamma_dot_t0")
+            .add_range_check("beta", -2.0, 2.0)
+            .add_range_check("phi0", -15.0, 15.0)
+        )
 
         def validate_parameters(params: np.ndarray) -> Result[np.ndarray]:
             """Convert array to dict and validate."""

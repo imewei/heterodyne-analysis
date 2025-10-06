@@ -304,16 +304,16 @@ class ClassicalOptimizer:
 
         # Determine analysis mode and effective parameter count
         if hasattr(self.core, "config_manager") and self.core.config_manager:
-            is_static_mode = self.core.config_manager.is_static_mode_enabled()
+            # Check for deprecated static mode in config (will raise error if found)
+            _ = self.core.config_manager.is_static_mode_enabled()
             analysis_mode = self.core.config_manager.get_analysis_mode()
             effective_param_count = (
                 self.core.config_manager.get_effective_parameter_count()
             )
         else:
-            # Fallback to core method
-            is_static_mode = getattr(self.core, "is_static_mode", lambda: False)()
-            analysis_mode = "static" if is_static_mode else "laminar_flow"
-            effective_param_count = 3 if is_static_mode else 7
+            # Fallback to laminar flow defaults
+            analysis_mode = "laminar_flow"
+            effective_param_count = 7
 
         print(f"  Analysis mode: {analysis_mode} ({effective_param_count} parameters)")
         logger.info(
@@ -346,7 +346,7 @@ class ClassicalOptimizer:
                 # Create default initial parameters based on effective parameter count
                 logger.warning("No initial parameters in config, using defaults")
                 default_params = {
-                    3: [1e-3, 0.9, 1e-4],  # Static mode defaults
+                    3: [1e-3, 0.9, 1e-4],  # Transport coefficients only
                     7: [
                         1e-3,
                         0.9,
@@ -355,7 +355,7 @@ class ClassicalOptimizer:
                         0.8,
                         0.001,
                         0.0,
-                    ],  # Laminar flow defaults
+                    ],  # Laminar flow (all 7 parameters)
                 }
                 initial_parameters = np.array(
                     default_params.get(effective_param_count, default_params[7]),
@@ -372,19 +372,20 @@ class ClassicalOptimizer:
             )
             effective_param_count = 7
 
-        if is_static_mode and len(initial_parameters) > effective_param_count:
-            # For static mode, only use transport coefficient parameters (first 3: D₀, α, D_offset)
-            initial_parameters = initial_parameters[:effective_param_count]
-            print(
-                f"  Using first {effective_param_count} parameters for static mode: {initial_parameters}"
-            )
-        elif not is_static_mode and len(initial_parameters) < effective_param_count:
-            # For laminar flow mode, ensure we have all 7 parameters
+        # Ensure we have the correct number of parameters for laminar flow
+        if len(initial_parameters) < effective_param_count:
+            # Extend with zeros if not enough parameters provided
             full_parameters = np.zeros(effective_param_count)
             full_parameters[: len(initial_parameters)] = initial_parameters
             initial_parameters = full_parameters
             print(
                 f"  Extended to {effective_param_count} parameters for laminar flow mode"
+            )
+        elif len(initial_parameters) > effective_param_count:
+            # Truncate if too many parameters provided
+            initial_parameters = initial_parameters[:effective_param_count]
+            print(
+                f"  Using first {effective_param_count} parameters: {initial_parameters}"
             )
 
         if phi_angles is None or c2_experimental is None:
@@ -1723,7 +1724,6 @@ class ClassicalOptimizer:
     def get_parameter_bounds(
         self,
         effective_param_count: int | None = None,
-        is_static_mode: bool | None = None,
     ) -> list[tuple[float, float]]:
         """
         Extract parameter bounds from configuration (unused by Nelder-Mead).
@@ -1734,18 +1734,13 @@ class ClassicalOptimizer:
         Parameters
         ----------
         effective_param_count : int, optional
-            Number of parameters to use (3 for static, 7 for laminar flow)
-        is_static_mode : bool, optional
-            Whether static mode is enabled (unused, kept for compatibility)
+            Number of parameters to use (defaults to 7 for laminar flow)
 
         Returns
         -------
         list[tuple[float, float]]
             List of (min, max) bounds for each parameter
         """
-        # Note: is_static_mode parameter is unused but kept for API
-        # compatibility
-        _ = is_static_mode  # Explicitly mark as unused for type checker
 
         bounds = []
         param_bounds = self.config.get("parameter_space", {}).get("bounds", [])

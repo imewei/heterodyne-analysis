@@ -35,14 +35,7 @@ Note: Parameters labeled "D₀", "α", "D_offset" are actually transport coeffic
 parameters (J₀, α, J_offset) following He et al. PNAS 2024 Equation S-95.
 For equilibrium Wiener processes: J = 6D where D is traditional diffusion.
 
-Parameter Models:
-Static Mode (3 parameters):
-- D₀: Reference transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
-- α: Transport coefficient time-scaling exponent [-]
-- D_offset: Baseline transport coefficient J_offset [Å²/s]
-(γ̇₀, β, γ̇_offset, φ₀ = 0 - automatically set and irrelevant)
-
-Laminar Flow Mode (7 parameters):
+Parameter Model (Laminar Flow, 7 parameters):
 - D₀: Reference transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
 - α: Transport coefficient time-scaling exponent [-]
 - D_offset: Baseline transport coefficient J_offset [Å²/s]
@@ -435,18 +428,14 @@ class HeterodyneAnalysisCore:
 
     def get_effective_parameter_count(self) -> int:
         """
-        Get the effective number of parameters based on analysis mode.
+        Get the effective number of parameters for laminar flow analysis.
 
         Returns
         -------
         int
-            Number of parameters actually used in the analysis:
-            - Static mode: 3 (transport coefficient parameters: D₀, α, D_offset)
-            - Laminar flow mode: 7 (all parameters including shear and φ₀)
+            Number of parameters used in laminar flow analysis: 7
+            (transport coefficient parameters D₀, α, D_offset + shear parameters + φ₀)
         """
-        if self.is_static_mode():
-            # Static mode: only transport coefficient parameters (D₀, α, D_offset) are meaningful
-            return self.num_diffusion_params  # 3 parameters
         # Laminar flow mode: all parameters are used
         return (
             self.num_diffusion_params + self.num_shear_rate_params + 1
@@ -454,7 +443,7 @@ class HeterodyneAnalysisCore:
 
     def get_effective_parameters(self, parameters: np.ndarray) -> np.ndarray:
         """
-        Extract only the effective parameters based on analysis mode.
+        Extract effective parameters for laminar flow analysis.
 
         Parameters
         ----------
@@ -464,20 +453,8 @@ class HeterodyneAnalysisCore:
         Returns
         -------
         np.ndarray
-            Effective parameters based on mode:
-            - Static mode: [D0, alpha, D_offset] (shear params set to 0, phi0 ignored)
-            - Laminar flow mode: all parameters as provided
+            All parameters as provided (laminar flow mode uses all 7 parameters)
         """
-        if self.is_static_mode():
-            # Return only transport coefficient parameters (D₀, α, D_offset), set others to zero
-            effective_params = np.zeros(7)  # Standard 7-parameter array
-            effective_params[: self.num_diffusion_params] = parameters[
-                : self.num_diffusion_params
-            ]
-            # Shear parameters (indices 3,4,5) remain zero
-            # phi0 (index 6) remains zero - irrelevant in static mode
-            return effective_params
-        # Return all parameters as provided
         return parameters.copy()
 
     def _apply_config_overrides(self, overrides: dict[str, Any]):
@@ -532,14 +509,6 @@ class HeterodyneAnalysisCore:
         if self.config is None:
             raise ValueError("Configuration not loaded: self.config is None.")
 
-        # Load angle configuration - skip for isotropic static mode
-        if self.config_manager.is_static_isotropic_enabled():
-            # In isotropic static mode, create a single dummy angle
-            phi_angles = np.array([0.0], dtype=np.float64)
-            num_angles = 1
-            logger.info(
-                "Isotropic static mode: Using single dummy angle (0.0°) instead of loading phi_angles_file"
-            )
         # Check for cached processed data first
         cache_template = self.config["experimental_data"]["cache_filename_template"]
         cache_file_path = self.config["experimental_data"].get("cache_file_path", ".")
@@ -822,27 +791,12 @@ class HeterodyneAnalysisCore:
                     f"Updated time_array to length {len(self.time_array)}, cleared integral cache"
                 )
 
-            # For isotropic static mode, we might have loaded multiple angles but only need one
-            if self.config_manager.is_static_isotropic_enabled():
-                logger.info(
-                    "Isotropic static mode: Using first correlation matrix for dummy angle"
+            # Ensure we have the expected number of angles
+            if c2_experimental.shape[0] != num_angles:
+                logger.warning(
+                    f"Loaded {c2_experimental.shape[0]} angles, expected {num_angles}. "
+                    f"Using loaded data dimensions."
                 )
-                # Create single-angle array for isotropic mode
-                isotropic_data = np.zeros(
-                    (1, c2_experimental.shape[1], c2_experimental.shape[2]),
-                    dtype=np.float64,
-                )
-                isotropic_data[0] = c2_experimental[0]  # Use first loaded matrix
-                c2_experimental = isotropic_data
-                logger.debug(f"Isotropic mode data shape: {c2_experimental.shape}")
-
-            # Ensure we have the expected number of angles for non-isotropic modes
-            if not self.config_manager.is_static_isotropic_enabled():
-                if c2_experimental.shape[0] != num_angles:
-                    logger.warning(
-                        f"Loaded {c2_experimental.shape[0]} angles, expected {num_angles}. "
-                        f"Using loaded data dimensions."
-                    )
 
             logger.info(
                 f"Successfully loaded raw data with final shape: {c2_experimental.shape}"
@@ -1263,7 +1217,6 @@ class HeterodyneAnalysisCore:
         parameters: np.ndarray,
         phi_angle: float,
         D_integral: np.ndarray,
-        is_static: bool,
         shear_params: np.ndarray,
         gamma_integral: np.ndarray | None = None,
     ) -> np.ndarray:
@@ -1271,18 +1224,16 @@ class HeterodyneAnalysisCore:
         Fast correlation function calculation with pre-computed values.
 
         This optimized version avoids redundant computations by accepting
-        pre-calculated common values.
+        pre-calculated common values for laminar flow mode.
 
         Parameters
         ----------
         parameters : np.ndarray
-            Model parameters
+            Model parameters (7 parameters for laminar flow)
         phi_angle : float
             Scattering angle in degrees
         D_integral : np.ndarray
             Pre-computed transport coefficient integral matrix ∫J(t)dt
-        is_static : bool
-            Pre-computed static mode flag
         shear_params : np.ndarray
             Pre-extracted shear parameters
 
@@ -1291,7 +1242,7 @@ class HeterodyneAnalysisCore:
         np.ndarray
             Correlation matrix c2(t1, t2)
         """
-        # Compute g1 correlation (transport coefficient contribution) - already optimized
+        # Compute g1 correlation (transport coefficient contribution)
         if NUMBA_AVAILABLE:
             g1 = compute_g1_correlation_numba(
                 D_integral, self.wavevector_q_squared_half_dt
@@ -1299,11 +1250,7 @@ class HeterodyneAnalysisCore:
         else:
             g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
 
-        # Handle shear contribution based on pre-computed static mode
-        if is_static:
-            # Static case: sinc² = 1, so c2 = g1²
-            return g1**2
-        # Laminar flow case: calculate full sinc² contribution
+        # Laminar flow: calculate full sinc² contribution
         phi_offset = parameters[-1]
 
         # Use pre-computed gamma_integral if available, otherwise compute

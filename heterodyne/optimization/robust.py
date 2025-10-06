@@ -1619,20 +1619,16 @@ class RobustHeterodyneOptimizer:
             # Get effective parameter count
             n_params = self.core.get_effective_parameter_count()
 
-            if self.core.is_static_mode():
-                # Static mode: only diffusion parameters
-                param_names = ["D0", "alpha", "D_offset"]
-            else:
-                # Laminar flow mode: all parameters
-                param_names = [
-                    "D0",
-                    "alpha",
-                    "D_offset",
-                    "gamma_dot_0",
-                    "beta",
-                    "gamma_dot_offset",
-                    "phi_0",
-                ]
+            # Laminar flow mode: all parameters
+            param_names = [
+                "D0",
+                "alpha",
+                "D_offset",
+                "gamma_dot_0",
+                "beta",
+                "gamma_dot_offset",
+                "phi_0",
+            ]
 
             bounds = []
 

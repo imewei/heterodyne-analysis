@@ -699,24 +699,21 @@ heterodyne-config --mode static_isotropic --sample protein_01
 heterodyne-config --mode laminar_flow --sample microgel
 ```
 
-### Mode Selection
+### Analysis Mode
 
-Configuration files specify analysis mode:
+The package uses **Laminar Flow Mode** (7 parameters) for all analyses:
 
 ```json
 {
   "analysis_settings": {
-    "static_mode": true/false,
-    "static_submode": "isotropic" | "anisotropic" | null
+    "model_description": {
+      "laminar_flow": "7-parameter heterodyne model with time-dependent transport coefficients and shear"
+    }
   }
 }
 ```
 
-**Rules:**
-
-- `static_mode: false` → Laminar Flow Mode (7 params)
-- `static_mode: true, static_submode: "isotropic"` → Static Isotropic (3 params)
-- `static_mode: true, static_submode: "anisotropic"` → Static Anisotropic (3 params)
+**Note:** Static modes have been removed in favor of the more general heterodyne model. If your configuration contains `static_mode` settings, please update to use laminar flow configuration.
 
 ### Subsampling Configuration
 
@@ -751,8 +748,6 @@ Configuration files specify analysis mode:
 ```json
 {
   "analysis_settings": {
-    "static_mode": false,
-    "static_submode": null,
     "angle_filtering": true,
     "optimization_method": "all"
   },
