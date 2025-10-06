@@ -433,13 +433,12 @@ class HeterodyneAnalysisCore:
         Returns
         -------
         int
-            Number of parameters used in laminar flow analysis: 7
-            (transport coefficient parameters D₀, α, D_offset + shear parameters + φ₀)
+            Number of parameters used in heterodyne analysis: 14
+            (ref transport coefficients (3) + sample transport coefficients (3) +
+             velocity (3) + fractions (4) + flow angle (1))
         """
-        # Laminar flow mode: all parameters are used
-        return (
-            self.num_diffusion_params + self.num_shear_rate_params + 1
-        )  # 7 parameters
+        # Heterodyne model: 14 parameters total
+        return 14
 
     def get_effective_parameters(self, parameters: np.ndarray) -> np.ndarray:
         """
@@ -992,34 +991,44 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            11-parameter array for heterodyne model
+            14-parameter array for heterodyne model
 
         Raises
         ------
         ValueError
             If parameters violate physical constraints
         """
-        if len(parameters) != 11:
+        if len(parameters) != 14:
             raise ValueError(
-                f"Heterodyne model requires exactly 11 parameters, got {len(parameters)}"
+                f"Heterodyne model requires exactly 14 parameters, got {len(parameters)}"
             )
 
         # Extract parameters
-        D0, alpha, D_offset = parameters[0:3]
-        v0, beta, v_offset = parameters[3:6]
-        f0, f1, f2, f3 = parameters[6:10]
-        phi0 = parameters[10]
+        D0_ref, alpha_ref, D_offset_ref = parameters[0:3]
+        D0_sample, alpha_sample, D_offset_sample = parameters[3:6]
+        v0, beta, v_offset = parameters[6:9]
+        f0, f1, f2, f3 = parameters[9:13]
+        phi0 = parameters[13]
 
-        # Diffusion constraints
-        if D0 < 0:
-            raise ValueError(f"D0 must be non-negative, got {D0}")
-        if not (-2.0 <= alpha <= 2.0):
+        # Reference diffusion constraints
+        if D0_ref < 0:
+            raise ValueError(f"D0_ref must be non-negative, got {D0_ref}")
+        if not (-2.0 <= alpha_ref <= 2.0):
             raise ValueError(
-                f"Power-law exponent alpha must be in [-2, 2], got {alpha}"
+                f"Power-law exponent alpha_ref must be in [-2, 2], got {alpha_ref}"
             )
-        # D_offset can be negative in some models (allow broader range)
-        if not (-100 <= D_offset <= 100):
-            raise ValueError(f"D_offset must be in [-100, 100], got {D_offset}")
+        if not (-100 <= D_offset_ref <= 100):
+            raise ValueError(f"D_offset_ref must be in [-100, 100], got {D_offset_ref}")
+
+        # Sample diffusion constraints
+        if D0_sample < 0:
+            raise ValueError(f"D0_sample must be non-negative, got {D0_sample}")
+        if not (-2.0 <= alpha_sample <= 2.0):
+            raise ValueError(
+                f"Power-law exponent alpha_sample must be in [-2, 2], got {alpha_sample}"
+            )
+        if not (-100 <= D_offset_sample <= 100):
+            raise ValueError(f"D_offset_sample must be in [-100, 100], got {D_offset_sample}")
 
         # Velocity constraints (less strict - can be negative for flow direction)
         if not (-2.0 <= beta <= 2.0):
@@ -1050,6 +1059,47 @@ class HeterodyneAnalysisCore:
                 f"Flow angle phi0 should be in [-360, 360] degrees, got {phi0}"
             )
 
+    def _compute_g1_from_diffusion_params(
+        self,
+        diffusion_params: np.ndarray,
+        param_hash_suffix: str = "",
+    ) -> np.ndarray:
+        """
+        Compute g1 field correlation from transport coefficient parameters.
+
+        This helper function calculates the field correlation g1 from diffusion
+        (transport coefficient) parameters, used for separate reference and sample
+        components in the 14-parameter heterodyne model.
+
+        Parameters
+        ----------
+        diffusion_params : np.ndarray
+            Transport coefficient parameters [D0, alpha, D_offset]
+        param_hash_suffix : str, optional
+            Suffix for cache key to distinguish reference vs sample
+
+        Returns
+        -------
+        np.ndarray
+            Field correlation matrix g1(t1, t2)
+        """
+        # Calculate time-dependent transport coefficient J(t)
+        D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
+
+        # Create transport coefficient integral matrix ∫J(t)dt
+        cache_key = f"D_{param_hash_suffix}_{hash(tuple(diffusion_params))}"
+        D_integral = self.create_time_integral_matrix_cached(cache_key, D_t)
+
+        # Compute g1 correlation from transport coefficient
+        if NUMBA_AVAILABLE:
+            g1 = compute_g1_correlation_numba(
+                D_integral, self.wavevector_q_squared_half_dt
+            )
+        else:
+            g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
+
+        return g1
+
     def calculate_heterodyne_correlation(
         self,
         parameters: np.ndarray,
@@ -1061,28 +1111,33 @@ class HeterodyneAnalysisCore:
         Calculate 2-component heterodyne correlation function.
 
         Implements **Equation S-95** (general time-dependent form) from He et al. PNAS 2024,
-        using transport coefficients J(t) for nonequilibrium dynamics:
+        using separate transport coefficients for reference and sample components:
 
         c₂(q⃗,t₁,t₂) = 1 + β/f² [
-            [xᵣ(t₁)xᵣ(t₂)]² exp(-q² ∫J(t)dt) +
-            [xₛ(t₁)xₛ(t₂)]² exp(-q² ∫J(t)dt) +
-            2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-q² ∫J(t)dt) cos(...)
+            [xᵣ(t₁)xᵣ(t₂)]² g₁_r² +
+            [xₛ(t₁)xₛ(t₂)]² g₁_s² +
+            2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) g₁_r·g₁_s cos(...)
         ]
 
+        where:
+            g₁_r = exp(-q²/2 ∫Jᵣ(t)dt)  # Reference field correlation
+            g₁_s = exp(-q²/2 ∫Jₛ(t)dt)  # Sample field correlation
+
         **Implementation Notes:**
-        - Uses transport coefficient J(t) = J₀·t^α + J_offset
+        - Uses separate transport coefficients: Jᵣ(t) and Jₛ(t)
+        - J(t) = J₀·t^α + J_offset
         - For equilibrium: J = 6D (Wiener process)
         - Parameters labeled "D" are actually J (transport coefficients)
-        - Uses single J for both components (J_r = J_s = J)
 
         Parameters
         ----------
         parameters : np.ndarray
-            11-parameter array:
-            [D0, alpha, D_offset,  # transport coefficient params J₀, α, J_offset (3)
-             v0, beta, v_offset,    # velocity params (3)
-             f0, f1, f2, f3,        # fraction params (4)
-             phi0]                   # flow angle (1)
+            14-parameter array:
+            [D0_ref, alpha_ref, D_offset_ref,      # reference transport coefficients (3)
+             D0_sample, alpha_sample, D_offset_sample,  # sample transport coefficients (3)
+             v0, beta, v_offset,                    # velocity params (3)
+             f0, f1, f2, f3,                        # fraction params (4)
+             phi0]                                   # flow angle (1)
         phi_angle : float
             Scattering angle in degrees
         precomputed_D_t : np.ndarray, optional
@@ -1098,17 +1153,12 @@ class HeterodyneAnalysisCore:
         # Validate parameters
         self.validate_heterodyne_parameters(parameters)
 
-        # Extract 11 parameters
-        diffusion_params = parameters[0:3]  # D0, alpha, D_offset
-        velocity_params = parameters[3:6]   # v0, beta, v_offset
-        fraction_params = parameters[6:10]  # f0, f1, f2, f3
-        phi0 = parameters[10]                # flow angle
-
-        # Calculate time-dependent transport coefficient J(t)
-        if precomputed_D_t is not None:
-            D_t = precomputed_D_t
-        else:
-            D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
+        # Extract 14 parameters
+        diffusion_params_ref = parameters[0:3]      # D0_ref, alpha_ref, D_offset_ref
+        diffusion_params_sample = parameters[3:6]   # D0_sample, alpha_sample, D_offset_sample
+        velocity_params = parameters[6:9]           # v0, beta, v_offset
+        fraction_params = parameters[9:13]          # f0, f1, f2, f3
+        phi0 = parameters[13]                        # flow angle
 
         # Calculate time-dependent velocity
         if precomputed_v_t is not None:
@@ -1127,23 +1177,12 @@ class HeterodyneAnalysisCore:
         # Calculate normalization factor: f_total² = [f_s(t1)² + f_r(t1)²] × [f_s(t2)² + f_r(t2)²]
         ftotal_squared = (f1_sample**2 + f1_ref**2) * (f2_sample**2 + f2_ref**2)
 
-        # Create transport coefficient integral matrix ∫J(t)dt
-        param_hash = hash(tuple(parameters))
-        D_integral = self.create_time_integral_matrix_cached(f"D_{param_hash}", D_t)
-
-        # Compute g1 correlation (transport coefficient contribution)
-        # Both reference and sample use same transport coefficient J(t) (can be different in extended model)
-        if NUMBA_AVAILABLE:
-            g1 = compute_g1_correlation_numba(
-                D_integral, self.wavevector_q_squared_half_dt
-            )
-        else:
-            g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
-
-        g1_ref = g1  # Reference g1
-        g1_sample = g1  # Sample g1 (same for now)
+        # Compute separate g1 correlations for reference and sample components
+        g1_ref = self._compute_g1_from_diffusion_params(diffusion_params_ref, "ref")
+        g1_sample = self._compute_g1_from_diffusion_params(diffusion_params_sample, "sample")
 
         # Create velocity integral matrix
+        param_hash = hash(tuple(parameters))
         v_integral = self.create_time_integral_matrix_cached(f"v_{param_hash}", v_t)
 
         # Calculate velocity cross-correlation term

@@ -1232,7 +1232,7 @@ class ConfigManager:
 
     def get_parameter_bounds(self) -> list[tuple[float, float]]:
         """
-        Get recommended bounds for all 11 heterodyne parameters.
+        Get recommended bounds for all 14 heterodyne parameters.
 
         Returns
         -------
@@ -1240,27 +1240,72 @@ class ConfigManager:
             List of (min, max) bounds for each parameter
         """
         return [
-            (0, 1000),      # D0: positive diffusion
-            (-2, 2),        # alpha: power-law range
-            (0, 100),       # D_offset: positive offset
+            # Reference transport coefficients
+            (0, 1000),      # D0_ref: positive diffusion
+            (-2, 2),        # alpha_ref: power-law range
+            (0, 100),       # D_offset_ref: positive offset
+            # Sample transport coefficients
+            (0, 1000),      # D0_sample: positive diffusion
+            (-2, 2),        # alpha_sample: power-law range
+            (0, 100),       # D_offset_sample: positive offset
+            # Velocity parameters
             (-10, 10),      # v0: velocity (can be negative)
             (-2, 2),        # beta: power-law range
             (-1, 1),        # v_offset: small offset
+            # Fraction parameters
             (0, 1),         # f0: fraction amplitude
             (-1, 1),        # f1: exponential rate
             (0, 200),       # f2: time offset
             (0, 1),         # f3: baseline fraction
+            # Flow angle
             (-360, 360)     # phi0: angle in degrees
         ]
 
-    def get_default_11_parameters(self) -> list[float]:
+    def get_default_14_parameters(self) -> list[float]:
         """
-        Get default values for 11-parameter heterodyne model.
+        Get default values for 14-parameter heterodyne model.
+
+        For backward compatibility, initializes sample parameters to match
+        reference parameters (g1_sample = g1_ref initially).
 
         Returns
         -------
         list[float]
             Default parameter values
+        """
+        return [
+            # Reference transport coefficients
+            100.0,   # D0_ref
+            -0.5,    # alpha_ref
+            10.0,    # D_offset_ref
+            # Sample transport coefficients (initially same as reference)
+            100.0,   # D0_sample
+            -0.5,    # alpha_sample
+            10.0,    # D_offset_sample
+            # Velocity parameters
+            0.1,     # v0
+            0.0,     # beta
+            0.01,    # v_offset
+            # Fraction parameters
+            0.5,     # f0
+            0.0,     # f1
+            50.0,    # f2
+            0.3,     # f3
+            # Flow angle
+            0.0      # phi0
+        ]
+
+    def get_default_11_parameters(self) -> list[float]:
+        """
+        Get default values for legacy 11-parameter model (deprecated).
+
+        This method is kept for backward compatibility only.
+        Use get_default_14_parameters() for the current heterodyne model.
+
+        Returns
+        -------
+        list[float]
+            Default parameter values (11 parameters)
         """
         return [
             100.0,   # D0

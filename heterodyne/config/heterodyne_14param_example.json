@@ -1,0 +1,117 @@
+{
+  "description": "Example 14-parameter heterodyne configuration with separate g1_ref and g1_sample",
+  "model": "heterodyne",
+  "version": "3.0",
+
+  "initial_parameters": {
+    "values": [
+      100.0,
+      -0.5,
+      10.0,
+      100.0,
+      -0.5,
+      10.0,
+      0.1,
+      0.0,
+      0.01,
+      0.5,
+      0.0,
+      50.0,
+      0.3,
+      0.0
+    ],
+    "parameter_names": [
+      "D0_ref",
+      "alpha_ref",
+      "D_offset_ref",
+      "D0_sample",
+      "alpha_sample",
+      "D_offset_sample",
+      "v0",
+      "beta",
+      "v_offset",
+      "f0",
+      "f1",
+      "f2",
+      "f3",
+      "phi0"
+    ],
+    "parameter_descriptions": {
+      "D0_ref": "Reference transport coefficient J₀_ref [Å²/s]",
+      "alpha_ref": "Reference transport coefficient time-scaling exponent (dimensionless)",
+      "D_offset_ref": "Reference baseline transport coefficient J_offset_ref [Å²/s]",
+      "D0_sample": "Sample transport coefficient J₀_sample [Å²/s]",
+      "alpha_sample": "Sample transport coefficient time-scaling exponent (dimensionless)",
+      "D_offset_sample": "Sample baseline transport coefficient J_offset_sample [Å²/s]",
+      "v0": "Reference velocity (nm/s)",
+      "beta": "Velocity power-law exponent (dimensionless)",
+      "v_offset": "Baseline velocity offset (nm/s)",
+      "f0": "Fraction amplitude (dimensionless, 0-1)",
+      "f1": "Fraction exponential rate (1/s)",
+      "f2": "Fraction time offset (s)",
+      "f3": "Fraction baseline (dimensionless, 0-1)",
+      "phi0": "Flow direction angle (degrees)"
+    },
+    "bounds": [
+      [0, 1000],
+      [-2, 2],
+      [0, 100],
+      [0, 1000],
+      [-2, 2],
+      [0, 100],
+      [-10, 10],
+      [-2, 2],
+      [-1, 1],
+      [0, 1],
+      [-1, 1],
+      [0, 200],
+      [0, 1],
+      [-360, 360]
+    ]
+  },
+
+  "analyzer_parameters": {
+    "temporal": {
+      "dt": 0.1,
+      "start_frame": 0,
+      "end_frame": 100
+    },
+    "scattering": {
+      "wavevector_q": 0.0054
+    },
+    "geometry": {
+      "stator_rotor_gap": 2000000
+    }
+  },
+
+  "optimization_config": {
+    "classical_optimization": {
+      "methods": ["Nelder-Mead", "Powell"],
+      "options": {
+        "maxiter": 1000,
+        "ftol": 1e-6
+      }
+    },
+    "robust_optimization": {
+      "enable": true,
+      "robust_loss": "huber",
+      "huber_delta": 1.0
+    }
+  },
+
+  "output_config": {
+    "save_parameters": true,
+    "save_correlation": true,
+    "save_plots": true,
+    "plot_format": "png"
+  },
+
+  "notes": [
+    "This is the 14-parameter heterodyne model with separate g1_ref and g1_sample",
+    "Reference and sample components now have independent transport coefficients",
+    "Initialize sample parameters equal to reference parameters for backward compatibility",
+    "During optimization, sample parameters will diverge from reference as needed",
+    "Fraction parameters (f0-f3) define time-dependent sample fraction: f(t) = f0*exp(f1*(t-f2)) + f3",
+    "Ensure 0 ≤ f(t) ≤ 1 for all times by adjusting f0, f1, f2, f3"
+  ]
+}

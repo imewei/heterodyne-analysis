@@ -1,76 +1,337 @@
-  How χ²_red (Reduced Chi-Squared) is Calculated
+═══════════════════════════════════════════════════════════════════════════════
+  How χ²_red (Reduced Chi-Squared) is Calculated for Heterodyne Model
+═══════════════════════════════════════════════════════════════════════════════
 
-  Formula:
+OVERVIEW
+--------
+This package implements the 11-parameter heterodyne scattering model based on
+Equation S-95 from He et al. PNAS 2024. The chi-squared calculation assesses
+how well the two-component heterodyne model fits experimental correlation data.
 
-  χ²_red = χ² / DOF
+Model: Two-component heterodyne system (reference + sample)
+- Transport coefficient J(t) for nonequilibrium dynamics
+- Time-dependent velocity v(t) for flow effects
+- Time-dependent fraction f(t) for component mixing
+- 11 total parameters optimized simultaneously
 
-  where:
-    χ² = Σ [(y_exp - y_theory)² / σ²]
-    DOF = N_data - N_params
 
-  Step-by-Step Calculation (from heterodyne/analysis/core.py:1499-1559):
+MATHEMATICAL FORMULA
+--------------------
 
-  1. Calculate theoretical correlation function
+χ²_red = χ² / DOF
 
-  c2_theory = calculate_c2_nonequilibrium_laminar_parallel(parameters, phi_angles)
+where:
+  χ² = Σ [(y_exp - y_fitted)²]        # Sum of squared residuals
+  y_fitted = contrast × y_theory + offset  # Scaled theoretical prediction
+  DOF = N_data_points - N_params      # Degrees of freedom
 
-  2. For each angle, solve for scaling parameters
+IMPORTANT: This implementation does NOT divide by uncertainty σ² in the
+chi-squared calculation. All data points are treated with equal weight.
 
-  The theoretical model needs to be scaled to match experimental intensities:
-  # Solve: y_exp = contrast * y_theory + offset
-  # Using least-squares: minimize ||y_exp - (C*y_theory + B)||²
-  contrast, offset = solve_scaling(c2_theory, c2_experimental)
+Standard formula:  χ² = Σ [(y_exp - y_fit)² / σ²]  ← Not used here
+This implementation: χ² = Σ [(y_exp - y_fit)²]      ← Actual implementation
 
-  3. Calculate chi-squared for each angle
+The reduced chi-squared normalizes by DOF, which provides a scale-independent
+goodness-of-fit metric suitable when uncertainties are unknown or equal.
 
-  # Residuals
-  residuals = c2_experimental - (contrast * c2_theory + offset)
 
-  # Uncertainty estimate (10% of experimental std deviation by default)
-  σ = max(0.1 * std(c2_experimental), 1e-10)
+HETERODYNE CORRELATION FUNCTION (Equation S-95)
+------------------------------------------------
 
-  # Chi-squared
-  χ² = Σ(residuals² / σ²)
+The theoretical model with separate reference and sample field correlations:
 
-  4. Apply degrees of freedom correction
+c₂(q⃗,t₁,t₂) = 1 + β/f² [
+    [x_r(t₁)x_r(t₂)]² g₁_r² +
+    [x_s(t₁)x_s(t₂)]² g₁_s² +
+    2x_r(t₁)x_r(t₂)x_s(t₁)x_s(t₂) g₁_r·g₁_s cos(Φ)
+]
 
-  # Degrees of freedom
-  DOF = N_data_points - N_parameters
-  DOF = max(600×600 - 3, 1)  # For your case: 360000 - 3 = 359997
+where:
+  x_r(t) = 1 - f(t)              # Reference component fraction
+  x_s(t) = f(t)                  # Sample component fraction
+  g₁_r = exp(-q²/2 ∫Jᵣ(t)dt)    # Reference field correlation
+  g₁_s = exp(-q²/2 ∫Jₛ(t)dt)    # Sample field correlation
+  Φ = shear phase term           # Flow-induced phase shift
 
-  # Reduced chi-squared
-  χ²_red = χ² / DOF
+Time-dependent coefficients:
+  Jᵣ(t) = J₀_ref · t^α_ref + J_offset_ref         # Reference transport [Å²/s]
+  Jₛ(t) = J₀_sample · t^α_sample + J_offset_sample  # Sample transport [Å²/s]
+  v(t) = v₀ · t^β + v_offset                      # Velocity [nm/s]
+  f(t) = f₀ · exp(f₁·(t-f₂)) + f₃                # Fraction mixing [dimensionless]
 
-  5. Average across angles (for optimization)
+For equilibrium Wiener process: J = 6D (where D is traditional diffusion)
 
-  # For multiple angles, compute reduced chi-squared for each angle
-  χ²_red_per_angle = [χ²_angle / DOF_angle for each angle]
 
-  # Final value (averaged, not summed)
-  χ²_red_final = mean(χ²_red_per_angle)  # Only optimization angles
+14 MODEL PARAMETERS
+-------------------
 
-  # Uncertainty estimate
-  χ²_red_uncertainty = std(χ²_red_per_angle) / sqrt(N_angles)
+The heterodyne model uses 14 parameters organized in 5 groups:
 
-  Your Results (from log line 61-67):
-  χ²_red = 5.804371  # Final converged value
-  Parameters:
-    p0 = 17833.108367
-    p1 = -1.584158
-    p2 = 3.072937
+1. Reference Transport Coefficient Parameters (3):
+   - D0_ref (J₀_ref): Reference component transport coefficient [Å²/s]
+   - alpha_ref (α_ref): Reference transport coefficient time-scaling exponent [dimensionless]
+   - D_offset_ref (J_offset_ref): Reference baseline transport coefficient [Å²/s]
 
-  Quality Interpretation:
-  - χ²_red ≤ 2.0: Excellent fit
-  - 2.0 < χ²_red ≤ 5.0: Acceptable fit
-  - 5.0 < χ²_red ≤ 10.0: Warning (your case: 5.804)
-  - χ²_red > 10.0: Poor fit
+2. Sample Transport Coefficient Parameters (3):
+   - D0_sample (J₀_sample): Sample component transport coefficient [Å²/s]
+   - alpha_sample (α_sample): Sample transport coefficient time-scaling exponent [dimensionless]
+   - D_offset_sample (J_offset_sample): Sample baseline transport coefficient [Å²/s]
 
-  Your fit is just above the "acceptable" threshold, suggesting:
-  1. Model captures most features
-  2. Some systematic deviations remain
-  3. Noise level might be higher than estimated (10% uncertainty factor)
-  4. Possible minor model inadequacy or data quality issues
+   Note: Parameters labeled "D" for backward compatibility, but represent
+   transport coefficients J following He et al. PNAS 2024 framework.
+   Separate J_ref and J_sample allow independent dynamics for reference and sample.
 
-  The key implementation detail: uncertainty is estimated from experimental data variance (line
-  1532):
-  σ = 0.1 * std(c2_experimental)  # 10% of data std deviation
+3. Velocity Parameters (3):
+   - v0: Reference velocity [nm/s]
+   - beta (β): Velocity power-law exponent [dimensionless]
+   - v_offset: Baseline velocity offset [nm/s]
+
+4. Fraction Parameters (4):
+   - f0: Fraction amplitude [dimensionless, 0-1]
+   - f1: Fraction exponential rate [1/s]
+   - f2: Fraction time offset [s]
+   - f3: Fraction baseline [dimensionless, 0-1]
+
+   Constraint: 0 ≤ f(t) ≤ 1 for all t
+
+5. Flow Direction (1):
+   - phi0 (φ₀): Flow direction angle [degrees]
+
+
+STEP-BY-STEP CALCULATION
+-------------------------
+(from heterodyne/analysis/core.py:1436-1567)
+
+1. Validate Parameters
+
+   Function: _validate_chi_squared_parameters()
+   - Check D0 > 0 (transport coefficient must be positive)
+   - Check parameter bounds
+   - Return np.inf if invalid
+
+2. Calculate Theoretical Correlation
+
+   Function: calculate_c2_nonequilibrium_laminar_parallel(parameters, phi_angles)
+
+   For each angle:
+     a) Pre-compute time-dependent coefficients:
+        - D_t = J(t) using calculate_diffusion_coefficient_optimized()
+        - v_t = v(t) using calculate_velocity_coefficient()
+
+     b) Calculate heterodyne correlation:
+        c2_theory = calculate_heterodyne_correlation(parameters, phi_angle)
+
+        This implements Equation S-95 with:
+        - Transport coefficient integral ∫J(t)dt
+        - Velocity-dependent phase Φ
+        - Two-component mixing with fractions f(t)
+
+   Returns: c2_theory array [n_angles, n_times, n_times]
+
+3. Determine Optimization Angles
+
+   Function: _get_optimization_indices()
+   - Apply angle filtering if configured
+   - Select angles to include in optimization
+   - Typically uses all angles unless filtering specified
+
+4. Solve for Scaling Parameters (Per Angle)
+
+   Function: solve_least_squares_batch_numba()
+
+   For each angle, solve for (contrast, offset):
+     minimize: ||c2_exp - (contrast × c2_theory + offset)||²
+
+   This accounts for experimental intensity scaling differences.
+
+   Solution:
+     contrast, offset = least_squares_fit(c2_theory, c2_exp)
+
+5. Compute Chi-Squared Values (Per Angle)
+
+   Function: _compute_chi_squared_batch() using compute_chi_squared_batch_numba()
+
+   For each angle:
+     # Calculate fitted values
+     c2_fitted = contrast × c2_theory + offset
+
+     # Compute residuals
+     residuals = c2_exp - c2_fitted
+
+     # Chi-squared (sum of squared residuals)
+     χ²_angle = Σ (residuals²)
+
+   Note: NO division by σ² - equal weighting for all data points
+
+6. Calculate Degrees of Freedom
+
+   DOF = N_data_points - N_parameters
+
+   For 14-parameter heterodyne model:
+     - N_data_points = n_times × n_times (typically 600×600 = 360,000)
+     - N_parameters = 14
+     - DOF = 360,000 - 14 = 359,986
+
+7. Calculate Reduced Chi-Squared (Per Angle)
+
+   χ²_red_per_angle = χ²_angle / DOF
+
+8. Average Across Optimization Angles
+
+   Function: _calculate_final_chi_squared_results()
+
+   # Select chi-squared values for optimization angles
+   χ²_red_optimization = [χ²_red_angle for angle in optimization_indices]
+
+   # Final reduced chi-squared (MEAN, not sum)
+   χ²_red_final = mean(χ²_red_optimization)
+
+   # Uncertainty estimate (standard error)
+   χ²_red_uncertainty = std(χ²_red_optimization) / sqrt(n_optimization_angles)
+
+   # Standard deviation across angles
+   χ²_red_std = std(χ²_red_optimization)
+
+
+CHI-SQUARED COMPONENTS RETURNED
+--------------------------------
+When return_components=True, returns dictionary with:
+
+- chi_squared: Total chi-squared (sum over all angles, for compatibility)
+- reduced_chi_squared: Average reduced chi-squared (optimization angles)
+- reduced_chi_squared_uncertainty: Standard error of mean (uncertainty)
+- reduced_chi_squared_std: Standard deviation across angles
+- n_optimization_angles: Number of angles used in optimization
+- degrees_of_freedom: DOF value used
+- angle_chi_squared: List of χ² for each angle
+- angle_chi_squared_reduced: List of χ²_red for each angle
+- angle_data_points: Data points per angle
+- phi_angles: Scattering angles [degrees]
+- scaling_solutions: (contrast, offset) pairs per angle
+
+
+QUALITY INTERPRETATION
+-----------------------
+
+Reduced chi-squared thresholds (configurable in advanced_settings):
+
+  χ²_red ≤ 2.0           → EXCELLENT fit
+  2.0 < χ²_red ≤ 5.0     → ACCEPTABLE fit
+  5.0 < χ²_red ≤ 10.0    → WARNING (marginal fit)
+  χ²_red > 10.0          → POOR fit
+
+Overall quality assessment combines:
+- Overall χ²_red value
+- Per-angle χ²_red distribution
+- Fraction of angles with acceptable fit
+- Statistical outliers
+
+Example interpretation for χ²_red = 5.8:
+1. Model captures most features (above pure noise level)
+2. Some systematic deviations remain
+3. Just above "acceptable" threshold
+4. May indicate:
+   - Minor model inadequacy
+   - Higher than expected noise in data
+   - Need for more complex model features
+   - Data quality issues at specific angles
+
+
+EXAMPLE RESULTS
+---------------
+
+Typical output during optimization:
+
+Iteration 001234 [Nelder-Mead]: χ²_red = 5.804371e+00 ± 1.234567e-01
+
+Per-angle breakdown:
+  Angle 1 (φ=0.0°):   χ²_red = 5.234567e+00
+  Angle 2 (φ=36.0°):  χ²_red = 6.123456e+00
+  Angle 3 (φ=72.0°):  χ²_red = 5.567890e+00
+  ...
+
+Optimized 14 parameters:
+  D0_ref = 17833.108 Å²/s         # Reference transport coefficient J₀_ref
+  alpha_ref = -1.584              # Reference time-scaling exponent
+  D_offset_ref = 3.073 Å²/s       # Reference baseline transport coefficient
+  D0_sample = 18102.345 Å²/s      # Sample transport coefficient J₀_sample
+  alpha_sample = -1.621           # Sample time-scaling exponent
+  D_offset_sample = 3.215 Å²/s    # Sample baseline transport coefficient
+  v0 = 0.100 nm/s                 # Reference velocity
+  beta = 0.500                    # Velocity exponent
+  v_offset = 0.001 nm/s           # Velocity offset
+  f0 = 0.500                      # Fraction amplitude
+  f1 = 0.000 1/s                  # Fraction rate
+  f2 = 50.000 s                   # Fraction time offset
+  f3 = 0.300                      # Fraction baseline
+  phi0 = 0.000°                   # Flow direction
+
+
+IMPLEMENTATION NOTES
+--------------------
+
+1. Parallel Processing:
+   - calculate_c2_nonequilibrium_laminar_parallel() uses parallel angles
+   - Pre-computes D_t and v_t once for efficiency
+   - Numba JIT compilation for chi-squared batch computation
+
+2. Caching:
+   - Transport coefficient integrals ∫J(t)dt are cached
+   - Configuration validation results cached
+   - Improves performance for repeated evaluations
+
+3. Numerical Stability:
+   - Checks for NaN/Inf in theoretical predictions
+   - Returns np.inf for invalid parameter combinations
+   - Uses robust least-squares for scaling solutions
+
+4. Logging:
+   - Default: Log every 100 iterations
+   - Verbose: Log per-angle breakdown
+   - Configurable via advanced_settings/chi_squared_calculation
+
+5. Code Locations:
+   - Main function: heterodyne/analysis/core.py:1436
+   - Heterodyne correlation: heterodyne/analysis/core.py:1099
+   - Batch chi-squared: heterodyne/core/kernels.py:497
+   - Least-squares scaling: heterodyne/core/kernels.py:436
+
+
+DIFFERENCES FROM TRADITIONAL MODELS
+------------------------------------
+
+Traditional laminar flow (7-parameter):
+- Single component system
+- Simple diffusion D(t)
+- No time-dependent fractions
+
+Heterodyne model (11-parameter):
+- Two-component system (reference + sample)
+- Transport coefficient J(t) for nonequilibrium
+- Time-dependent fraction mixing f(t)
+- Richer dynamics: f(t) · g₁² · cos(Φ) terms
+
+The heterodyne model is more general and can capture:
+- Component mixing effects
+- Nonequilibrium transport dynamics
+- Time-dependent sample evolution
+- More complex correlation structures
+
+
+REFERENCES
+----------
+
+Equation S-95: He et al. "Transport coefficient approach for characterizing
+              nonequilibrium dynamics in soft matter" PNAS 2024
+              https://doi.org/10.1073/pnas.2401162121
+
+Implementation: heterodyne/analysis/core.py
+               heterodyne/core/kernels.py
+
+Documentation: docs/research/theoretical_framework.rst
+               docs/user-guide/analysis-modes.rst
+
+═══════════════════════════════════════════════════════════════════════════════
+Last Updated: 2025-10-06
+Model Version: 11-parameter heterodyne (Equation S-95)
+═══════════════════════════════════════════════════════════════════════════════
