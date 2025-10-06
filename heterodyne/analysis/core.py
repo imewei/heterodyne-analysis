@@ -1037,8 +1037,9 @@ class HeterodyneAnalysisCore:
             raise ValueError(
                 f"Power-law exponent alpha must be in [-2, 2], got {alpha}"
             )
-        if D_offset < 0:
-            raise ValueError(f"D_offset must be non-negative, got {D_offset}")
+        # D_offset can be negative in some models (allow broader range)
+        if not (-100 <= D_offset <= 100):
+            raise ValueError(f"D_offset must be in [-100, 100], got {D_offset}")
 
         # Velocity constraints (less strict - can be negative for flow direction)
         if not (-2.0 <= beta <= 2.0):
@@ -1047,8 +1048,13 @@ class HeterodyneAnalysisCore:
             )
 
         # Fraction constraints - ensure f(t) stays in [0, 1] for all times
-        # Check at several time points
-        t_check = np.linspace(self.time_abs[0], self.time_abs[-1], 100)
+        # Check at several time points (use representative range if time_abs not available)
+        if hasattr(self, 'time_abs') and self.time_abs is not None:
+            t_check = np.linspace(self.time_abs[0], self.time_abs[-1], 100)
+        else:
+            # Use default time range for validation
+            t_check = np.linspace(0, 100, 100)
+
         f_check = f0 * np.exp(f1 * (t_check - f2)) + f3
 
         if not (np.all(f_check >= 0) and np.all(f_check <= 1)):
