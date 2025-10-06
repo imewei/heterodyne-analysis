@@ -373,7 +373,7 @@ class ClassicalOptimizer:
             effective_param_count = 7
 
         if is_static_mode and len(initial_parameters) > effective_param_count:
-            # For static mode, only use diffusion parameters (first 3)
+            # For static mode, only use transport coefficient parameters (first 3: D₀, α, D_offset)
             initial_parameters = initial_parameters[:effective_param_count]
             print(
                 f"  Using first {effective_param_count} parameters for static mode: {initial_parameters}"
@@ -742,7 +742,7 @@ class ClassicalOptimizer:
             num_diffusion_params : num_diffusion_params + num_shear_params
         ]
 
-        # Check positive D0 (only if we have diffusion parameters)
+        # Check positive D0 (transport coefficient J₀, only if we have this parameter)
         if (
             validation.get("check_positive_D0", True)
             and len(diffusion_params) > 0

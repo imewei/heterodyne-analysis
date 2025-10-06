@@ -380,7 +380,7 @@ where:
 - $h$: gap between stator and rotor [Å]
 - $\\phi(t)$: angle between shear/flow direction and $\\vec{q}$ [degrees]
 - $\\dot{\\gamma}(t)$: time-dependent shear rate [s⁻¹]
-- $D(t)$: time-dependent diffusion coefficient [Å²/s]
+- $J(t)$: time-dependent transport coefficient [Å²/s] (labeled D in code)
 - $\\beta$: instrumental contrast parameter
 
 ### Analysis Modes
@@ -395,9 +395,9 @@ where:
 
 **Static Parameters (All Modes):**
 
-- $D_0$: baseline diffusion coefficient [Å²/s]
-- $\\alpha$: diffusion scaling exponent
-- $D\_{\\text{offset}}$: additive diffusion offset [Å²/s]
+- $D_0$: baseline transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
+- $\\alpha$: transport coefficient scaling exponent
+- $D\_{\\text{offset}}$: additive transport coefficient offset J_offset [Å²/s]
 
 **Flow Parameters (Laminar Flow Mode):**
 

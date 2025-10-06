@@ -113,12 +113,15 @@ def _create_time_integral_matrix_impl(time_dependent_array):
 
 def _calculate_diffusion_coefficient_impl(time_array, D0, alpha, D_offset):
     """
-    Calculate time-dependent diffusion coefficient.
+    Calculate time-dependent transport coefficient J(t).
+
+    Note: Function name retained for API compatibility. Calculates transport
+    coefficient following He et al. PNAS 2024 Equation S-95.
 
     OPTIMIZED VERSION: Vectorized computation replacing element-wise loop
     Expected speedup: 10-50x through NumPy vectorization
 
-    Mathematical operation: D_t[i] = max(D0 * t[i]^alpha + D_offset, 1e-10)
+    Mathematical operation: J_t[i] = max(J₀ * t[i]^alpha + J_offset, 1e-10)
 
     Vectorization strategy:
     1. Use NumPy power operation for entire array
@@ -126,10 +129,10 @@ def _calculate_diffusion_coefficient_impl(time_array, D0, alpha, D_offset):
     3. Vectorized maximum operation for clamping
 
     Special handling for negative alpha:
-    - For alpha < 0, D(t) = D0 * t^alpha + D_offset diverges as t→0
-    - Physical limit: lim(t→0) D(t) = D_offset (constant term dominates)
-    - For t=0 or very small t: D(0) = D_offset
-    - For t > threshold: D(t) = D0 * t^alpha + D_offset
+    - For alpha < 0, J(t) = J₀ * t^alpha + J_offset diverges as t→0
+    - Physical limit: lim(t→0) J(t) = J_offset (constant term dominates)
+    - For t=0 or very small t: J(0) = J_offset
+    - For t > threshold: J(t) = J₀ * t^alpha + J_offset
     """
     if alpha < 0:
         # For negative alpha, handle t=0 by taking the physical limit
@@ -193,12 +196,15 @@ def _calculate_shear_rate_impl(time_array, gamma_dot_t0, beta, gamma_dot_t_offse
 
 def _compute_g1_correlation_impl(diffusion_integral_matrix, wavevector_factor):
     """
-    Compute field correlation function g₁ from diffusion.
+    Compute field correlation function g₁ from transport coefficient.
+
+    Calculates g₁(t₁,t₂) = exp(-q²/2 ∫J(t)dt) using transport coefficient J(t)
+    following He et al. PNAS 2024 Equation S-95.
 
     OPTIMIZED VERSION: Revolutionary vectorization eliminating nested loops
     Expected speedup: 5-10x through matrix vectorization
 
-    Mathematical operation: g1[i, j] = exp(-wavevector_factor * diffusion_matrix[i, j])
+    Mathematical operation: g1[i, j] = exp(-wavevector_factor * J_integral_matrix[i, j])
 
     Vectorization strategy:
     1. Vectorized multiplication across entire matrix
@@ -731,10 +737,10 @@ def compute_g1_correlation_legacy(
     if dt == 0:
         return 1.0  # No decay at t=0
 
-    # Compute diffusion integral properly
-    # For anomalous diffusion: ∫ D(t') dt' from t1 to t2
-    # D(t) = D0 * t^alpha + D_offset
-    # Integral = D0 * (t2^(alpha+1) - t1^(alpha+1))/(alpha+1) + D_offset * (t2 - t1)
+    # Compute transport coefficient integral properly
+    # For transport coefficient: ∫ J(t') dt' from t1 to t2
+    # J(t) = J₀ * t^alpha + J_offset (labeled D in code for compatibility)
+    # Integral = J₀ * (t2^(alpha+1) - t1^(alpha+1))/(alpha+1) + J_offset * (t2 - t1)
 
     t_min = min(t1, t2)
     t_max = max(t1, t2)
@@ -785,7 +791,7 @@ def compute_g1_correlation_legacy(
         # Combined g1 = g1_diff * g1_shear
         g1 = g1_diff * g1_shear
     else:
-        # No shear, only diffusion
+        # No shear, only transport coefficient contribution
         g1 = g1_diff
 
     return float(g1)
@@ -823,15 +829,15 @@ def compute_sinc_squared_numba_flexible(x, prefactor=None):
 
 def compute_g1_correlation_vectorized(D_integral, wavevector_q_squared_half_dt):
     """
-    Vectorized g1 correlation calculation from pre-computed diffusion integral.
+    Vectorized g1 correlation calculation from pre-computed transport coefficient integral.
 
     This is the optimized 2-parameter version for performance-critical calculations
-    where the diffusion integral has been pre-computed.
+    where the transport coefficient integral ∫J(t)dt has been pre-computed.
 
     Parameters
     ----------
     D_integral : array_like
-        Pre-computed diffusion integral: ∫D(t')dt' from t1 to t2
+        Pre-computed transport coefficient integral: ∫J(t')dt' from t1 to t2
     wavevector_q_squared_half_dt : float
         Pre-computed factor: q²/2 * Δt
 

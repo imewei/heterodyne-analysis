@@ -441,11 +441,11 @@ class HeterodyneAnalysisCore:
         -------
         int
             Number of parameters actually used in the analysis:
-            - Static mode: 3 (only diffusion parameters: D₀, α, D_offset)
+            - Static mode: 3 (transport coefficient parameters: D₀, α, D_offset)
             - Laminar flow mode: 7 (all parameters including shear and φ₀)
         """
         if self.is_static_mode():
-            # Static mode: only diffusion parameters are meaningful
+            # Static mode: only transport coefficient parameters (D₀, α, D_offset) are meaningful
             return self.num_diffusion_params  # 3 parameters
         # Laminar flow mode: all parameters are used
         return (
@@ -469,7 +469,7 @@ class HeterodyneAnalysisCore:
             - Laminar flow mode: all parameters as provided
         """
         if self.is_static_mode():
-            # Return only diffusion parameters, set others to zero
+            # Return only transport coefficient parameters (D₀, α, D_offset), set others to zero
             effective_params = np.zeros(7)  # Standard 7-parameter array
             effective_params[: self.num_diffusion_params] = parameters[
                 : self.num_diffusion_params
@@ -908,14 +908,17 @@ class HeterodyneAnalysisCore:
     def calculate_diffusion_coefficient_optimized(
         self, params: np.ndarray
     ) -> np.ndarray:
-        """Calculate time-dependent diffusion coefficient.
+        """Calculate time-dependent transport coefficient J(t).
 
-        Ensures D(t) > 0 always by applying a minimum threshold.
+        Note: Method name retained for API compatibility. Calculates transport
+        coefficient J(t) following He et al. PNAS 2024 Equation S-95.
+
+        Ensures J(t) > 0 always by applying a minimum threshold.
 
         Special handling for negative alpha:
-        - For alpha < 0, D(t) diverges as t→0
-        - Physical limit: D(0) = D_offset
-        - For t > threshold: D(t) = D0 * t^alpha + D_offset"""
+        - For alpha < 0, J(t) diverges as t→0
+        - Physical limit: J(0) = J_offset (labeled D_offset in code)
+        - For t > threshold: J(t) = J₀ * t^alpha + J_offset"""
         D0, alpha, D_offset = params
 
         if NUMBA_AVAILABLE:
@@ -1147,7 +1150,7 @@ class HeterodyneAnalysisCore:
         fraction_params = parameters[6:10]  # f0, f1, f2, f3
         phi0 = parameters[10]                # flow angle
 
-        # Calculate time-dependent diffusion coefficient
+        # Calculate time-dependent transport coefficient J(t)
         if precomputed_D_t is not None:
             D_t = precomputed_D_t
         else:
@@ -1170,12 +1173,12 @@ class HeterodyneAnalysisCore:
         # Calculate normalization factor: f_total² = [f_s(t1)² + f_r(t1)²] × [f_s(t2)² + f_r(t2)²]
         ftotal_squared = (f1_sample**2 + f1_ref**2) * (f2_sample**2 + f2_ref**2)
 
-        # Create diffusion integral matrix
+        # Create transport coefficient integral matrix ∫J(t)dt
         param_hash = hash(tuple(parameters))
         D_integral = self.create_time_integral_matrix_cached(f"D_{param_hash}", D_t)
 
-        # Compute g1 correlation (diffusion contribution)
-        # Both reference and sample use same diffusion (can be different in extended model)
+        # Compute g1 correlation (transport coefficient contribution)
+        # Both reference and sample use same transport coefficient J(t) (can be different in extended model)
         if NUMBA_AVAILABLE:
             g1 = compute_g1_correlation_numba(
                 D_integral, self.wavevector_q_squared_half_dt
@@ -1277,7 +1280,7 @@ class HeterodyneAnalysisCore:
         phi_angle : float
             Scattering angle in degrees
         D_integral : np.ndarray
-            Pre-computed diffusion integral matrix
+            Pre-computed transport coefficient integral matrix ∫J(t)dt
         is_static : bool
             Pre-computed static mode flag
         shear_params : np.ndarray
@@ -1288,7 +1291,7 @@ class HeterodyneAnalysisCore:
         np.ndarray
             Correlation matrix c2(t1, t2)
         """
-        # Compute g1 correlation (diffusion contribution) - already optimized
+        # Compute g1 correlation (transport coefficient contribution) - already optimized
         if NUMBA_AVAILABLE:
             g1 = compute_g1_correlation_numba(
                 D_integral, self.wavevector_q_squared_half_dt
@@ -3618,11 +3621,11 @@ Validation:
         params = np.array(parameters)
 
         # Basic bounds checking (these are typical physical bounds)
-        # D0 (diffusion coefficient): should be positive and reasonable
+        # D0 (transport coefficient J₀, labeled 'D'): should be positive and reasonable
         if params[0] <= 0 or params[0] > 0.1:  # Not too large
             return False
 
-        # Alpha (diffusion exponent): typically between -1 and 1
+        # Alpha (transport coefficient exponent): typically between -1 and 1
         if params[1] < -2.0 or params[1] > 2.0:
             return False
 
