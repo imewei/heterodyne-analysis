@@ -132,7 +132,15 @@ params, results = optimizer.run_classical_optimization_optimized(
     c2_experimental=c2_data
 )
 
-print(f"D₀ = {params[0]:.3e} Å²/s")
+# Extract parameters (14 total)
+D0_ref, alpha_ref, D_offset_ref = params[0:3]
+D0_sample, alpha_sample, D_offset_sample = params[3:6]
+v0, beta, v_offset = params[6:9]
+f0, f1, f2, f3 = params[9:13]
+phi0 = params[13]
+
+print(f"D₀_ref = {D0_ref:.3e} Å²/s")
+print(f"D₀_sample = {D0_sample:.3e} Å²/s")
 print(f"χ² = {results.chi_squared:.6e}")
 ```
 
@@ -292,7 +300,9 @@ The heterodyne intensity correlation function g₂ combines separate first-order
 
 - Separate diffusion dynamics for reference and sample components
 - Time-dependent fraction evolution: f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
-- Power-law transport: D(t) = D₀ × t^α + D_offset
+- Power-law transport for both components:
+  - Reference: D_ref(t) = D₀_ref × t^(α_ref) + D_offset_ref
+  - Sample: D_sample(t) = D₀_sample × t^(α_sample) + D_offset_sample
 - Flow-induced decorrelation with angle dependence
 
 ## Frame Counting Convention
@@ -534,9 +544,9 @@ robust_result_dict = robust.optimize(
 robust_params = robust_result_dict['optimal_params']
 robust_chi2 = robust_result_dict['chi_squared']
 
-print(f"Classical D₀: {classical_params[0]:.3e} Å²/s")
+print(f"Classical D₀_ref: {classical_params[0]:.3e} Å²/s")
 print(f"Classical χ²: {classical_results.chi_squared:.6e}")
-print(f"\nRobust D₀: {robust_params[0]:.3e} Å²/s")
+print(f"\nRobust D₀_ref: {robust_params[0]:.3e} Å²/s")
 print(f"Robust χ²: {robust_chi2:.6e}")
 ```
 
@@ -648,9 +658,21 @@ The package uses the **14-parameter heterodyne model** for all analyses:
     "time_length_comment": "Calculated as end_frame - start_frame + 1 = 600"
   },
   "optimization_bounds": {
-    "D0": [1e-15, 1e-10],
-    "alpha": [0.1, 2.0],
-    "D_offset": [-1e-12, 1e-12]
+    "comment": "Simplified example - see heterodyne/config/template.json for complete 14-parameter bounds",
+    "D0_ref": [1.0, 1e6],
+    "alpha_ref": [-2.0, 2.0],
+    "D_offset_ref": [-100.0, 100.0],
+    "D0_sample": [1.0, 1e6],
+    "alpha_sample": [-2.0, 2.0],
+    "D_offset_sample": [-100.0, 100.0],
+    "v0": [-10.0, 10.0],
+    "beta": [-2.0, 2.0],
+    "v_offset": [-1.0, 1.0],
+    "f0": [0.0, 1.0],
+    "f1": [-1.0, 1.0],
+    "f2": [0.0, 200.0],
+    "f3": [0.0, 1.0],
+    "phi0": [-360.0, 360.0]
   }
 }
 ```
