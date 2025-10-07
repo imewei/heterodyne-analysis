@@ -126,7 +126,7 @@ class TestHeterodyneIntegration:
         phi_angles = np.array([0, 45, 90, 135])
 
         # Calculate for all angles
-        c2_results = core.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_results = core.calculate_c2_heterodyne_parallel(
             params, phi_angles
         )
 
@@ -257,7 +257,7 @@ class TestHeterodyneOptimizationIntegration:
 
         # Generate synthetic data
         phi_angles = np.array([0, 90])
-        c2_synthetic = core.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_synthetic = core.calculate_c2_heterodyne_parallel(
             initial_params, phi_angles
         )
 

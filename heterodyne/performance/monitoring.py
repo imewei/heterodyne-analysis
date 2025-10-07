@@ -387,7 +387,7 @@ class PerformanceMonitor:
 
         # Benchmark correlation calculation
         def correlation_benchmark():
-            return core.calculate_c2_nonequilibrium_laminar_parallel(
+            return core.calculate_c2_heterodyne_parallel(
                 test_params, test_angles
             )
 

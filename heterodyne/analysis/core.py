@@ -417,7 +417,7 @@ class HeterodyneAnalysisCore:
 
             try:
                 # Warm up the main correlation calculation
-                _ = self.calculate_c2_nonequilibrium_laminar_parallel(
+                _ = self.calculate_c2_heterodyne_parallel(
                     test_params, test_phi_angles
                 )
                 logger.debug("High-level correlation function warmed up")
@@ -1335,7 +1335,7 @@ class HeterodyneAnalysisCore:
         else:
             g1 = np.exp(-self.wavevector_q_squared_half_dt * D_integral)
 
-        # Laminar flow: calculate full sinc² contribution
+        # Heterodyne scattering: calculate sinc² contribution from shear
         phi_offset = parameters[-1]
 
         # Use pre-computed gamma_integral if available, otherwise compute
@@ -1364,13 +1364,13 @@ class HeterodyneAnalysisCore:
         # Combine contributions: c2 = (g1 × sinc²)²
         return (sinc2 * g1) ** 2
 
-    def calculate_c2_nonequilibrium_laminar_parallel(
+    def calculate_c2_heterodyne_parallel(
         self, parameters: np.ndarray, phi_angles: np.ndarray
     ) -> np.ndarray:
         """
-        Calculate heterodyne correlation function for all angles with parallel processing.
+        Calculate 2-component heterodyne correlation function for all angles with parallel processing.
 
-        Uses the 2-component heterodyne scattering model with 14 parameters.
+        Uses the heterodyne scattering model with 14 parameters (2 shear bands).
 
         Parameters
         ----------
@@ -1562,7 +1562,7 @@ class HeterodyneAnalysisCore:
                 return validation_result
 
             # Step 2: Calculate theoretical correlation
-            c2_theory = self.calculate_c2_nonequilibrium_laminar_parallel(
+            c2_theory = self.calculate_c2_heterodyne_parallel(
                 parameters, phi_angles
             )
 
@@ -3581,7 +3581,7 @@ Validation:
             logger.debug(f"Generating theoretical data for {len(phi_angles)} angles")
 
             # Call the main correlation calculation method
-            theoretical_data = self.calculate_c2_nonequilibrium_laminar_parallel(
+            theoretical_data = self.calculate_c2_heterodyne_parallel(
                 np.array(parameters),
                 phi_angles,  # type: ignore
             )

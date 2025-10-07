@@ -1062,12 +1062,16 @@ class ConfigManager:
         
         DEPRECATED: Static isotropic mode has been removed.
 
-        Returns
-        -------
-        bool
-            Always returns False (static isotropic mode no longer supported)
+        Raises
+        ------
+        ValueError
+            Always raises error - static isotropic mode no longer exists
         """
-        return False
+        raise ValueError(
+            "Static isotropic mode has been removed. "
+            "Only the 2-component heterodyne mode (14 parameters) is supported. "
+            "See migration guide for details."
+        )
 
     def is_static_anisotropic_enabled(self) -> bool:
         """
@@ -1075,12 +1079,16 @@ class ConfigManager:
         
         DEPRECATED: Static anisotropic mode has been removed.
 
-        Returns
-        -------
-        bool
-            Always returns False (static anisotropic mode no longer supported)
+        Raises
+        ------
+        ValueError
+            Always raises error - static anisotropic mode no longer exists
         """
-        return False
+        raise ValueError(
+            "Static anisotropic mode has been removed. "
+            "Only the 2-component heterodyne mode (14 parameters) is supported. "
+            "See migration guide for details."
+        )
 
     def get_analysis_mode(self) -> str:
         """

@@ -575,11 +575,8 @@ def main():
         if hasattr(args, "enable_transfer_learning") and args.enable_transfer_learning:
             logger.info("Transfer learning enabled")
 
-    # Log analysis mode selection
-    if hasattr(args, "laminar_flow") and args.laminar_flow:
-        logger.info("Command-line mode: laminar flow (7 parameters, legacy)")
-    else:
-        logger.info("Analysis mode: heterodyne (from configuration file)")
+    # Log analysis mode
+    logger.info("Analysis mode: 2-component heterodyne (14 parameters)")
 
     # Handle special plotting modes
     if args.plot_simulated_data:

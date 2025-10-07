@@ -317,7 +317,7 @@ class PerformanceProfiler:
             # Test correlation function calculation
             with self.monitor_performance("correlation_calculation"):
                 for _i in range(5):  # Multiple iterations
-                    core.calculate_c2_nonequilibrium_laminar_parallel(
+                    core.calculate_c2_heterodyne_parallel(
                         test_params, test_angles
                     )
 
