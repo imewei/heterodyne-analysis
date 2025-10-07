@@ -689,9 +689,7 @@ The package uses the **14-parameter heterodyne model** for all analyses:
 ```json
 {
   "analysis_settings": {
-    "model_description": {
-      "heterodyne": "14-parameter two-component heterodyne model with time-dependent transport and mixing"
-    }
+    "model_description": "g₂ = heterodyne correlation with separate g₁_ref and g₁_sample field correlations (He et al. PNAS 2024 Eq. S-95). 14-parameter model: 3 reference transport + 3 sample transport + 3 velocity + 4 fraction + 1 flow angle"
   }
 }
 ```

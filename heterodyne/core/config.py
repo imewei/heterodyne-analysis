@@ -135,7 +135,7 @@ class AnalysisSettings(TypedDict, total=False):
 
     static_mode: bool
     static_submode: NotRequired[str]  # "isotropic" or "anisotropic"
-    model_description: dict[str, str]
+    model_description: str
 
 
 class ExperimentalDataConfig(TypedDict, total=False):
@@ -1473,14 +1473,11 @@ class ConfigManager:
         # Provide sensible defaults
         default_settings = {
             "static_mode": False,
-            "model_description": {
-                "static_case": (
-                    "g₁(t₁,t₂) = exp(-q² ∫ᵗ²ᵗ¹ D(t)dt) = g₁_diff(t₁,t₂), g₂(t₁,t₂) = [g₁(t₁,t₂)]²"
-                ),
-                "laminar_flow_case": (
-                    "g₁(t₁,t₂) = g₁_diff(t₁,t₂) × g₁_shear(t₁,t₂) where g₁_shear = [sinc(Φ)]² and Φ = (1/2π)qL cos(φ₀-φ) ∫|t₂-t₁| γ̇(t')dt'"
-                ),
-            },
+            "model_description": (
+                "g₂ = heterodyne correlation with separate g₁_ref and g₁_sample field correlations "
+                "(He et al. PNAS 2024 Eq. S-95). 14-parameter model: 3 reference transport + 3 sample transport + "
+                "3 velocity + 4 fraction + 1 flow angle"
+            ),
         }
 
         # Merge with defaults
@@ -1521,14 +1518,11 @@ class ConfigManager:
             },
             "analysis_settings": {
                 "static_mode": False,
-                "model_description": {
-                    "static_case": (
-                        "g₁(t₁,t₂) = exp(-q² ∫ᵗ²ᵗ¹ D(t)dt) = g₁_diff(t₁,t₂), g₂(t₁,t₂) = [g₁(t₁,t₂)]²"
-                    ),
-                    "laminar_flow_case": (
-                        "g₁(t₁,t₂) = g₁_diff(t₁,t₂) × g₁_shear(t₁,t₂) where g₁_shear = [sinc(Φ)]² and Φ = (1/2π)qL cos(φ₀-φ) ∫|t₂-t₁| γ̇(t')dt'"
-                    ),
-                },
+                "model_description": (
+                    "g₂ = heterodyne correlation with separate g₁_ref and g₁_sample field correlations "
+                    "(He et al. PNAS 2024 Eq. S-95). 14-parameter model: 3 reference transport + 3 sample transport + "
+                    "3 velocity + 4 fraction + 1 flow angle"
+                ),
             },
             "initial_parameters": {
                 "values": [1324.1, -0.014, -0.674361, 0.003, -0.909, 0.0, 0.0],
