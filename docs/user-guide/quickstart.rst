@@ -148,7 +148,7 @@ Configuration Tips
 
    {
      "metadata": {
-       "config_version": "2.0",
+       "config_version": "1.0",
        "analysis_mode": "heterodyne"
      },
      "file_paths": {

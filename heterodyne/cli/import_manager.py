@@ -666,7 +666,7 @@ def _save_analysis_results(
     results = {
         "metadata": {
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "analysis_version": "2.0",
+            "analysis_version": "1.0",
             "safety_level": safety_level,
         },
         "summary": {

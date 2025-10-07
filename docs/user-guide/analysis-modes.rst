@@ -186,7 +186,7 @@ Configuration Examples
 
    {
      "metadata": {
-       "config_version": "2.0",
+       "config_version": "1.0",
        "analysis_mode": "heterodyne"
      },
      "initial_parameters": {

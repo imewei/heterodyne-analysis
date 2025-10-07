@@ -48,7 +48,7 @@ Quick Configuration
 
    {
      "metadata": {
-       "config_version": "2.0",
+       "config_version": "1.0",
        "analysis_mode": "heterodyne"
      },
      "file_paths": {
@@ -437,7 +437,7 @@ Configuration Templates
 
    {
      "metadata": {
-       "config_version": "2.0",
+       "config_version": "1.0",
        "analysis_mode": "heterodyne",
        "description": "Two-component heterodyne scattering analysis"
      },
@@ -493,7 +493,7 @@ For initial exploration with reduced complexity:
 
    {
      "metadata": {
-       "config_version": "2.0",
+       "config_version": "1.0",
        "analysis_mode": "heterodyne"
      },
      "file_paths": {

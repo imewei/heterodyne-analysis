@@ -22,7 +22,7 @@ class TestHeterodyneIntegration:
         config = {
             "description": "Test 14-parameter heterodyne configuration",
             "model": "heterodyne",
-            "version": "2.0",
+            "version": "1.0",
             "initial_parameters": {
                 "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
                           0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
@@ -198,7 +198,7 @@ class TestHeterodyneOptimizationIntegration:
         config = {
             "description": "Test optimization configuration",
             "model": "heterodyne",
-            "version": "2.0",
+            "version": "1.0",
             "initial_parameters": {
                 "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
                           0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],

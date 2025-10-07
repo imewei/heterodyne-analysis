@@ -6,9 +6,9 @@ this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2025-10-06
+## [1.0.0] - 2025-10-06
 
-### ⚠️ BREAKING CHANGES - 14-Parameter Heterodyne Model
+### Major Release - 14-Parameter Heterodyne Model
 
 This release implements the mathematically correct 14-parameter heterodyne model with separate reference and sample transport coefficients, as specified in He et al. PNAS 2024 Equation S-95.
 

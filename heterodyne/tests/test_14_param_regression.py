@@ -21,7 +21,7 @@ class Test14ParameterRegression:
         config = {
             "description": "14-parameter config with g1_ref = g1_sample initially",
             "model": "heterodyne",
-            "version": "2.0",
+            "version": "1.0",
             "initial_parameters": {
                 "values": [
                     # Reference transport
@@ -175,7 +175,7 @@ class Test14ParameterNumericalStability:
         config = {
             "description": "Numerical stability test config",
             "model": "heterodyne",
-            "version": "2.0",
+            "version": "1.0",
             "initial_parameters": {
                 "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
                           0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],

@@ -315,7 +315,7 @@ Plugins should:
 
 ## Version History
 
-### v2.0.0 (Current)
+### v1.0.0 (Current)
 
 - ✨ Complete rewrite with modular architecture
 - 🚀 10x performance improvement

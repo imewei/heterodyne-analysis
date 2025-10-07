@@ -1247,7 +1247,7 @@ def main():
             "metadata": {
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "package_root": str(args.package_root),
-                "analysis_version": "2.0",
+                "analysis_version": "1.0",
                 "safety_level": args.safety_level,
             },
             "summary": {

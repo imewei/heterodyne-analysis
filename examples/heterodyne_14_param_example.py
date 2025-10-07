@@ -39,7 +39,7 @@ def create_14param_config(output_path="heterodyne_14param_config.json"):
     config = {
         "description": "14-parameter heterodyne model with independent ref and sample",
         "model": "heterodyne",
-        "version": "2.0",
+        "version": "1.0",
         "initial_parameters": {
             "values": [
                 # Reference transport coefficients

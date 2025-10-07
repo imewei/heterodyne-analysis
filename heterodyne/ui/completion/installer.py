@@ -1053,7 +1053,7 @@ fi
     def _get_installed_details(self) -> dict[str, Any]:
         """Get details about installed completion system."""
         return {
-            "version": "2.0.0",
+            "version": "1.0.0",
             "install_date": "unknown",  # Would be stored during installation
             "config": asdict(self.config),
             "features": {
