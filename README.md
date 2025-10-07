@@ -66,7 +66,7 @@ applications to biological systems, colloids, and active matter under flow condi
 pip install heterodyne-analysis[all]
 
 # Create heterodyne configuration (14 parameters)
-cp heterodyne/config/heterodyne_11param_example.json my_config.json
+cp heterodyne/config/template.json my_config.json
 # Edit my_config.json with your experimental parameters
 
 # Run analysis
@@ -155,89 +155,6 @@ pytest -v -m "not slow"
 pytest heterodyne/tests/test_time_length_calculation.py -v
 ```
 
-## Heterodyne Model (11 Parameters)
-
-The package implements the **general two-component heterodyne scattering model** from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**, which uses time-dependent transport coefficients J(t) for nonequilibrium dynamics.
-
-### Model Foundation (Equation S-95)
-
-This implementation uses **Equation S-95** (general time-dependent form) with transport coefficients:
-
-```
-c₂(q⃗, t₁, t₂) = 1 + β/f² [
-  [xᵣ(t₁)xᵣ(t₂)]² exp(-q² ∫[t₁ to t₂] J(t) dt) +
-  [xₛ(t₁)xₛ(t₂)]² exp(-q² ∫[t₁ to t₂] J(t) dt) +
-  2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-q² ∫[t₁ to t₂] J(t) dt) cos(...)
-]
-```
-
-where:
-- **J(t)**: Time-dependent transport coefficient [Å²/s]
-- **x_n(t)**: Time-dependent fraction of component n (reference/sample)
-- **𝔼[v(t)]**: Time-dependent mean velocity
-- **φ**: Angle between scattering vector and flow direction
-- **β**: Contrast factor
-- **f²**: Normalization factor
-
-**Relationship to Equilibrium Form (Equation S-98):**
-For equilibrium Wiener processes, the transport coefficient reduces to J = 6D, where D is the traditional diffusion coefficient. Equation S-98 is this equilibrium simplification. This package implements the more general S-95 with time-dependent J(t).
-
-### Nonequilibrium Implementation (11-Parameter Model)
-
-This package parameterizes J(t) as **J(t) = J₀·t^α + J_offset** to capture nonequilibrium dynamics including aging, yielding, and shear banding phenomena. Note that parameters labeled "D" in the code (D₀, α, D_offset) are actually transport coefficient parameters (J₀, α, J_offset) for historical compatibility.
-
-### Parameters
-
-**Transport Coefficients (3 parameters):**
-- `D₀`: Reference transport coefficient J₀ [Å²/s], range [1.0, 1×10⁶] (labeled "D" for historical compatibility)
-- `α`: Transport coefficient time-scaling exponent (dimensionless), range [-2, 2]
-- `D_offset`: Baseline transport coefficient J_offset [Å²/s], range [-100, 100]
-
-**Note:** For equilibrium Wiener processes, J = 6D where D is the traditional diffusion coefficient. This implementation uses J(t) directly for nonequilibrium dynamics.
-
-**Velocity (3 parameters):**
-- `v₀`: Reference velocity (nm/s), range [-10, 10]
-- `β`: Velocity power-law exponent (dimensionless), range [-2, 2]
-- `v_offset`: Baseline velocity offset (nm/s), range [-1, 1]
-
-**Fraction (4 parameters):**
-- `f₀`: Fraction amplitude (dimensionless), range [0, 1]
-- `f₁`: Fraction exponential rate (1/s), range [-1, 1]
-- `f₂`: Fraction time offset (s), range [0, 200]
-- `f₃`: Fraction baseline (dimensionless), range [0, 1]
-
-**Flow Angle (1 parameter):**
-- `φ₀`: Flow direction angle (degrees), range [-360, 360]
-
-### Time-Dependent Fraction
-
-The sample fraction follows:
-```
-f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
-```
-
-**Constraint**: `0 ≤ f(t) ≤ 1` for all times (enforced during validation)
-
-### Example Configuration
-
-```json
-{
-  "initial_parameters": {
-    "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
-    "parameter_names": [
-      "D0", "alpha", "D_offset",
-      "v0", "beta", "v_offset",
-      "f0", "f1", "f2", "f3",
-      "phi0"
-    ]
-  },
-  "analyzer_parameters": {
-    "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
-    "scattering": {"wavevector_q": 0.0054},
-    "geometry": {"stator_rotor_gap": 2000000}
-  }
-}
-```
 
 ## Installation
 
@@ -361,33 +278,28 @@ dependencies.
 
 ## Scientific Background
 
-### Physical Model
+### Heterodyne Scattering Model
 
-The package analyzes time-dependent intensity correlation functions in the presence of
-laminar flow:
+The package implements the **14-parameter heterodyne scattering model** from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**. This model analyzes two-component heterodyne X-ray photon correlation spectroscopy (XPCS) with separate reference and sample field correlations.
 
-$$c_2(\\vec{q}, t_1, t_2) = 1 + \\beta\\left[e^{-q^2\\int J(t)dt}\\right] \\times
-\\text{sinc}^2\\left\[\\frac{1}{2\\pi} qh
-\\int\\dot{\\gamma}(t)\\cos(\\phi(t))dt\\right\]$$
+**Model Equation:**
 
-where:
+The heterodyne intensity correlation function g₂ combines separate first-order field correlations g₁_ref and g₁_sample for reference and sample components, with time-dependent fraction mixing that captures nonequilibrium dynamics.
 
-- $\\vec{q}$: scattering wavevector [Å⁻¹]
-- $h$: gap between stator and rotor [Å]
-- $\\phi(t)$: angle between shear/flow direction and $\\vec{q}$ [degrees]
-- $\\dot{\\gamma}(t)$: time-dependent shear rate [s⁻¹]
-- $J(t)$: time-dependent transport coefficient [Å²/s] (labeled D in code)
-- $\\beta$: instrumental contrast parameter
+**14-Parameter Structure:**
 
-### Heterodyne Model Parameters
+- **Reference transport** (3): D₀_ref, α_ref, D_offset_ref - Transport properties of reference component [Å²/s]
+- **Sample transport** (3): D₀_sample, α_sample, D_offset_sample - Transport properties of sample component [Å²/s]
+- **Velocity** (3): v₀, β, v_offset - Time-dependent flow velocity [nm/s]
+- **Fraction** (4): f₀, f₁, f₂, f₃ - Time-dependent mixing fraction (dimensionless)
+- **Flow angle** (1): φ₀ - Angle between flow direction and scattering vector [degrees]
 
-**14-Parameter Model:**
+**Key Features:**
 
-- **Reference transport** (3): D₀_ref, α_ref, D_offset_ref [Å²/s]
-- **Sample transport** (3): D₀_sample, α_sample, D_offset_sample [Å²/s]
-- **Velocity** (3): v₀, β, v_offset [nm/s]
-- **Fraction** (4): f₀, f₁, f₂, f₃ [dimensionless]
-- **Flow angle** (1): φ₀ [degrees]
+- Separate diffusion dynamics for reference and sample components
+- Time-dependent fraction evolution: f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
+- Power-law transport: D(t) = D₀ × t^α + D_offset
+- Flow-induced decorrelation with angle dependence
 
 ## Frame Counting Convention
 
