@@ -12,23 +12,17 @@
 
 ## Overview
 
-**heterodyne-analysis** is a research-grade Python package for analyzing heterodyne
-scattering in X-ray Photon Correlation Spectroscopy (XPCS) under nonequilibrium
-conditions. This package implements theoretical frameworks from
-[He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) for characterizing
-transport properties in flowing soft matter systems through time-dependent intensity
-correlation functions.
+**heterodyne-analysis** is a research-grade Python package for analyzing two-component heterodyne X-ray Photon Correlation Spectroscopy (XPCS) under nonequilibrium conditions. This package implements the 14-parameter heterodyne scattering model from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) (Equation S-95), which characterizes transport properties through separate reference and sample field correlations.
 
-The package provides comprehensive analysis of nonequilibrium dynamics by capturing the
-interplay between Brownian diffusion and advective shear flow in complex fluids, with
-applications to biological systems, colloids, and active matter under flow conditions.
+The package provides comprehensive analysis of nonequilibrium dynamics by modeling distinct transport behaviors in reference and sample components, with time-dependent fraction mixing that captures complex phenomena in soft matter systems, biological fluids, colloids, and active matter.
 
 ## Key Features
 
 ### Analysis Capabilities
 
-- **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne scattering with time-dependent fraction mixing
-  - **Diffusion** (3 params): D₀, α, D_offset
+- **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne with separate reference and sample correlations
+  - **Reference transport** (3 params): D₀_ref, α_ref, D_offset_ref
+  - **Sample transport** (3 params): D₀_sample, α_sample, D_offset_sample
   - **Velocity** (3 params): v₀, β, v_offset
   - **Fraction** (4 params): f₀, f₁, f₂, f₃
   - **Flow angle** (1 param): φ₀
