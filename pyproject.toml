@@ -176,10 +176,6 @@ Changelog = "https://github.com/imewei/heterodyne/blob/main/CHANGELOG.md"
 [project.scripts]
 heterodyne = "heterodyne.cli.run_heterodyne:main"
 heterodyne-config = "heterodyne.cli.create_config:main"
-heterodyne-test = "heterodyne.tests.test_runner:main"
-heterodyne-imports = "heterodyne.cli.import_manager:main"
-heterodyne-import-analyzer = "heterodyne.tests.import_analyzer:main"
-heterodyne-workflow-setup = "heterodyne.tests.import_workflow_integrator:main"
 
 # =============================================================================
 # Tool Configuration - Modern Python Toolchain
