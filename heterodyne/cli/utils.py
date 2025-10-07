@@ -145,16 +145,7 @@ def print_banner(args: argparse.Namespace) -> None:
         )
 
     # Show analysis mode
-    if args.static_isotropic:
-        print("Analysis mode:    Static isotropic (3 parameters, no angle selection)")
-    elif args.static_anisotropic:
-        print(
-            "Analysis mode:    Static anisotropic (3 parameters, with angle selection)"
-        )
-    elif args.laminar_flow:
-        print("Analysis mode:    Laminar flow (7 parameters)")
-    else:
-        print("Analysis mode:    From configuration file")
+    print("Analysis mode:    2-component heterodyne (14 parameters)")
 
     print()
     print("Starting analysis...")
@@ -207,30 +198,8 @@ def create_config_override(args: argparse.Namespace) -> dict[str, Any] | None:
     """
     config_override: dict[str, Any] | None = None
 
-    # Handle analysis mode overrides
-    if args.static_isotropic:
-        config_override = {
-            "analysis_settings": {
-                "static_mode": True,
-                "static_submode": "isotropic",
-            }
-        }
-        logger.info(
-            "Using command-line override: static isotropic mode (3 parameters, no angle selection)"
-        )
-    elif args.static_anisotropic:
-        config_override = {
-            "analysis_settings": {
-                "static_mode": True,
-                "static_submode": "anisotropic",
-            }
-        }
-        logger.info(
-            "Using command-line override: static anisotropic mode (3 parameters, with angle selection)"
-        )
-    elif args.laminar_flow:
-        config_override = {"analysis_settings": {"static_mode": False}}
-        logger.info("Using command-line override: laminar flow mode (7 parameters)")
+    # Note: Obsolete mode arguments (static_isotropic, static_anisotropic, laminar_flow)
+    # have been removed. Only heterodyne mode is supported.
 
     # Handle experimental data plotting override
     if hasattr(args, "plot_experimental_data") and args.plot_experimental_data:

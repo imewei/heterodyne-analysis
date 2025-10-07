@@ -64,20 +64,10 @@ def create_simulation_config_override(args: argparse.Namespace) -> dict:
     dict
         Configuration override dictionary
     """
-    config_override = {}
-    if args.static_isotropic:
-        config_override["analysis_settings"] = {
-            "static_mode": True,
-            "isotropic_mode": True,
-        }
-    elif args.static_anisotropic:
-        config_override["analysis_settings"] = {
-            "static_mode": True,
-            "isotropic_mode": False,
-        }
-    elif args.laminar_flow:
-        config_override["analysis_settings"] = {"static_mode": False}
-    return config_override
+    # Note: Obsolete mode arguments (static_isotropic, static_anisotropic, laminar_flow)
+    # have been removed. Only heterodyne mode is supported.
+    # Return empty dict as no overrides are needed.
+    return {}
 
 
 def initialize_analysis_core_for_simulation(args: argparse.Namespace):
@@ -524,9 +514,7 @@ def save_simulation_data(
             "contrast": args.contrast,
             "offset": args.offset,
             "phi_angles": args.phi_angles,
-            "static_isotropic": args.static_isotropic,
-            "static_anisotropic": args.static_anisotropic,
-            "laminar_flow": args.laminar_flow,
+            # Obsolete mode arguments removed (only heterodyne mode supported)
         },
         "parameters": {
             "values": initial_params.tolist(),

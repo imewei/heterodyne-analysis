@@ -9,11 +9,10 @@ from pathlib import Path
 # Configuration template directory
 CONFIG_DIR = Path(__file__).parent
 
-# Template file mapping (static modes removed in v1.0.0)
+# Template file mapping (only heterodyne mode supported)
 TEMPLATE_FILES = {
-    "laminar_flow": "laminar_flow.json",
-    "heterodyne_11param": "heterodyne_11param_example.json",
-    "template": "template.json",
+    "heterodyne": "heterodyne_14param_example.json",  # Current 14-parameter 2-component model
+    "template": "template.json",  # Generic template
 }
 
 
@@ -24,7 +23,7 @@ def get_template_path(template_name: str) -> Path:
     Parameters
     ----------
     template_name : str
-        Name of the template ('laminar_flow', 'heterodyne_11param', 'template')
+        Name of the template ('heterodyne' for 14-parameter model, or 'template' for generic)
 
     Returns
     -------
