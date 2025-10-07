@@ -11,7 +11,7 @@ CONFIG_DIR = Path(__file__).parent
 
 # Template file mapping (only heterodyne mode supported)
 TEMPLATE_FILES = {
-    "heterodyne": "heterodyne_14param_example.json",  # Current 14-parameter 2-component model
+    "heterodyne": "heterodyne_template.json",  # Current 14-parameter 2-component model
     "template": "template.json",  # Generic template
 }
 
