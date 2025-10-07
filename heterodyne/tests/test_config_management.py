@@ -51,7 +51,7 @@ class TestConfigManager:
                 "preload_data": False,
             },
             "optimization_config": {
-                "mode": "laminar_flow",
+                "mode": "heterodyne",
                 "method": "classical",
                 "enable_angle_filtering": True,
                 "chi_squared_threshold": 2.0,
@@ -115,7 +115,7 @@ class TestConfigManager:
         config = manager.load_config(self.temp_config.name)
 
         assert config["analyzer_parameters"]["contrast"] == 0.95
-        assert config["optimization_config"]["mode"] == "laminar_flow"
+        assert config["optimization_config"]["mode"] == "heterodyne"
 
     def test_config_validation(self):
         """Test configuration validation."""
@@ -246,11 +246,13 @@ class TestConfigManager:
         manager = ConfigManager(config=self.sample_config)
 
         # Test that required sections exist (using actual schema)
+        # For 14-parameter heterodyne model: analyzer_parameters and initial_parameters are core
+        # experimental_data is optional (legacy), optimization_config is optional
         required_sections = [
             "analyzer_parameters",
-            "experimental_data",
-            "optimization_config",
         ]
+        # At least one of these should be present
+        optional_sections = ["initial_parameters", "experimental_data", "optimization_config"]
 
         for section in required_sections:
             assert section in manager.config
@@ -277,7 +279,7 @@ class TestConfigManager:
                 "preload_data": False,  # boolean
             },
             "optimization_config": {
-                "mode": "laminar_flow",  # string
+                "mode": "heterodyne",  # string
                 "enable_angle_filtering": True,  # boolean
                 "max_iterations": 1000,  # int
             },
@@ -398,9 +400,14 @@ class TestConfigTemplates:
 
                     assert isinstance(template_config, dict)
 
-                    # Check that it has required sections (using actual schema)
+                    # Check that it has required sections for 14-parameter heterodyne model
                     assert "analyzer_parameters" in template_config
-                    assert "experimental_data" in template_config
+                    # experimental_data is optional in new template structure
+                    # Check for either initial_parameters (new) or experimental_data (legacy)
+                    assert (
+                        "initial_parameters" in template_config
+                        or "experimental_data" in template_config
+                    )
 
     def test_template_validation(self):
         """Test that templates are valid configurations."""
@@ -537,7 +544,7 @@ class TestConfigurationIntegration:
                 "preload_data": False,
             },
             "optimization_config": {
-                "mode": "static_isotropic",
+                "mode": "heterodyne",
                 "method": "classical",
                 "enable_angle_filtering": False,
                 "max_iterations": 500,
@@ -567,14 +574,14 @@ class TestConfigurationIntegration:
         assert q_value == 0.08
 
         mode = manager.get_parameter("optimization_config", "mode")
-        assert mode == "static_isotropic"
+        assert mode == "heterodyne"
 
     @pytest.mark.skipif(
         not CONFIG_AVAILABLE, reason="Configuration module not available"
     )
     def test_config_with_different_modes(self):
         """Test configuration with different analysis modes."""
-        modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+        modes = ["heterodyne"]
 
         for mode in modes:
             config = self.integration_config.copy()

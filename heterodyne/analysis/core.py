@@ -3683,21 +3683,6 @@ Validation:
 
         return True
 
-    def _get_analysis_mode(self) -> str:
-        """
-        Get the current analysis mode from configuration.
-
-        Returns
-        -------
-        str
-            Analysis mode ('static_isotropic', 'laminar_flow', etc.)
-        """
-        if self.config is None:
-            return "laminar_flow"  # Default mode
-
-        analysis_params = self.config.get("analyzer_parameters", {})
-        return analysis_params.get("mode", "laminar_flow")
-
     def _calculate_theoretical_correlation(self, parameters: np.ndarray) -> np.ndarray:
         """
         Calculate theoretical correlation function for given parameters.
@@ -4034,39 +4019,44 @@ Validation:
         analysis_params = self.config.get("analysis_parameters", {})
         analyzer_params = self.config.get("analyzer_parameters", {})
         mode = analysis_params.get("mode") or analyzer_params.get(
-            "mode", "laminar_flow"
+            "mode", "heterodyne"
         )
 
         # Check initial_guesses in config
         initial_guesses = self.config.get("initial_guesses", {})
 
-        if mode == "static_isotropic":
-            # 3-parameter static isotropic mode
+        if mode == "heterodyne":
+            # 14-parameter heterodyne mode (2-component model)
             params = np.array(
                 [
-                    initial_guesses.get("D0", 1e-3),
-                    initial_guesses.get("alpha", 0.9),
-                    initial_guesses.get("D_offset", 1e-4),
-                ]
-            )
-        else:
-            # 7-parameter laminar flow mode (default)
-            params = np.array(
-                [
-                    initial_guesses.get("D0", 1e-3),
-                    initial_guesses.get("alpha", 0.9),
-                    initial_guesses.get("D_offset", 1e-4),
-                    initial_guesses.get("gamma0", 0.01),
+                    # Reference component diffusion (3 params)
+                    initial_guesses.get("D0_ref", 1e-3),
+                    initial_guesses.get("alpha_ref", 0.9),
+                    initial_guesses.get("D_offset_ref", 1e-4),
+                    # Sample component diffusion (3 params)
+                    initial_guesses.get("D0_sample", 1e-3),
+                    initial_guesses.get("alpha_sample", 0.9),
+                    initial_guesses.get("D_offset_sample", 1e-4),
+                    # Velocity parameters (3 params)
+                    initial_guesses.get("v0", 0.01),
                     initial_guesses.get("beta", 0.8),
-                    initial_guesses.get("gamma_offset", 0.001),
+                    initial_guesses.get("v_offset", 0.001),
+                    # Fraction parameters (4 params)
+                    initial_guesses.get("f0", 0.5),
+                    initial_guesses.get("f1", 0.0),
+                    initial_guesses.get("f2", 50.0),
+                    initial_guesses.get("f3", 0.3),
+                    # Flow angle (1 param)
                     initial_guesses.get("phi0", 0.0),
                 ]
             )
-
-            # For static mode, zero out flow parameters
-            if mode == "static_anisotropic":
-                params[3] = 0.0  # gamma0
-                params[5] = 0.0  # gamma_offset
+        else:
+            raise ValueError(
+                f"Unsupported analysis mode: {mode}. "
+                "Only 'heterodyne' mode is supported. "
+                "For legacy configs, use the migration tool: "
+                "python -m heterodyne.core.migration"
+            )
 
         return params
 
@@ -4109,7 +4099,7 @@ Validation:
         analysis_params = self.config.get("analysis_parameters", {})
         if analysis_params:
             mode = analysis_params.get("mode")
-            valid_modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+            valid_modes = ["heterodyne"]
             if mode is not None and mode not in valid_modes:
                 raise ValueError(f"mode must be one of {valid_modes}, got {mode}")
 
@@ -4199,7 +4189,7 @@ Validation:
         Returns
         -------
         str
-            Analysis mode ('static_isotropic', 'static_anisotropic', or 'laminar_flow')
+            Analysis mode ('heterodyne')
         """
         # Check both analysis_parameters and analyzer_parameters for backward compatibility
         analysis_params = self.config.get("analysis_parameters", {})
@@ -4207,7 +4197,7 @@ Validation:
 
         # Prefer analysis_parameters if available, fallback to analyzer_parameters
         mode = analysis_params.get("mode") or analyzer_params.get(
-            "mode", "laminar_flow"
+            "mode", "heterodyne"
         )
         return mode
 

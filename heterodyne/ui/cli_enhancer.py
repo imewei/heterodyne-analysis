@@ -470,7 +470,7 @@ class CLIEnhancer:
 
         # Analysis mode selection
         mode_choice = self.prompt_user_choice(
-            "Select analysis mode", ["static", "laminar_flow"], "static"
+            "Select analysis mode", ["heterodyne"], "heterodyne"
         )
 
         config["analysis_settings"] = {"static_mode": mode_choice == "static"}

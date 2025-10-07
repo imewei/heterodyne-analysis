@@ -237,7 +237,7 @@ class ComprehensiveTestFramework:
         """Test configuration file handling and validation."""
         # Test JSON configuration handling
         test_config = {
-            "analysis_mode": "static_isotropic",
+            "analysis_mode": "heterodyne",
             "optimization_method": "classical",
             "parameters": {"tolerance": 1e-6, "max_iterations": 1000},
         }

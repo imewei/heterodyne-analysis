@@ -389,7 +389,7 @@ class TestHighComplexityFunctions:
 
             # Test with valid template name
             try:
-                create_config_from_template("static_isotropic", "test_output.json")
+                create_config_from_template("heterodyne", "test_output.json")
                 # Should create configuration or handle gracefully
             except Exception as e:
                 logger.info(f"create_config_from_template validates inputs: {e}")

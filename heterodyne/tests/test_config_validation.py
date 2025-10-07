@@ -167,8 +167,8 @@ def test_configuration_file_loading():
             },
             "experimental_data": {"data_file": "/tmp/test_data.h5", "format": "hdf5"},
             "analysis_settings": {
-                "mode": "laminar_flow",
-                "description": "Test laminar flow analysis",
+                "mode": "heterodyne",
+                "description": "Test heterodyne analysis",
             },
             "optimization_config": {
                 "classical_optimization": {"methods": ["Nelder-Mead"]},

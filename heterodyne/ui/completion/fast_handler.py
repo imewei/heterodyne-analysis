@@ -103,7 +103,7 @@ def handle_fast_completion():
                     completions = ["output/", "results/", "data/"]
 
             elif prev_word in ["--mode"]:
-                modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+                modes = ["heterodyne"]
                 if current_word:
                     modes = [m for m in modes if m.startswith(current_word)]
                 completions = modes

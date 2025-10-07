@@ -58,7 +58,7 @@ class TestRefactoredCalculateChiSquared:
                     "preload_data": False,
                 },
                 "optimization_config": {
-                    "mode": "static_isotropic",
+                    "mode": "heterodyne",
                     "method": "classical",
                     "enable_angle_filtering": False,
                     "parameter_bounds": {
@@ -232,7 +232,7 @@ class TestRefactoredRunAnalysis:
 
             # Test override creation
             override = _create_config_override(
-                static_isotropic=True, laminar_flow=False, method="classical"
+                mode="heterodyne", method="classical"
             )
 
             # Should create proper override structure

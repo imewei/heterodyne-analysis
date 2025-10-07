@@ -96,7 +96,7 @@ def sample_config():
             "sample_thickness": 1.0,
         },
         "analysis_parameters": {
-            "mode": "laminar_flow",
+            "mode": "heterodyne",
             "method": "classical",
             "enable_angle_filtering": True,
             "chi_squared_threshold": 2.0,
@@ -131,20 +131,23 @@ def sample_config():
 
 @pytest.fixture
 def static_config():
-    """Configuration for static (non-flow) analysis."""
+    """Configuration for heterodyne analysis (legacy fixture name maintained for compatibility)."""
     return {
         "experimental_parameters": {"q_value": 0.08, "contrast": 0.92, "offset": 1.0},
         "analysis_parameters": {
-            "mode": "static_isotropic",
+            "mode": "heterodyne",
             "method": "classical",
             "enable_angle_filtering": False,
             "max_iterations": 500,
             "tolerance": 1e-5,
         },
         "parameter_bounds": {
-            "D0": [1e-5, 1e-2],
-            "alpha": [0.2, 1.8],
-            "D_offset": [1e-7, 1e-4],
+            "D0_ref": [1e-5, 1e-2],
+            "alpha_ref": [0.2, 1.8],
+            "D_offset_ref": [1e-7, 1e-4],
+            "D0_sample": [1e-5, 1e-2],
+            "alpha_sample": [0.2, 1.8],
+            "D_offset_sample": [1e-7, 1e-4],
         },
     }
 

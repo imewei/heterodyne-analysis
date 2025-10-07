@@ -601,7 +601,7 @@ def get_config_flags():
 
 def get_config_mode_completions():
     """Get configuration mode completions."""
-    return ["static_isotropic", "static_anisotropic", "laminar_flow"]
+    return ["heterodyne"]
 
 def main():
     """Main completion handler."""

@@ -361,7 +361,7 @@ class CompletionEngine:
             "--method": self._complete_methods(context),
             "--config": self._complete_config_files(context),
             "--output-dir": self._complete_directories(context),
-            "--mode": ["static_isotropic", "static_anisotropic", "laminar_flow"],
+            "--mode": ["heterodyne"],
             "--dataset-size": ["small", "standard", "large"],
         }
 

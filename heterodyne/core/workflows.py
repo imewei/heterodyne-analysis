@@ -282,11 +282,11 @@ class OptimizationWorkflow:
         )
 
         # Mode-specific validations
-        if analysis_mode == "laminar_flow":
+        if analysis_mode == "heterodyne":
             validator = (
-                validator.add_positivity_check("gamma_dot_t0")
+                validator.add_positivity_check("v0")
                 .add_range_check("beta", -2.0, 2.0)
-                .add_range_check("phi0", -15.0, 15.0)
+                .add_range_check("phi0", -180.0, 180.0)
             )
 
         return validator.build_pipeline()

@@ -935,25 +935,12 @@ class ConfigManager:
         """
         Check if angle filtering is enabled in configuration.
 
-        Automatically returns False for static isotropic mode, regardless of
-        configuration setting.
-
         Returns
         -------
         bool
             True if angle filtering should be used, False otherwise
         """
-        # Always disable angle filtering for static isotropic mode
-        if self.is_static_isotropic_enabled():
-            # Warn if user explicitly enabled angle filtering but it's ignored
-            explicit_enabled = self.get_angle_filtering_config().get("enabled", True)
-            if explicit_enabled:
-                logger.debug(
-                    "Angle filtering disabled for static isotropic mode "
-                    "(ignoring configuration setting)"
-                )
-            return False
-
+        # Heterodyne mode supports angle filtering
         return bool(self.get_angle_filtering_config().get("enabled", True))
 
     def get_target_angle_ranges(self) -> list[tuple[float, float]]:

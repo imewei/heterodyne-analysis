@@ -276,23 +276,16 @@ class TestHeterodyneAnalysisCore:
         assert processed["success"]
 
     def test_static_mode_parameter_handling(self):
-        """Test parameter handling in static mode."""
+        """Test that deprecated static mode is rejected."""
         static_config = self.config_data.copy()
         # Ensure analysis_parameters key exists
         if "analysis_parameters" not in static_config:
             static_config["analysis_parameters"] = {}
         static_config["analysis_parameters"]["mode"] = "static_isotropic"
 
-        analyzer = HeterodyneAnalysisCore(config=static_config)
-
-        # In static mode, flow parameters should be fixed
-        params = analyzer._get_initial_parameters()
-
-        # Check that flow parameters are zeroed
-        if len(params) >= 7:  # Full parameter set
-            # gamma0, beta, gamma_offset should be minimal or zero
-            assert params[3] <= 1e-10  # gamma0
-            assert params[5] <= 1e-10  # gamma_offset
+        # Should raise ValueError for unsupported mode
+        with pytest.raises(ValueError, match="mode must be one of"):
+            analyzer = HeterodyneAnalysisCore(config=static_config)
 
     def test_configuration_validation(self):
         """Test configuration validation."""
@@ -528,25 +521,19 @@ class TestAnalysisCoreIntegration:
 
     @pytest.mark.skipif(not ANALYSIS_AVAILABLE, reason="Analysis core not available")
     def test_different_analysis_modes(self):
-        """Test different analysis modes."""
-        modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+        """Test heterodyne analysis mode."""
+        config = self.config_data.copy()
+        # Ensure analysis_parameters key exists
+        if "analysis_parameters" not in config:
+            config["analysis_parameters"] = {}
+        config["analysis_parameters"]["mode"] = "heterodyne"
 
-        for mode in modes:
-            config = self.config_data.copy()
-            # Ensure analysis_parameters key exists
-            if "analysis_parameters" not in config:
-                config["analysis_parameters"] = {}
-            config["analysis_parameters"]["mode"] = mode
+        analyzer = HeterodyneAnalysisCore(config=config)
+        assert analyzer._get_analysis_mode() == "heterodyne"
 
-            analyzer = HeterodyneAnalysisCore(config=config)
-            assert analyzer._get_analysis_mode() == mode
-
-            # Test parameter count for each mode
-            params = analyzer._get_initial_parameters()
-            if mode == "static_isotropic":
-                assert len(params) >= 3  # At least D0, alpha, D_offset
-            elif mode == "laminar_flow":
-                assert len(params) == 7  # All parameters
+        # Test parameter count for heterodyne mode
+        params = analyzer._get_initial_parameters()
+        assert len(params) == 14  # 14-parameter heterodyne model
 
     @pytest.mark.skipif(not ANALYSIS_AVAILABLE, reason="Analysis core not available")
     def test_robustness_to_noise(self):

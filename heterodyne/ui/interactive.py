@@ -357,8 +357,8 @@ class InteractiveInterface:
         # Analysis mode selection
         mode_choice = Prompt.ask(
             "Analysis mode",
-            choices=["static_isotropic", "static_anisotropic", "laminar_flow"],
-            default="static_anisotropic",
+            choices=["heterodyne"],
+            default="heterodyne",
         )
 
         if "analysis_settings" not in config:
@@ -575,8 +575,8 @@ class InteractiveInterface:
         )
 
         analysis_mode = widgets.Dropdown(
-            options=["static_isotropic", "static_anisotropic", "laminar_flow"],
-            value="static_anisotropic",
+            options=["heterodyne"],
+            value="heterodyne",
             description="Analysis Mode:",
             style={"description_width": "initial"},
         )

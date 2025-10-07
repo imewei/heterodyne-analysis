@@ -111,7 +111,7 @@ class TestClassicalOptimizationPerformance:
                 "offset": 1.0,
             },
             "analysis_parameters": {
-                "mode": "laminar_flow",
+                "mode": "heterodyne",
                 "method": "classical",
                 "max_iterations": 1000,
                 "tolerance": 1e-6,
@@ -405,7 +405,7 @@ class TestRobustOptimizationPerformance:
                 "offset": 1.0,
             },
             "analysis_parameters": {
-                "mode": "laminar_flow",
+                "mode": "heterodyne",
                 "method": "robust",
                 "robust_method": "wasserstein_dro",
                 "uncertainty_budget": 0.1,
@@ -648,7 +648,7 @@ class TestOptimizationMemoryProfiling:
                         "offset": 1.0,
                     },
                     "analysis_parameters": {
-                        "mode": "static_isotropic",
+                        "mode": "heterodyne",
                         "method": "classical",
                     },
                     "parameter_bounds": {
@@ -715,7 +715,7 @@ class TestOptimizationMemoryProfiling:
                     "contrast": 0.95,
                     "offset": 1.0,
                 },
-                "analysis_parameters": {"mode": "laminar_flow", "method": "classical"},
+                "analysis_parameters": {"mode": "heterodyne", "method": "classical"},
                 "parameter_bounds": {
                     "D0": [1e-6, 1e-1],
                     "alpha": [0.1, 2.0],
@@ -782,7 +782,7 @@ class TestPerformanceRegression:
                 "contrast": 0.95,
                 "offset": 1.0,
             },
-            "analysis_parameters": {"mode": "static_isotropic", "method": "classical"},
+            "analysis_parameters": {"mode": "heterodyne", "method": "classical"},
             "parameter_bounds": {
                 "D0": [1e-6, 1e-1],
                 "alpha": [0.1, 2.0],

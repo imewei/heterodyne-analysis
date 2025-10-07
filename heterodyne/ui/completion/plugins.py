@@ -207,7 +207,7 @@ class HeterodyneCommandPlugin(CompletionPlugin):
         ]
 
         if context.previous_word == "--mode":
-            modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+            modes = ["heterodyne"]
             matching = [m for m in modes if m.startswith(context.current_word)]
             if matching:
                 return [

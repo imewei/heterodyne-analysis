@@ -1348,24 +1348,10 @@ class RobustHeterodyneOptimizer:
             Theoretical correlation function
         """
         try:
-            # Check if we're in static isotropic mode
-            if (
-                hasattr(self.core, "config_manager")
-                and self.core.config_manager.is_static_isotropic_enabled()
-            ):
-                # In static isotropic mode, we work with a single dummy angle
-                # The core will handle this appropriately
-                logger.debug("Computing correlation for static isotropic mode")
-                # Use the standard calculation method - it already handles
-                # static isotropic
-                c2_theory = self.core.calculate_c2_nonequilibrium_laminar_parallel(
-                    theta, phi_angles
-                )
-            else:
-                # Standard calculation for other modes
-                c2_theory = self.core.calculate_c2_nonequilibrium_laminar_parallel(
-                    theta, phi_angles
-                )
+            # Calculate theoretical correlation for heterodyne mode
+            c2_theory = self.core.calculate_c2_nonequilibrium_laminar_parallel(
+                theta, phi_angles
+            )
             return c2_theory
         except Exception as e:
             logger.error(f"Error computing theoretical correlation: {e}")

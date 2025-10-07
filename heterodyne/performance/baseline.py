@@ -815,8 +815,7 @@ class PerformanceProfiler:
                 "n_time_steps": 50,
             },
             "analysis_settings": {
-                "enable_static_isotropic": True,
-                "enable_laminar_flow": False,
+                "mode": "heterodyne",
             },
             "performance_settings": {
                 "enable_parallel_processing": True,

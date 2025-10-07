@@ -287,14 +287,55 @@ Detected Version: {version}
 """
 
         if version == "11-param-heterodyne":
-            guide += "✅ Already using 11-parameter heterodyne model. No migration needed.\n"
+            params = config["initial_parameters"]["values"]
+            new_params = HeterodyneMigration.migrate_11_to_14_parameters(params)
+
+            guide += f"""
+Migration Required: 11-parameter → 14-parameter heterodyne
+
+OLD PARAMETERS (11 - single g1):
+  Diffusion (3): D0 = {params[0]}, alpha = {params[1]}, D_offset = {params[2]}
+  Velocity (3): v0 = {params[3]}, beta = {params[4]}, v_offset = {params[5]}
+  Fraction (4): f0 = {params[6]}, f1 = {params[7]}, f2 = {params[8]}, f3 = {params[9]}
+  Flow angle (1): phi0 = {params[10]}
+
+NEW PARAMETERS (14 - separate g1_ref and g1_sample):
+  Reference Diffusion (3):
+    [0] D0_ref = {new_params[0]} (= old D0)
+    [1] alpha_ref = {new_params[1]} (= old alpha)
+    [2] D_offset_ref = {new_params[2]} (= old D_offset)
+
+  Sample Diffusion (3):
+    [3] D0_sample = {new_params[3]} (= old D0, initially same as reference)
+    [4] alpha_sample = {new_params[4]} (= old alpha, initially same as reference)
+    [5] D_offset_sample = {new_params[5]} (= old D_offset, initially same as reference)
+
+  Velocity (3):
+    [6] v0 = {new_params[6]} (unchanged)
+    [7] beta = {new_params[7]} (unchanged)
+    [8] v_offset = {new_params[8]} (unchanged)
+
+  Fraction (4):
+    [9] f0 = {new_params[9]} (unchanged)
+    [10] f1 = {new_params[10]} (unchanged)
+    [11] f2 = {new_params[11]} (unchanged)
+    [12] f3 = {new_params[12]} (unchanged)
+
+  Flow angle (1):
+    [13] phi0 = {new_params[13]} (unchanged)
+
+To migrate automatically:
+  python -m heterodyne.core.migration {config_path} output.json
+"""
 
         elif version == "7-param-laminar":
             params = config["initial_parameters"]["values"]
-            new_params = HeterodyneMigration.migrate_7_to_11_parameters(params)
+            # Chain migration: 7→11→14
+            params_11 = HeterodyneMigration.migrate_7_to_11_parameters(params)
+            new_params = HeterodyneMigration.migrate_11_to_14_parameters(params_11)
 
             guide += f"""
-Migration Required: 7-parameter → 11-parameter heterodyne
+Migration Required: 7-parameter → 14-parameter heterodyne
 
 OLD PARAMETERS (7):
   [0] D0 = {params[0]}
@@ -305,27 +346,33 @@ OLD PARAMETERS (7):
   [5] gamma_dot_t_offset = {params[5]}
   [6] phi0 = {params[6]}
 
-NEW PARAMETERS (11):
-  Diffusion (3):
-    [0] D0 = {new_params[0]} (unchanged)
-    [1] alpha = {new_params[1]} (unchanged)
-    [2] D_offset = {new_params[2]} (unchanged)
+NEW PARAMETERS (14):
+  Reference Diffusion (3):
+    [0] D0_ref = {new_params[0]} (from old D0)
+    [1] alpha_ref = {new_params[1]} (from old alpha)
+    [2] D_offset_ref = {new_params[2]} (from old D_offset)
+
+  Sample Diffusion (3):
+    [3] D0_sample = {new_params[3]} (from old D0, initially same as reference)
+    [4] alpha_sample = {new_params[4]} (from old alpha, initially same as reference)
+    [5] D_offset_sample = {new_params[5]} (from old D_offset, initially same as reference)
 
   Velocity (3):
-    [3] v0 = {new_params[3]} (derived from gamma_dot_t0)
-    [4] beta = {new_params[4]} (unchanged)
-    [5] v_offset = {new_params[5]} (derived from gamma_dot_t_offset)
+    [6] v0 = {new_params[6]} (derived from gamma_dot_t0)
+    [7] beta = {new_params[7]} (unchanged)
+    [8] v_offset = {new_params[8]} (derived from gamma_dot_t_offset)
 
   Fraction (4):
-    [6] f0 = {new_params[6]} (default: 0.5)
-    [7] f1 = {new_params[7]} (default: 0.0)
-    [8] f2 = {new_params[8]} (default: 50.0)
-    [9] f3 = {new_params[9]} (default: 0.3)
+    [9] f0 = {new_params[9]} (default: 0.5)
+    [10] f1 = {new_params[10]} (default: 0.0)
+    [11] f2 = {new_params[11]} (default: 50.0)
+    [12] f3 = {new_params[12]} (default: 0.3)
 
   Flow angle (1):
-    [10] phi0 = {new_params[10]} (unchanged)
+    [13] phi0 = {new_params[13]} (unchanged)
 
 ⚠️  IMPORTANT: Fraction parameters (f0-f3) are initialized with defaults.
+   Sample diffusion params initially equal reference for backward compatibility.
    You should tune these based on your experimental data.
 
 To migrate automatically:

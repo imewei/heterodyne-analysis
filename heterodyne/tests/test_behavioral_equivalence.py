@@ -52,7 +52,7 @@ class TestCalculateChiSquaredEquivalence:
 
         # Mock the configuration manager
         config_manager = Mock()
-        config_manager.get_analysis_mode.return_value = "laminar_flow"
+        config_manager.get_analysis_mode.return_value = "heterodyne"
         analyzer.config_manager = config_manager
 
         # Mock analysis methods
@@ -270,9 +270,9 @@ class TestRunAnalysisEquivalence:
 
         # Test initialization parameters
         initialization_params = [
-            {"method": "classical", "static_isotropic": False},
-            {"method": "robust", "static_isotropic": True},
-            {"method": "all", "laminar_flow": True},
+            {"method": "classical", "mode": "heterodyne"},
+            {"method": "robust", "mode": "heterodyne"},
+            {"method": "all", "mode": "heterodyne"},
         ]
 
         for params in initialization_params:
@@ -280,11 +280,9 @@ class TestRunAnalysisEquivalence:
             method = params.get("method", "classical")
             assert method in ["classical", "robust", "all"]
 
-            # Test mode flags
-            if "static_isotropic" in params:
-                assert isinstance(params["static_isotropic"], bool)
-            if "laminar_flow" in params:
-                assert isinstance(params["laminar_flow"], bool)
+            # Test mode
+            if "mode" in params:
+                assert params["mode"] == "heterodyne"
 
         print("✓ Analysis initialization equivalence verified")
 

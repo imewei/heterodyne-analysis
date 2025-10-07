@@ -254,7 +254,7 @@ print(f"IMPORT_TIME:{end - start}")
 
             # Create instances to measure actual memory usage
             config = {
-                "analysis_mode": "static_isotropic",
+                "analysis_mode": "heterodyne",
                 "optimization": {"method": "nelder_mead", "max_iterations": 10},
             }
 

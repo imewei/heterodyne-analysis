@@ -61,7 +61,7 @@ class TestCLIBasicFunctionality:
                 "preload_data": False,
             },
             "optimization_config": {
-                "mode": "laminar_flow",
+                "mode": "heterodyne",
                 "method": "classical",
                 "enable_angle_filtering": True,
                 "chi_squared_threshold": 2.0,
@@ -156,7 +156,7 @@ class TestCLIBasicFunctionality:
                 "--output",
                 self.config_path,
                 "--template",
-                "laminar_flow",
+                "heterodyne",
             ],
         ):
             try:
@@ -234,7 +234,7 @@ class TestCLIBasicFunctionality:
         test_args = [
             ["run_heterodyne", "--config", self.config_path],
             ["run_heterodyne", "--method", "classical"],
-            ["run_heterodyne", "--mode", "static_isotropic"],
+            ["run_heterodyne", "--mode", "heterodyne"],
             ["run_heterodyne", "--output-dir", self.temp_dir],
         ]
 
@@ -279,7 +279,7 @@ class TestCLIBasicFunctionality:
 
     def test_cli_mode_selection(self):
         """Test CLI mode selection functionality."""
-        modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+        modes = ["heterodyne"]
 
         for mode in modes:
             with (
@@ -325,7 +325,7 @@ class TestWorkflowIntegration:
                 "preload_data": False,
             },
             "optimization_config": {
-                "mode": "static_isotropic",
+                "mode": "heterodyne",
                 "method": "classical",
                 "enable_angle_filtering": False,
                 "max_iterations": 50,  # Very reduced for testing
@@ -478,9 +478,7 @@ class TestWorkflowIntegration:
     def test_workflow_with_different_configurations(self):
         """Test workflow with different configuration combinations."""
         configurations = [
-            {"mode": "static_isotropic", "method": "classical"},
-            {"mode": "static_anisotropic", "method": "classical"},
-            {"mode": "laminar_flow", "method": "classical"},
+            {"mode": "heterodyne", "method": "classical"},
         ]
 
         for i, config_override in enumerate(configurations):
@@ -558,7 +556,7 @@ class TestCLISubprocess:
                         "--output",
                         config_path,
                         "--template",
-                        "static_isotropic",
+                        "heterodyne",
                     ],
                     check=False,
                     capture_output=True,

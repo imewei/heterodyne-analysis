@@ -178,14 +178,12 @@ class LegacyCompletionAdapter:
                 completions.extend(result.completions)
 
             return completions or [
-                "static_isotropic",
-                "static_anisotropic",
-                "laminar_flow",
+                "heterodyne",
             ]
 
         except Exception:
-            # Fallback to static modes
-            modes = ["static_isotropic", "static_anisotropic", "laminar_flow"]
+            # Fallback to heterodyne mode
+            modes = ["heterodyne"]
             if prefix:
                 return [m for m in modes if m.startswith(prefix.lower())]
             return modes
