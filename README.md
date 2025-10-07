@@ -91,7 +91,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install heterodyne-analysis[all]
 
 # Generate configuration template
-heterodyne-config --mode laminar_flow --sample my_experiment
+heterodyne-config --sample my_experiment
 ```
 
 **2. Standard Analysis (Clean Data):**
@@ -326,7 +326,6 @@ heterodyne-config [OPTIONS]
 
 **Options:**
 
-- `--mode {static_isotropic,static_anisotropic,laminar_flow}` - Analysis mode
 - `--output OUTPUT` - Output file (default: my_config.json)
 - `--sample SAMPLE` - Sample name
 - `--author AUTHOR` - Author name
@@ -335,11 +334,8 @@ heterodyne-config [OPTIONS]
 **Examples:**
 
 ```bash
-# Default laminar flow config
+# Generate heterodyne config
 heterodyne-config
-
-# Static isotropic (fastest)
-heterodyne-config --mode static_isotropic --output fast_config.json
 
 # With metadata
 heterodyne-config --sample protein --author "Your Name"
@@ -383,28 +379,15 @@ where:
 - $J(t)$: time-dependent transport coefficient [Å²/s] (labeled D in code)
 - $\\beta$: instrumental contrast parameter
 
-### Analysis Modes
+### Heterodyne Model Parameters
 
-| Mode | Parameters | Physical Description | Computational Complexity | Speed |
-|------|------------|---------------------|--------------------------|-------| |
-**Static Isotropic** | 3 | Brownian motion only, isotropic systems | O(N) | ⭐⭐⭐ | |
-**Static Anisotropic** | 3 | Static systems with angular dependence | O(N log N) | ⭐⭐ |
-| **Laminar Flow** | 7 | Full nonequilibrium with flow and shear | O(N²) | ⭐ |
+**14-Parameter Model:**
 
-#### Model Parameters
-
-**Static Parameters (All Modes):**
-
-- $D_0$: baseline transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
-- $\\alpha$: transport coefficient scaling exponent
-- $D\_{\\text{offset}}$: additive transport coefficient offset J_offset [Å²/s]
-
-**Flow Parameters (Laminar Flow Mode):**
-
-- $\\dot{\\gamma}\_0$: baseline shear rate [s⁻¹]
-- $\\beta$: shear rate scaling exponent
-- $\\dot{\\gamma}\_{\\text{offset}}$: additive shear rate offset [s⁻¹]
-- $\\phi_0$: flow direction angle [degrees]
+- **Reference transport** (3): D₀_ref, α_ref, D_offset_ref [Å²/s]
+- **Sample transport** (3): D₀_sample, α_sample, D_offset_sample [Å²/s]
+- **Velocity** (3): v₀, β, v_offset [nm/s]
+- **Fraction** (4): f₀, f₁, f₂, f₃ [dimensionless]
+- **Flow angle** (1): φ₀ [degrees]
 
 ## Frame Counting Convention
 
@@ -572,7 +555,7 @@ from heterodyne.optimization.classical import ClassicalOptimizer
 from heterodyne.data.xpcs_loader import load_xpcs_data
 
 # Load configuration file
-config_file = "config_static_isotropic.json"
+config_file = "config_heterodyne.json"
 with open(config_file, 'r') as f:
     config = json.load(f)
 
@@ -610,7 +593,7 @@ from heterodyne.optimization.robust import RobustHeterodyneOptimizer
 from heterodyne.data.xpcs_loader import load_xpcs_data
 
 # Load experimental configuration
-config_file = "config_laminar_flow.json"
+config_file = "config_heterodyne.json"
 with open(config_file, 'r') as f:
     config = json.load(f)
 
@@ -662,7 +645,7 @@ from heterodyne.optimization.classical import ClassicalOptimizer
 from heterodyne.data.xpcs_loader import load_xpcs_data
 
 # Load configuration
-config_file = "config_laminar_flow.json"
+config_file = "config_heterodyne.json"
 with open(config_file, 'r') as f:
     config = json.load(f)
 
@@ -695,25 +678,23 @@ print(f"Best method: {results.best_method}")
 
 ```bash
 # Generate templates
-heterodyne-config --mode static_isotropic --sample protein_01
-heterodyne-config --mode laminar_flow --sample microgel
+heterodyne-config --sample protein_01
+heterodyne-config --sample microgel
 ```
 
 ### Analysis Mode
 
-The package uses **Laminar Flow Mode** (7 parameters) for all analyses:
+The package uses the **14-parameter heterodyne model** for all analyses:
 
 ```json
 {
   "analysis_settings": {
     "model_description": {
-      "laminar_flow": "7-parameter heterodyne model with time-dependent transport coefficients and shear"
+      "heterodyne": "14-parameter two-component heterodyne model with time-dependent transport and mixing"
     }
   }
 }
 ```
-
-**Note:** Static modes have been removed in favor of the more general heterodyne model. If your configuration contains `static_mode` settings, please update to use laminar flow configuration.
 
 ### Subsampling Configuration
 

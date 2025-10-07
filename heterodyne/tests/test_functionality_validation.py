@@ -173,7 +173,7 @@ class TestConfigurationSystem:
         """Test template path function."""
         try:
             # Test with a known template
-            template_path = heterodyne.get_template_path("static_isotropic")
+            template_path = heterodyne.get_template_path("heterodyne")
             assert template_path is not None
         except Exception:
             # This might fail if template doesn't exist, but function should be accessible

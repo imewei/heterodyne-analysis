@@ -198,8 +198,7 @@ def create_config_override(args: argparse.Namespace) -> dict[str, Any] | None:
     """
     config_override: dict[str, Any] | None = None
 
-    # Note: Obsolete mode arguments (static_isotropic, static_anisotropic, laminar_flow)
-    # have been removed. Only heterodyne mode is supported.
+    # Note: Only heterodyne (14-parameter) mode is supported.
 
     # Handle experimental data plotting override
     if hasattr(args, "plot_experimental_data") and args.plot_experimental_data:

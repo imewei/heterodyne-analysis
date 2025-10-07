@@ -62,9 +62,7 @@ Key Components
 .. code-block:: python
 
    # Functional interface for models
-   def static_isotropic_model(tau, params, q)
-   def static_anisotropic_model(tau, params, q, phi)
-   def laminar_flow_model(tau, params, q, phi)
+   def heterodyne_model(tau, params, q, phi)
 
 **4. Optimization Backends**
 
@@ -139,10 +137,8 @@ Models are created based on configuration:
    class ModelFactory:
        @staticmethod
        def create_model(analysis_mode: str):
-           if analysis_mode == "static_isotropic":
-               return StaticIsotropicModel()
-           elif analysis_mode == "laminar_flow":
-               return LaminarFlowModel()
+           if analysis_mode == "heterodyne":
+               return HeterodyneModel()
            else:
                raise ValueError(f"Unknown mode: {analysis_mode}")
 

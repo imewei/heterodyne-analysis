@@ -1,28 +1,24 @@
 {
   "_template_info": {
     "_comment": "COMPREHENSIVE HETERODYNE CONFIGURATION TEMPLATE - Based on current codebase v1.0.0",
-    "_creation_date": "2025-09-29",
-    "_based_on_analysis": "All existing config files (static_isotropic, static_anisotropic, laminar_flow) merged with recent enhancements",
-    "_usage": "Copy this template and customize the analysis_mode, initial_parameters, and experimental_data sections for your specific experiment",
-    "_config_modes": {
-      "static_isotropic": "3-parameter optimization [D0, alpha, D_offset] - no angle filtering",
-      "static_anisotropic": "3-parameter optimization [D0, alpha, D_offset] - with angle filtering",
-      "laminar_flow": "7-parameter optimization [D0, alpha, D_offset, gamma0, beta, gamma_offset, phi0] - full flow dynamics"
-    }
+    "_creation_date": "2025-10-07",
+    "_based_on_analysis": "14-parameter heterodyne model implementing He et al. PNAS 2024 Equation S-95",
+    "_usage": "Copy this template and customize the initial_parameters and experimental_data sections for your specific experiment",
+    "_model_info": "14-parameter heterodyne model with separate reference and sample transport coefficients"
   },
   "metadata": {
-    "_comment": "Template metadata - Customize description and analysis_mode for your experiment",
+    "_comment": "Template metadata - Customize description for your experiment",
     "config_version": "1.0.0",
     "description": "TEMPLATE: Comprehensive heterodyne scattering analysis configuration",
-    "based_on": "He et al. PNAS 2024 - Transport coefficient approach",
-    "analysis_mode": "CHANGE_ME: static_isotropic | static_anisotropic | laminar_flow",
+    "based_on": "He et al. PNAS 2024 - Transport coefficient approach (Equation S-95)",
+    "analysis_mode": "heterodyne",
     "plotting_features": {
       "experimental_data_plotting": "Use --plot-experimental-data for validation and comparison",
       "simulated_data_plotting": "Use --plot-simulated-data with --contrast and --offset parameters",
       "phi_angles_override": "Command-line --phi-angles overrides config file settings",
       "multi_method_support": "Separate plots generated for each optimization method (Nelder-Mead, Gurobi, etc.)"
     },
-    "parameters_optimized": "DEPENDS_ON_MODE: [D0,alpha,D_offset] for static modes, [D0,alpha,D_offset,gamma0,beta,gamma_offset,phi0] for laminar_flow",
+    "parameters_optimized": "[D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample, v0, beta, v_offset, f0, f1, f2, f3, phi0]",
     "script_compatibility": "heterodyne v1.0.0 with enhanced Gurobi optimization and code quality improvements",
     "_solver_optimization": {
       "optimized_for": "Large datasets (0.1M - 4M datapoints)",
@@ -80,7 +76,7 @@
     },
     "geometry": {
       "stator_rotor_gap": 2000000,
-      "_gap_note": "CUSTOMIZE: Gap in Angstroms - critical for laminar_flow, less important for static modes",
+      "_gap_note": "CUSTOMIZE: Gap in Angstroms - important for flow geometry",
       "gap_unit": "Å",
       "gap_in_microns": 200
     },
@@ -94,44 +90,56 @@
     }
   },
   "initial_parameters": {
-    "_comment": "CUSTOMIZE: Starting values - CRITICAL for convergence. Adjust based on your analysis_mode",
-    "_mode_dependent_note": "Parameter count depends on analysis_mode: 3 for static modes, 7 for laminar_flow",
-    "values": "MODE_DEPENDENT: [100.0,0.0,10.0] for static, [100.0,0.0,10.0,1.0,0.0,0.0,0.0] for laminar_flow",
-    "parameter_names": "MODE_DEPENDENT: See _parameter_definitions below",
+    "_comment": "CUSTOMIZE: Starting values for 14-parameter heterodyne model - CRITICAL for convergence",
+    "values": [100.0, 0.0, 10.0, 100.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.0],
+    "parameter_names": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
     "_parameter_definitions": {
-      "static_modes": ["D0", "alpha", "D_offset"],
-      "laminar_flow": [
-        "D0",
-        "alpha",
-        "D_offset",
-        "gamma0",
-        "beta",
-        "gamma_offset",
-        "phi0"
-      ]
+      "reference_transport": ["D0_ref", "alpha_ref", "D_offset_ref"],
+      "sample_transport": ["D0_sample", "alpha_sample", "D_offset_sample"],
+      "velocity": ["v0", "beta", "v_offset"],
+      "fractions": ["f0", "f1", "f2", "f3"],
+      "flow_angle": ["phi0"]
     },
-    "units": "MODE_DEPENDENT: [Å²/s,dimensionless,Å²/s] for static, [Å²/s,dimensionless,Å²/s,s⁻¹,dimensionless,s⁻¹,degrees] for laminar_flow",
+    "units": ["Å²/s", "dimensionless", "Å²/s", "Å²/s", "dimensionless", "Å²/s", "Å/s", "dimensionless", "Å/s", "dimensionless", "dimensionless", "dimensionless", "dimensionless", "degrees"],
     "physical_meaning": {
-      "_common_to_all_modes": {
-        "D0": "Reference transport coefficient J₀ (labeled 'D' for compatibility)",
-        "alpha": "Transport coefficient time-scaling exponent",
-        "D_offset": "Baseline transport coefficient J_offset"
-      },
-      "_laminar_flow_additional": {
-        "gamma0": "Reference shear rate",
-        "beta": "Power-law exponent for shear rate evolution",
-        "gamma_offset": "Baseline shear rate",
-        "phi0": "Angular offset between flow and scattering"
-      }
+      "D0_ref": "Reference transport coefficient J₀ for reference beam",
+      "alpha_ref": "Transport coefficient time-scaling exponent for reference",
+      "D_offset_ref": "Baseline transport coefficient J_offset for reference",
+      "D0_sample": "Reference transport coefficient J₀ for sample beam",
+      "alpha_sample": "Transport coefficient time-scaling exponent for sample",
+      "D_offset_sample": "Baseline transport coefficient J_offset for sample",
+      "v0": "Reference velocity magnitude",
+      "beta": "Power-law exponent for velocity evolution",
+      "v_offset": "Baseline velocity offset",
+      "f0": "Fraction parameter 0 (sum of f0+f1+f2+f3 should equal 1)",
+      "f1": "Fraction parameter 1",
+      "f2": "Fraction parameter 2",
+      "f3": "Fraction parameter 3",
+      "phi0": "Angular offset between flow and scattering"
     },
-    "active_parameters": "MODE_DEPENDENT: Matches parameter_names above",
-    "parameter_units": "MODE_DEPENDENT: Matches units above in dict format"
+    "active_parameters": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "parameter_units": {
+      "D0_ref": "Å²/s",
+      "alpha_ref": "dimensionless",
+      "D_offset_ref": "Å²/s",
+      "D0_sample": "Å²/s",
+      "alpha_sample": "dimensionless",
+      "D_offset_sample": "Å²/s",
+      "v0": "Å/s",
+      "beta": "dimensionless",
+      "v_offset": "Å/s",
+      "f0": "dimensionless",
+      "f1": "dimensionless",
+      "f2": "dimensionless",
+      "f3": "dimensionless",
+      "phi0": "degrees"
+    }
   },
   "optimization_config": {
     "_comment": "Comprehensive optimization settings with enhanced Gurobi and robust methods",
     "angle_filtering": {
-      "_mode_dependent": "disabled for static_isotropic, enabled for static_anisotropic and laminar_flow",
-      "enabled": "MODE_DEPENDENT: false for static_isotropic, true for others",
+      "_comment": "Angle filtering for anisotropic analysis - customize ranges for your geometry",
+      "enabled": true,
       "target_ranges": [
         {
           "min_angle": -10.0,
@@ -139,8 +147,7 @@
         },
         {
           "min_angle": 80.0,
-          "max_angle": 100.0,
-          "_note": "static_anisotropic only"
+          "max_angle": 100.0
         },
         {
           "min_angle": 170.0,
@@ -148,8 +155,7 @@
         },
         {
           "min_angle": 260.0,
-          "max_angle": 280.0,
-          "_note": "static_anisotropic only"
+          "max_angle": 280.0
         }
       ],
       "fallback_to_all_angles": true,
@@ -230,12 +236,12 @@
       "enabled": true,
       "uncertainty_model": "wasserstein",
       "_uncertainty_model_note": "Options: wasserstein (recommended), ellipsoidal, scenario",
-      "uncertainty_radius": "MODE_DEPENDENT: 0.03 for static, 0.05 for laminar_flow",
+      "uncertainty_radius": 0.05,
       "_uncertainty_radius_note": "Fraction of data variance for uncertainty set",
       "n_scenarios": 15,
       "_n_scenarios_note": "Bootstrap scenarios - optimized for performance",
-      "regularization_alpha": "MODE_DEPENDENT: 0.01 for static, 0.02 for laminar_flow",
-      "_regularization_alpha_note": "L2 regularization - higher for complex parameter spaces",
+      "regularization_alpha": 0.02,
+      "_regularization_alpha_note": "L2 regularization for complex 14-parameter space",
       "regularization_beta": 0.001,
       "_regularization_beta_note": "L1 sparsity parameter",
       "jacobian_epsilon": 1e-6,
@@ -257,16 +263,16 @@
       },
       "method_options": {
         "wasserstein": {
-          "uncertainty_radius": "MODE_DEPENDENT: 0.03 for static, 0.05 for laminar_flow",
-          "regularization_alpha": "MODE_DEPENDENT: 0.01 for static, 0.02 for laminar_flow"
+          "uncertainty_radius": 0.05,
+          "regularization_alpha": 0.02
         },
         "scenario": {
           "n_scenarios": 15,
           "bootstrap_method": "residual"
         },
         "ellipsoidal": {
-          "gamma": "MODE_DEPENDENT: 0.1 for static, 0.15 for laminar_flow",
-          "regularization_alpha": "MODE_DEPENDENT: 0.01 for static, 0.02 for laminar_flow"
+          "gamma": 0.15,
+          "regularization_alpha": 0.02
         }
       }
     },
@@ -281,115 +287,169 @@
         "max": 1.0
       },
       "contrast": {
-        "min": "MODE_DEPENDENT: 1e-4 for static, 0.05 for laminar_flow",
+        "min": 0.05,
         "max": 0.5,
-        "prior_mu": "MODE_DEPENDENT: 0.05 for static, 0.3 for laminar_flow",
-        "prior_sigma": "MODE_DEPENDENT: 0.01 for static, 0.1 for laminar_flow",
+        "prior_mu": 0.3,
+        "prior_sigma": 0.1,
         "type": "TruncatedNormal"
       },
       "offset": {
-        "min": "MODE_DEPENDENT: 1.0 for static, 0.05 for laminar_flow",
-        "max": "MODE_DEPENDENT: 1.5 for static, 1.95 for laminar_flow",
-        "prior_mu": "MODE_DEPENDENT: 1.3 for static, 1.0 for laminar_flow",
-        "prior_sigma": "MODE_DEPENDENT: 0.01 for static, 0.2 for laminar_flow",
+        "min": 0.05,
+        "max": 1.95,
+        "prior_mu": 1.0,
+        "prior_sigma": 0.2,
         "type": "TruncatedNormal"
       }
     }
   },
   "parameter_space": {
-    "_comment": "CUSTOMIZE: Parameter bounds and priors - adjust based on your physical system",
-    "_bounds_note": "Parameter bounds depend on analysis_mode - see mode-specific examples below",
+    "_comment": "CUSTOMIZE: Parameter bounds and priors for 14-parameter heterodyne model - adjust based on your physical system",
     "bounds": [
       {
-        "_common_parameter_1": "D0",
-        "name": "D0",
+        "name": "D0_ref",
         "min": 1.0,
         "max": 1000000.0,
-        "_customize_note": "Adjust D0 bounds based on your expected diffusion rates",
+        "_customize_note": "Adjust D0_ref bounds based on your expected reference transport coefficients",
         "type": "TruncatedNormal",
         "prior_mu": 10000.0,
         "prior_sigma": 1000.0,
         "unit": "Å²/s"
       },
       {
-        "_common_parameter_2": "alpha",
-        "name": "alpha",
+        "name": "alpha_ref",
         "min": -2.0,
         "max": 2.0,
-        "_customize_note": "Power-law exponent - typically [-2, 2] range is sufficient",
+        "_customize_note": "Power-law exponent for reference - typically [-2, 2] range is sufficient",
         "type": "Normal",
         "prior_mu": -1.5,
         "prior_sigma": 0.1,
         "unit": "dimensionless"
       },
       {
-        "_common_parameter_3": "D_offset",
-        "name": "D_offset",
+        "name": "D_offset_ref",
         "min": -100,
         "max": 100,
-        "_customize_note": "Baseline diffusion - adjust based on system",
+        "_customize_note": "Baseline transport for reference - adjust based on system",
         "type": "Normal",
         "prior_mu": 0.0,
         "prior_sigma": 10.0,
         "unit": "Å²/s"
       },
       {
-        "_laminar_flow_parameter_4": "gamma0 (laminar_flow mode only)",
-        "name": "gamma0",
-        "min": 1e-6,
-        "max": 1.0,
-        "_customize_note": "Reference shear rate - adjust for your flow conditions",
+        "name": "D0_sample",
+        "min": 1.0,
+        "max": 1000000.0,
+        "_customize_note": "Adjust D0_sample bounds based on your expected sample transport coefficients",
         "type": "TruncatedNormal",
-        "prior_mu": 0.001,
-        "prior_sigma": 0.01,
-        "unit": "s⁻¹"
+        "prior_mu": 10000.0,
+        "prior_sigma": 1000.0,
+        "unit": "Å²/s"
       },
       {
-        "_laminar_flow_parameter_5": "beta (laminar_flow mode only)",
+        "name": "alpha_sample",
+        "min": -2.0,
+        "max": 2.0,
+        "_customize_note": "Power-law exponent for sample - typically [-2, 2] range is sufficient",
+        "type": "Normal",
+        "prior_mu": -1.5,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "D_offset_sample",
+        "min": -100,
+        "max": 100,
+        "_customize_note": "Baseline transport for sample - adjust based on system",
+        "type": "Normal",
+        "prior_mu": 0.0,
+        "prior_sigma": 10.0,
+        "unit": "Å²/s"
+      },
+      {
+        "name": "v0",
+        "min": 0.0,
+        "max": 10000.0,
+        "_customize_note": "Reference velocity - adjust for your flow conditions",
+        "type": "TruncatedNormal",
+        "prior_mu": 1000.0,
+        "prior_sigma": 100.0,
+        "unit": "Å/s"
+      },
+      {
         "name": "beta",
         "min": -2.0,
         "max": 2.0,
-        "_customize_note": "Shear rate power-law exponent",
+        "_customize_note": "Velocity power-law exponent",
         "type": "Normal",
         "prior_mu": 0.0,
         "prior_sigma": 0.1,
         "unit": "dimensionless"
       },
       {
-        "_laminar_flow_parameter_6": "gamma_offset (laminar_flow mode only)",
-        "name": "gamma_offset",
-        "min": -0.01,
-        "max": 0.01,
-        "_customize_note": "Baseline shear rate offset",
+        "name": "v_offset",
+        "min": -1000.0,
+        "max": 1000.0,
+        "_customize_note": "Baseline velocity offset",
         "type": "Normal",
         "prior_mu": 0.0,
-        "prior_sigma": 0.001,
-        "unit": "s⁻¹"
+        "prior_sigma": 100.0,
+        "unit": "Å/s"
       },
       {
-        "_laminar_flow_parameter_7": "phi0 (laminar_flow mode only)",
+        "name": "f0",
+        "min": 0.0,
+        "max": 1.0,
+        "_customize_note": "Fraction parameter 0 - sum of all f parameters should equal 1",
+        "type": "TruncatedNormal",
+        "prior_mu": 0.25,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "f1",
+        "min": 0.0,
+        "max": 1.0,
+        "_customize_note": "Fraction parameter 1",
+        "type": "TruncatedNormal",
+        "prior_mu": 0.25,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "f2",
+        "min": 0.0,
+        "max": 1.0,
+        "_customize_note": "Fraction parameter 2",
+        "type": "TruncatedNormal",
+        "prior_mu": 0.25,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "f3",
+        "min": 0.0,
+        "max": 1.0,
+        "_customize_note": "Fraction parameter 3",
+        "type": "TruncatedNormal",
+        "prior_mu": 0.25,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
         "name": "phi0",
-        "min": -10.0,
-        "max": 10.0,
+        "min": -180.0,
+        "max": 180.0,
         "_customize_note": "Angular offset - adjust based on geometry",
         "type": "Normal",
         "prior_mu": 0.0,
-        "prior_sigma": 5.0,
+        "prior_sigma": 10.0,
         "unit": "degrees"
       }
     ]
   },
   "analysis_settings": {
-    "_comment": "CUSTOMIZE: Set analysis_mode and corresponding static_mode/static_submode",
-    "static_mode": "MODE_DEPENDENT: true for static_isotropic/static_anisotropic, false for laminar_flow",
-    "_static_mode_note": "Controls whether to use static (3-param) or dynamic (7-param) model",
-    "static_submode": "MODE_DEPENDENT: isotropic/anisotropic for static modes, null for laminar_flow",
-    "_submode_note": "Isotropic disables angle filtering, anisotropic enables it",
-    "model_description": {
-      "static_isotropic": "g₂(t₁,t₂) ~ [exp(-q² ∫ D(t)dt)]² with isotropic symmetry",
-      "static_anisotropic": "g₂(t₁,t₂) ~ [exp(-q² ∫ D(t)dt)]² with angular filtering",
-      "laminar_flow": "g₂ = g₁_diff × g₁_shear with sinc² term for full flow dynamics"
-    }
+    "_comment": "14-parameter heterodyne model settings",
+    "model_description": "g₂ = heterodyne correlation with separate g₁_ref and g₁_sample field correlations (He et al. PNAS 2024 Eq. S-95)"
   },
   "advanced_settings": {
     "_comment": "Advanced computational and numerical settings",
@@ -406,13 +466,14 @@
       "uncertainty_calculation": {
         "enable_uncertainty": true,
         "report_uncertainty": true,
-        "minimum_angles_for_uncertainty": "MODE_DEPENDENT: 1 for static_isotropic, 2+ for others"
+        "minimum_angles_for_uncertainty": 2
       },
       "validity_check": {
         "check_positive_D0": true,
-        "check_positive_gamma0": "MODE_DEPENDENT: false for static modes, true for laminar_flow",
+        "check_positive_v0": true,
         "check_positive_time_dependent": true,
-        "check_parameter_bounds": true
+        "check_parameter_bounds": true,
+        "check_fraction_sum": true
       }
     },
     "numerical_integration": {
@@ -422,14 +483,14 @@
     },
     "optimization_controls": {
       "convergence_tolerance": 1e-8,
-      "max_function_evaluations": "MODE_DEPENDENT: 5000 for static, 15000 for laminar_flow",
-      "_max_function_evaluations_note": "Higher limits for complex parameter spaces",
+      "max_function_evaluations": 15000,
+      "_max_function_evaluations_note": "Higher limits for complex 14-parameter space",
       "parameter_scaling": "auto",
       "finite_difference_step": 1e-8
     }
   },
   "performance_settings": {
-    "_comment": "Performance optimization settings with mode-dependent scaling",
+    "_comment": "Performance optimization settings for 14-parameter model",
     "caching": {
       "enable_memory_cache": true,
       "enable_disk_cache": true,
@@ -455,7 +516,7 @@
       "cache_numba": true,
       "stability_enhancements": {
         "enable_kernel_warmup": true,
-        "warmup_iterations": "MODE_DEPENDENT: 3 for static, 5 for laminar_flow",
+        "warmup_iterations": 5,
         "optimize_memory_layout": true,
         "enable_nogil": true,
         "environment_optimization": {
@@ -514,7 +575,7 @@
         "warning_threshold": 20.0,
         "outlier_threshold_multiplier": 2.5,
         "max_outlier_fraction": 0.25,
-        "min_good_angles": "MODE_DEPENDENT: 1 for static_isotropic, 2-3 for others"
+        "min_good_angles": 2
       }
     },
     "frame_range": {
@@ -573,8 +634,8 @@
         "create_plots": true,
         "plot_format": "png",
         "dpi": 300,
-        "figure_size": "MODE_DEPENDENT: [10,8] for static, [12,8] for laminar_flow",
-        "_figsize_note": "Larger figures for complex parameter results",
+        "figure_size": [12, 8],
+        "_figsize_note": "Larger figures for complex 14-parameter results",
         "style": "publication",
         "save_plots": true,
         "show_plots": false
@@ -588,8 +649,8 @@
         "include_residuals": true,
         "colormap": "viridis",
         "colorbar_position": "right",
-        "title_prefix": "MODE_DEPENDENT: C2 Correlation Function ([analysis_mode])",
-        "figsize": "MODE_DEPENDENT: [12,4] for static_isotropic, [15,5] for static_anisotropic, [18,6] for laminar_flow"
+        "title_prefix": "C2 Correlation Function (Heterodyne)",
+        "figsize": [18, 6]
       },
       "diagnostic_plots": {
         "enabled": true,
@@ -615,7 +676,7 @@
       "log_level": "INFO",
       "log_to_file": true,
       "log_to_console": true,
-      "log_filename": "MODE_DEPENDENT: heterodyne_[analysis_mode].log",
+      "log_filename": "heterodyne_analysis.log",
       "rotation": {
         "max_bytes": 10485760,
         "backup_count": 3
@@ -623,18 +684,16 @@
     }
   },
   "_customization_guide": {
-    "_step_1": "Set analysis_mode in metadata section to: static_isotropic, static_anisotropic, or laminar_flow",
-    "_step_2": "Update experimental_data section with your file paths and sample name",
-    "_step_3": "Customize analyzer_parameters: dt (time step), q (wavevector), frame range, gap size",
-    "_step_4": "Adjust initial_parameters values based on your expected parameter ranges",
-    "_step_5": "Modify parameter_space bounds to match your physical system constraints",
-    "_step_6": "Update analysis_settings: set static_mode and static_submode consistently with analysis_mode",
-    "_step_7": "Adjust performance_settings based on your computational resources",
-    "_step_8": "Customize validation_rules thresholds based on your data quality expectations",
-    "_step_9": "Update output_settings paths and logging configuration",
-    "_mode_dependent_values": "Search for 'MODE_DEPENDENT' throughout config to see values that need mode-specific customization"
+    "_step_1": "Update experimental_data section with your file paths and sample name",
+    "_step_2": "Customize analyzer_parameters: dt (time step), q (wavevector), frame range, gap size",
+    "_step_3": "Adjust initial_parameters values based on your expected parameter ranges",
+    "_step_4": "Modify parameter_space bounds to match your physical system constraints",
+    "_step_5": "Adjust performance_settings based on your computational resources",
+    "_step_6": "Customize validation_rules thresholds based on your data quality expectations",
+    "_step_7": "Update output_settings paths and logging configuration"
   },
   "_recent_enhancements": {
+    "_14_parameter_model": "Correctly implements independent g₁_ref and g₁_sample field correlations (He et al. PNAS 2024 Eq. S-95)",
     "_gurobi_optimization": "Enhanced Trust Region SQP algorithm fixes χ² convergence issues in v0.6.5+",
     "_robust_optimization": "100x-5000x performance improvements with smart caching and optimized solvers",
     "_code_quality": "Full codebase formatted with black, linted with flake8, type-checked with mypy",

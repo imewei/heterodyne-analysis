@@ -187,7 +187,6 @@ clean-test:
 	rm -rf ml_optimization_data/
 	rm -rf performance_results/
 	rm -f nonexistent_template
-	rm -f static_isotropic
 	rm -f test_*.npz
 	rm -f test_*.json
 	rm -f phi_angles_list.txt

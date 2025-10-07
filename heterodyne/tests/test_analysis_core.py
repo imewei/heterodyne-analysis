@@ -40,7 +40,7 @@ class TestHeterodyneAnalysisCore:
                 "sample_thickness": 1.0,
             },
             "analyzer_parameters": {
-                "mode": "laminar_flow",
+                "mode": "heterodyne",
                 "method": "classical",
                 "enable_angle_filtering": True,
                 "chi_squared_threshold": 2.0,
@@ -151,15 +151,9 @@ class TestHeterodyneAnalysisCore:
 
     def test_mode_detection(self):
         """Test analysis mode detection."""
-        # Test laminar flow mode
+        # Test heterodyne mode
         analyzer = HeterodyneAnalysisCore(config_override=self.config_data)
-        assert analyzer._get_analysis_mode() == "laminar_flow"
-
-        # Test static mode
-        static_config = self.config_data.copy()
-        static_config["analyzer_parameters"]["mode"] = "static_isotropic"
-        analyzer_static = HeterodyneAnalysisCore(config=static_config)
-        assert analyzer_static._get_analysis_mode() == "static_isotropic"
+        assert analyzer._get_analysis_mode() == "heterodyne"
 
     def test_chi_squared_calculation(self):
         """Test chi-squared calculation."""

@@ -31,7 +31,7 @@ Manages configuration loading, validation, and access.
 
 * ``__init__(config_file)`` - Load configuration from file
 * ``validate_config()`` - Validate configuration settings
-* ``get_analysis_mode()`` - Get the analysis mode (static_isotropic, etc.)
+* ``get_analysis_mode()`` - Get the analysis mode (heterodyne)
 * ``get_active_parameters()`` - Get list of active parameters
 * ``is_angle_filtering_enabled()`` - Check if angle filtering is enabled
 

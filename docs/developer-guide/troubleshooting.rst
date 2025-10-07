@@ -430,15 +430,15 @@ Performance Issues
 Model-Specific Issues
 ---------------------
 
-**Isotropic Mode Issues**
+**Heterodyne Mode Issues**
 
-*Problem*: Warnings about angle filtering in isotropic mode
+*Problem*: Parameter convergence issues with 14-parameter model
 
-.. code-block:: text
+*Solutions*:
 
-   Warning: Angle filtering enabled but static_isotropic mode detected
-
-*Solution*: This is expected behavior - angle filtering is automatically disabled in isotropic mode.
+1. **Check if all parameters are needed** for your system
+2. **Use good initial estimates** from physical constraints
+3. **Use realistic bounds** for all 14 parameters
 
 **Flow Mode Parameter Issues**
 

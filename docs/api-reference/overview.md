@@ -59,7 +59,7 @@ from heterodyne.optimization.classical import ClassicalOptimizer
 import numpy as np
 
 # Initialize analysis core
-config_file = "config_static_isotropic.json"
+config_file = "config_heterodyne.json"
 core = HeterodyneAnalysisCore(config_file)
 
 # Load experimental data

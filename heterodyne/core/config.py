@@ -1043,40 +1043,6 @@ class ConfigManager:
         
         return None
 
-    def is_static_isotropic_enabled(self) -> bool:
-        """
-        Check if static isotropic mode is enabled.
-        
-        DEPRECATED: Static isotropic mode has been removed.
-
-        Raises
-        ------
-        ValueError
-            Always raises error - static isotropic mode no longer exists
-        """
-        raise ValueError(
-            "Static isotropic mode has been removed. "
-            "Only the 2-component heterodyne mode (14 parameters) is supported. "
-            "See migration guide for details."
-        )
-
-    def is_static_anisotropic_enabled(self) -> bool:
-        """
-        Check if static anisotropic mode is enabled.
-        
-        DEPRECATED: Static anisotropic mode has been removed.
-
-        Raises
-        ------
-        ValueError
-            Always raises error - static anisotropic mode no longer exists
-        """
-        raise ValueError(
-            "Static anisotropic mode has been removed. "
-            "Only the 2-component heterodyne mode (14 parameters) is supported. "
-            "See migration guide for details."
-        )
-
     def get_analysis_mode(self) -> str:
         """
         Get the current analysis mode.
@@ -1084,12 +1050,7 @@ class ConfigManager:
         Returns
         -------
         str
-            "heterodyne" (14-parameter model, default)
-
-        Note
-        ----
-        Static modes ("static_isotropic", "static_anisotropic") were removed in v1.0.0.
-        Legacy "laminar_flow" (7-parameter) configs are auto-migrated to heterodyne.
+            "heterodyne" - 14-parameter model
         """
         # Static mode check will raise error if enabled (removed in v1.0.0)
         if self.is_static_mode_enabled():

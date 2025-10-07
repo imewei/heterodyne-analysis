@@ -64,8 +64,7 @@ def create_simulation_config_override(args: argparse.Namespace) -> dict:
     dict
         Configuration override dictionary
     """
-    # Note: Obsolete mode arguments (static_isotropic, static_anisotropic, laminar_flow)
-    # have been removed. Only heterodyne mode is supported.
+    # Note: Only heterodyne (14-parameter) mode is supported.
     # Return empty dict as no overrides are needed.
     return {}
 

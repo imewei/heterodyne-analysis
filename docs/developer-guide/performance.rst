@@ -140,7 +140,7 @@ Estimate memory requirements before analysis:
    memory_gb = estimate_memory_usage(
        data_shape=(1000, 500),    # Time points x angles
        num_angles=360,
-       analysis_mode="laminar_flow",
+       analysis_mode="heterodyne",
        data_type="float64"
    )
 
@@ -263,60 +263,20 @@ Choose appropriate optimization algorithms:
        }
    }
 
-**2. Optimization Strategy by Analysis Mode**
+**2. Optimization Strategy for Heterodyne Mode**
 
-Configure optimization parameters based on problem complexity:
+Configure optimization parameters for the 14-parameter heterodyne model:
 
 .. code-block:: python
 
-   # Static Isotropic Mode (3 parameters)
+   # Heterodyne Mode (14 parameters)
    config = {
        "optimization_config": {
            "classical_optimization": {
                "methods": ["Nelder-Mead"],
                "method_options": {
                    "Nelder-Mead": {
-                       "maxiter": 2000,      # Faster convergence
-                       "xatol": 1e-6,
-                       "fatol": 1e-6
-                   }
-               }
-           }
-       },
-       "performance_settings": {
-           "num_threads": 4,
-           "enable_jit": True
-       }
-   }
-
-   # Static Anisotropic Mode (3 parameters)
-   config = {
-       "optimization_config": {
-           "classical_optimization": {
-               "methods": ["Nelder-Mead"],
-               "method_options": {
-                   "Nelder-Mead": {
-                       "maxiter": 3000,      # More iterations for angular dependence
-                       "xatol": 1e-6,
-                       "fatol": 1e-6
-                   }
-               }
-           }
-       },
-       "analysis_settings": {
-           "enable_angle_filtering": True,   # 3-5x speedup
-           "angle_filter_ranges": [[-5, 5], [175, 185]]
-       }
-   }
-
-   # Laminar Flow Mode (7 parameters)
-   config = {
-       "optimization_config": {
-           "classical_optimization": {
-               "methods": ["Nelder-Mead"],
-               "method_options": {
-                   "Nelder-Mead": {
-                       "maxiter": 5000,      # More iterations for complex landscape
+                       "maxiter": 10000,     # More iterations for 14-parameter space
                        "xatol": 1e-7,        # Tighter tolerance
                        "fatol": 1e-7
                    }
@@ -344,24 +304,24 @@ Performance Benchmarks
      - Memory
      - Speedup
      - Notes
-   * - **Basic isotropic**
-     - 30s
-     - 0.5 GB
+   * - **Basic heterodyne**
+     - 60s
+     - 1.0 GB
      - 1x
-     - Baseline
+     - 14-parameter baseline
    * - **+ Angle filtering**
-     - 8s
-     - 0.3 GB
+     - 15s
+     - 0.6 GB
      - 4x
      - Most effective
    * - **+ Float32**
-     - 7s
-     - 0.15 GB
-     - 4.3x
+     - 13s
+     - 0.3 GB
+     - 4.6x
      - Memory efficient
    * - **+ JIT compilation**
-     - 5s
-     - 0.15 GB
+     - 10s
+     - 0.3 GB
      - 6x
      - Full optimization
 

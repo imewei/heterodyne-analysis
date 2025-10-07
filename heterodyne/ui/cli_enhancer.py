@@ -101,8 +101,7 @@ class CLIEnhancer:
     def _add_config_rows(self, table: "Table", config: dict[str, Any]) -> None:
         """Add configuration rows to rich table."""
         # Analysis mode
-        analysis_mode = config.get("analysis_settings", {}).get("static_mode", False)
-        mode_str = "Static" if analysis_mode else "Laminar Flow"
+        mode_str = "Heterodyne"
         table.add_row("Analysis Mode", mode_str, "✓")
 
         # Frame range
@@ -136,8 +135,7 @@ class CLIEnhancer:
     def _print_config_text(self, config: dict[str, Any]) -> None:
         """Print configuration in plain text format."""
         # Analysis mode
-        analysis_mode = config.get("analysis_settings", {}).get("static_mode", False)
-        mode_str = "Static" if analysis_mode else "Laminar Flow"
+        mode_str = "Heterodyne"
         print(f"Analysis Mode: {mode_str}")
 
         # Frame range

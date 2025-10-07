@@ -45,8 +45,7 @@ core = HeterodyneAnalysisCore(config_file: str | Path)
 **Example:**
 
 ```python
-core = HeterodyneAnalysisCore("config_laminar_flow.json")
-print(f"Analysis mode: {core.static_mode}")
+core = HeterodyneAnalysisCore("config_heterodyne.json")
 print(f"Time length: {core.time_length}")
 print(f"Parameters: {core.n_params}")
 ```
@@ -150,8 +149,7 @@ c2_theoretical = core.calculate_correlation_function(
 **Parameters:**
 
 - `params` (np.ndarray): Model parameters
-  - Static mode (3 params): `[D₀, α, D_offset]`
-  - Laminar flow (7 params): `[D₀, α, D_offset, γ̇₀, β, γ̇_offset, φ₀]`
+  - Heterodyne mode (14 params): `[D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample, v0, beta, v_offset, f0, f1, f2, f3, phi0]`
 - `phi_angles` (np.ndarray): Scattering angles [degrees]
 - `time_array` (np.ndarray | None): Time points [seconds] (default: use
   `self.time_array`)
@@ -357,59 +355,20 @@ For production analysis, regenerate cache files to match configuration exactly.
 
 ## Analysis Modes
 
-### Static Isotropic Mode
+### Heterodyne Mode
 
-**Parameters**: 3 (D₀, α, D_offset) **Complexity**: O(N) **Use Case**: Brownian motion
-only, isotropic systems
-
-```python
-config = {
-    "analysis_settings": {
-        "static_mode": true,
-        "static_submode": "isotropic"
-    }
-}
-
-core = HeterodyneAnalysisCore("config_static_isotropic.json")
-assert core.n_params == 3
-assert core.static_mode == True
-assert core.static_submode == "isotropic"
-```
-
-### Static Anisotropic Mode
-
-**Parameters**: 3 (D₀, α, D_offset) **Complexity**: O(N log N) **Use Case**: Static
-systems with angular dependence
+**Parameters**: 14 (reference transport: 3, sample transport: 3, velocity: 3, fraction: 4, flow angle: 1)
+**Use Case**: Two-component heterodyne scattering with time-dependent fraction mixing
 
 ```python
 config = {
     "analysis_settings": {
-        "static_mode": true,
-        "static_submode": "anisotropic"
+        "static_mode": false
     }
 }
 
-core = HeterodyneAnalysisCore("config_static_anisotropic.json")
-assert core.n_params == 3
-assert core.static_submode == "anisotropic"
-```
-
-### Laminar Flow Mode
-
-**Parameters**: 7 (D₀, α, D_offset, γ̇₀, β, γ̇_offset, φ₀) **Complexity**: O(N²) **Use
-Case**: Full nonequilibrium with flow and shear
-
-```python
-config = {
-    "analysis_settings": {
-        "static_mode": false,
-        "static_submode": null
-    }
-}
-
-core = HeterodyneAnalysisCore("config_laminar_flow.json")
-assert core.n_params == 7
-assert core.static_mode == False
+core = HeterodyneAnalysisCore("config_heterodyne.json")
+assert core.n_params == 14
 ```
 
 ## Performance Optimizations
@@ -474,7 +433,7 @@ from heterodyne.analysis.core import HeterodyneAnalysisCore
 from heterodyne.optimization.classical import ClassicalOptimizer
 
 # Initialize analysis core
-config_file = "config_laminar_flow.json"
+config_file = "config_heterodyne.json"
 core = HeterodyneAnalysisCore(config_file)
 
 print(f"Analysis mode: {'Static' if core.static_mode else 'Laminar Flow'}")

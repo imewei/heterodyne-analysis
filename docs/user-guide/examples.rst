@@ -15,11 +15,10 @@ Example 1: Basic Isotropic Analysis
    {
      "metadata": {
        "sample_name": "polymer_solution",
-       "analysis_mode": "static_isotropic"
+       "analysis_mode": "heterodyne"
      },
      "analysis_settings": {
-       "static_mode": true,
-       "static_submode": "isotropic"
+       "static_mode": false
      },
      "file_paths": {
        "c2_data_file": "data/polymer_c2_data.h5"
@@ -66,7 +65,7 @@ Example 2: Flow Analysis with Robust Methods
    {
      "metadata": {
        "sample_name": "flowing_suspension",
-       "analysis_mode": "laminar_flow"
+       "analysis_mode": "heterodyne"
      },
      "analysis_settings": {
        "static_mode": false,

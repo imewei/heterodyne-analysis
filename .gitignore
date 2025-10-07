@@ -16,7 +16,6 @@ cache_*.npz
 performance_results/
 ml_optimization_data/
 nonexistent_template
-static_isotropic
 test_*.npz
 test_*.json
 phi_angles_list.txt

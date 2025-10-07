@@ -78,22 +78,22 @@ Test Fixtures
        """Basic configuration for testing"""
        return {
            "analysis_settings": {
-               "static_mode": True,
-               "static_submode": "isotropic"
+               "static_mode": False
            },
            "initial_parameters": {
-               "values": [1000, -0.5, 100]
+               "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0, 0.0, 0.0, 0.0]
            }
        }
 
    @pytest.fixture
-   def synthetic_isotropic_data():
-       """Synthetic data for isotropic model"""
+   def synthetic_heterodyne_data():
+       """Synthetic data for heterodyne model"""
        tau = np.logspace(-6, 1, 100)
-       params = [1500, -0.8, 50]
+       # 14-parameter heterodyne model
+       params = [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0, 0.0, 0.0, 0.0]
        q = 0.001
 
-       # Generate perfect isotropic correlation
+       # Generate heterodyne correlation (simplified for testing)
        g1 = np.exp(-q**2 * (params[0] * tau**(-params[1]) + params[2] * tau))
 
        # Add realistic noise
@@ -120,46 +120,29 @@ Unit Testing
    # test_models.py
    import pytest
    import numpy as np
-   from heterodyne.models import static_isotropic_model
+   from heterodyne.models import heterodyne_model
 
-   class TestStaticIsotropicModel:
+   class TestHeterodyneModel:
        def test_basic_functionality(self):
            tau = np.logspace(-6, 1, 100)
-           params = [1000, -0.5, 100]
+           # 14-parameter heterodyne model
+           params = [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0, 0.0, 0.0, 0.0]
            q = 0.001
 
-           g1 = static_isotropic_model(tau, params, q)
+           g1 = heterodyne_model(tau, params, q)
 
            # Basic checks
            assert len(g1) == len(tau)
-           assert np.all(g1 > 0)
-           assert np.all(g1 <= 1)
-           assert g1[0] > g1[-1]  # Decay
+           assert np.all(np.isfinite(g1))
 
        def test_parameter_bounds(self):
            tau = np.logspace(-6, 1, 10)
            q = 0.001
 
-           # Test with extreme parameters
-           params_extreme = [10000, -2.0, 1000]
-           g1 = static_isotropic_model(tau, params_extreme, q)
+           # Test with valid 14-parameter set
+           params = [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0, 0.0, 0.0, 0.0]
+           g1 = heterodyne_model(tau, params, q)
            assert np.all(np.isfinite(g1))
-
-       @pytest.mark.parametrize("params,expected_decay", [
-           ([1000, -0.5, 0], "power_law"),
-           ([1000, 0, 100], "exponential"),
-           ([0, -0.5, 100], "offset_only")
-       ])
-       def test_decay_behavior(self, params, expected_decay):
-           tau = np.logspace(-6, 1, 100)
-           g1 = static_isotropic_model(tau, params, 0.001)
-
-           # Check decay characteristics
-           if expected_decay == "power_law":
-               assert g1[10] > g1[50]  # Power law decay
-           elif expected_decay == "exponential":
-               # Check exponential form
-               pass
 
 **Configuration Tests**:
 
@@ -201,8 +184,8 @@ Unit Testing
 
    class TestClassicalOptimization:
        def test_optimization_convergence(self, config_manager,
-                                       synthetic_isotropic_data):
-           phi_angles, c2_data, true_params, q = synthetic_isotropic_data
+                                       synthetic_heterodyne_data):
+           phi_angles, c2_data, true_params, q = synthetic_heterodyne_data
 
            core = HeterodyneAnalysisCore(config_manager)
 
@@ -236,8 +219,8 @@ Integration Testing
    from pathlib import Path
 
    class TestFullWorkflow:
-       def test_complete_isotropic_analysis(self, synthetic_isotropic_data):
-           tau, g1_data, true_params, q = synthetic_isotropic_data
+       def test_complete_heterodyne_analysis(self, synthetic_heterodyne_data):
+           tau, g1_data, true_params, q = synthetic_heterodyne_data
 
            with tempfile.TemporaryDirectory() as tmp_dir:
                tmp_path = Path(tmp_dir)
@@ -287,7 +270,7 @@ Integration Testing
 .. code-block:: python
 
    @pytest.mark.slow
-           tau, g1_data, true_params, q = synthetic_isotropic_data
+           tau, g1_data, true_params, q = synthetic_heterodyne_data
 
            config_manager.config["optimization_config"] = {
                    "enabled": True,
@@ -333,9 +316,9 @@ Performance Testing
 
    class TestPerformance:
        @pytest.mark.benchmark
-       def test_optimization_speed(self, config_manager, synthetic_isotropic_data):
+       def test_optimization_speed(self, config_manager, synthetic_heterodyne_data):
            """Test that optimization completes within reasonable time"""
-           tau, g1_data, true_params, q = synthetic_isotropic_data
+           tau, g1_data, true_params, q = synthetic_heterodyne_data
 
            core = HeterodyneAnalysisCore(config_manager)
            core._tau = tau
@@ -370,16 +353,14 @@ Test Data Management
 .. code-block:: python
 
    # test_data_generator.py
-   def generate_test_data(model_type="isotropic", noise_level=0.01):
+   def generate_test_data(model_type="heterodyne", noise_level=0.01):
        """Generate synthetic test data"""
        tau = np.logspace(-6, 1, 100)
 
-       if model_type == "isotropic":
-           params = [1500, -0.8, 50]
-           g1_perfect = static_isotropic_model(tau, params, 0.001)
-       elif model_type == "flow":
-           params = [1200, -0.9, 80, 15, 0.3, 2, 0]
-           g1_perfect = laminar_flow_model(tau, params, 0.001, 0)
+       if model_type == "heterodyne":
+           # 14-parameter heterodyne model
+           params = [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0, 0.0, 0.0, 0.0]
+           g1_perfect = heterodyne_model(tau, params, 0.001)
 
        # Add noise
        noise = np.random.normal(0, noise_level, size=g1_perfect.shape)
@@ -395,8 +376,8 @@ Store reference results for regression testing:
 
    # Store expected results
    reference_results = {
-       "isotropic_basic": {
-           "parameters": [1500.2, -0.801, 49.8],
+       "heterodyne_basic": {
+           "parameters": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0, 0.0, 0.0, 0.0],
            "chi_squared": 0.023,
            "success": True
        }
@@ -405,7 +386,7 @@ Store reference results for regression testing:
    def test_regression(self):
        # Compare current results with reference
        current_result = run_analysis()
-       reference = reference_results["isotropic_basic"]
+       reference = reference_results["heterodyne_basic"]
 
        for i, (current, expected) in enumerate(
            zip(current_params, reference["parameters"])
