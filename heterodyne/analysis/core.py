@@ -4,45 +4,71 @@ Core Analysis Engine for Heterodyne Scattering Analysis
 
 High-performance heterodyne scattering analysis with configuration management.
 
-This module implements the complete analysis pipeline for XPCS data in
-nonequilibrium laminar flow systems, based on He et al. (2024).
+This module implements the complete analysis pipeline for heterodyne XPCS data with
+separate reference and sample scattering components, based on He et al. PNAS 2024.
 
-Physical Theory
----------------
-The theoretical framework describes the time-dependent intensity correlation function
-c2(φ,t₁,t₂) for X-ray photon correlation spectroscopy (XPCS) measurements of fluids
-under nonequilibrium laminar flow conditions. The model captures the interplay between
-Brownian diffusion and advective shear flow in the two-time correlation dynamics.
+Physical Theory - Heterodyne Model
+-----------------------------------
+The heterodyne scattering model describes the time-dependent correlation function
+C₂(t₁,t₂,φ) for X-ray photon correlation spectroscopy (XPCS) measurements of
+two-component systems (reference + sample) under nonequilibrium conditions.
 
-The correlation function has the form:
-    g2(φ,t₁,t₂) = 1 + contrast * [g1(φ,t₁,t₂)]²
+The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):
 
-where g1 is the field correlation function with separable contributions:
-    g1(φ,t₁,t₂) = g1_diff(t₁,t₂) * g1_shear(φ,t₁,t₂)
+    C₂(t₁,t₂,φ) = f(t₁)f(t₂)|g₁ₛ(t₁,t₂,φ)|²
+                  + [1-f(t₁)][1-f(t₂)]|g₁ᵣ(t₁,t₂,φ)|²
+                  + f(t₁)[1-f(t₂)]g₁ᵣ*(t₁,t₂,φ)g₁ₛ(t₁,t₂,φ)
+                  + [1-f(t₁)]f(t₂)g₁ᵣ(t₁,t₂,φ)g₁ₛ*(t₁,t₂,φ)
 
-Diffusion Contribution:
-    g1_diff(t₁,t₂) = exp[-q²/2 ∫|t₂-t₁| D(t')dt']
+where:
+- g₁ᵣ: Reference component field correlation
+- g₁ₛ: Sample component field correlation
+- f(t): Time-dependent fraction of sample component
+- * denotes complex conjugate
 
-Shear Contribution:
-    g1_shear(φ,t₁,t₂) = [sinc(Φ(φ,t₁,t₂))]²
-    Φ(φ,t₁,t₂) = (1/2π) q L cos(φ₀-φ) ∫|t₂-t₁| γ̇(t')dt'
+Field Correlation Functions:
+    g₁ᵣ(t₁,t₂,φ) = exp[-q²/2 ∫Jᵣ(t)dt] * g₁_shear(φ,t₁,t₂)
+    g₁ₛ(t₁,t₂,φ) = exp[-q²/2 ∫Jₛ(t)dt] * g₁_shear(φ,t₁,t₂)
 
-Time-Dependent Transport Coefficients:
-    J(t) = J₀ t^α + J_offset    (transport coefficient, labeled D for compatibility)
-    γ̇(t) = γ̇₀ t^β + γ̇_offset   (time-dependent shear rate)
+Transport Coefficients (separate for reference and sample):
+    Jᵣ(t) = D0_ref * t^(alpha_ref) + D_offset_ref
+    Jₛ(t) = D0_sample * t^(alpha_sample) + D_offset_sample
 
-Note: Parameters labeled "D₀", "α", "D_offset" are actually transport coefficient
-parameters (J₀, α, J_offset) following He et al. PNAS 2024 Equation S-95.
-For equilibrium Wiener processes: J = 6D where D is traditional diffusion.
+Velocity Contribution (shared):
+    g₁_shear(φ,t₁,t₂) = [sinc(Φ(φ,t₁,t₂))]²
+    Φ(φ,t₁,t₂) = (1/2π) q L cos(φ₀-φ) ∫v(t')dt'
+    v(t) = v0 * t^β + v_offset
 
-Parameter Model (Laminar Flow, 7 parameters):
-- D₀: Reference transport coefficient J₀ [Å²/s] (labeled 'D' for compatibility)
-- α: Transport coefficient time-scaling exponent [-]
-- D_offset: Baseline transport coefficient J_offset [Å²/s]
-- γ̇₀: Reference shear rate [s⁻¹]
-- β: Shear rate time-dependence exponent [-]
-- γ̇_offset: Baseline shear rate [s⁻¹]
-- φ₀: Angular offset parameter [degrees]
+Fraction Function:
+    f(t) = f0 * exp(f1 * (t - f2)) + f3
+
+Note: Parameters labeled "D" are transport coefficients J following He et al.
+For equilibrium: J = 6D where D is traditional diffusion coefficient.
+
+Parameter Model (Heterodyne, 14 parameters):
+Reference Transport (3):
+- D0_ref: Reference transport coefficient J₀_ref [nm²/s]
+- alpha_ref: Reference power-law exponent [-]
+- D_offset_ref: Reference baseline transport J_offset_ref [nm²/s]
+
+Sample Transport (3):
+- D0_sample: Sample transport coefficient J₀_sample [nm²/s]
+- alpha_sample: Sample power-law exponent [-]
+- D_offset_sample: Sample baseline transport J_offset_sample [nm²/s]
+
+Velocity (3):
+- v0: Velocity amplitude [nm/s]
+- beta: Velocity power-law exponent [-]
+- v_offset: Baseline velocity [nm/s]
+
+Fraction (4):
+- f0: Fraction amplitude [0-1]
+- f1: Exponential decay rate [s⁻¹]
+- f2: Time offset [s]
+- f3: Baseline fraction [0-1]
+
+Flow Angle (1):
+- phi0: Angular offset parameter [degrees]
 
 Experimental Parameters:
 - q: Scattering wavevector magnitude [Å⁻¹]
@@ -85,13 +111,32 @@ Usage
 -----
 >>> from heterodyne.analysis.core import HeterodyneAnalysisCore
 >>> analyzer = HeterodyneAnalysisCore('config.json')
->>> data = analyzer.load_experimental_data()
->>> chi2 = analyzer.calculate_chi_squared_optimized(parameters, phi_angles, data[0])
+>>>
+>>> # 14-parameter heterodyne model
+>>> params = [100.0, -0.5, 10.0,   # Reference transport
+...           100.0, -0.5, 10.0,   # Sample transport (initially = reference)
+...           0.1, 0.0, 0.01,      # Velocity
+...           0.5, 0.0, 50.0, 0.3, # Fraction
+...           0.0]                 # Flow angle
+>>>
+>>> c2 = analyzer.calculate_heterodyne_correlation(params, phi_angle=0.0)
+>>> chi2 = analyzer.calculate_chi_squared_optimized(params, phi_angles, c2_experimental)
+
+Migration from 11-Parameter Model
+----------------------------------
+Existing configurations can be automatically migrated:
+
+>>> from heterodyne.core.migration import HeterodyneMigration
+>>> migrated = HeterodyneMigration.migrate_config_file('old_config.json', 'new_config.json')
+
+The migration initializes sample parameters equal to reference parameters for
+backward compatibility. During optimization, they can diverge.
 
 References
 ----------
-He, H., Chen, W., et al. (2024). "Time-dependent dynamics in nonequilibrium
-laminar flow systems via X-ray photon correlation spectroscopy."
+He, H., Chen, W., et al. (2024). "Heterodyne X-ray Photon Correlation Spectroscopy."
+PNAS, Equation S-95 (Heterodyne Correlation Function).
+https://doi.org/10.1073/pnas.2315354121
 
 Authors: Wei Chen, Hongrui He
 Institution: Argonne National Laboratory
