@@ -135,8 +135,8 @@ Transport Coefficient vs Diffusion Coefficient
 **Important:** Parameters labeled "D₀", "α", "D_offset" in the code are actually transport coefficient
 parameters (J₀, α, J_offset) for historical compatibility.
 
-Implementation Simplification: Single Transport Coefficient
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Implementation: Separate Reference and Sample Transport
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The full Equation S-95 allows different transport coefficients for reference and sample:
 
@@ -144,38 +144,46 @@ The full Equation S-95 allows different transport coefficients for reference and
 
    J_r(t) \neq J_s(t)
 
-This package implements a **simplified version** where both components share the same transport coefficient:
+This package implements the **full two-component model** with separate transport coefficients for reference and sample fields:
 
 .. math::
 
-   J_r(t) = J_s(t) = J(t)
+   D_{\text{ref}}(t) &= D_{0,\text{ref}} \cdot t^{\alpha_{\text{ref}}} + D_{\text{offset,ref}} \\
+   D_{\text{sample}}(t) &= D_{0,\text{sample}} \cdot t^{\alpha_{\text{sample}}} + D_{\text{offset,sample}}
 
-This means all three exponential terms use the same :math:`\exp(-q^2 \int J(t) dt)` factor,
-which is computationally efficient and appropriate for many experimental systems.
+This enables comprehensive characterization of the distinct transport properties of both components,
+which is essential for heterodyne measurements where reference and sample exhibit different dynamics.
 
-11-Parameter Nonequilibrium Extension
+14-Parameter Nonequilibrium Extension
 --------------------------------------
 
 Time-Dependent Parameterization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As described above, this package implements **Equation S-95** with **time-dependent transport coefficients**.
-The model uses 11 parameters organized into four groups:
+As described above, this package implements **Equation S-95** with **separate time-dependent transport coefficients** for reference and sample fields.
+The model uses 14 parameters organized into five groups:
 
-**1. Transport Coefficient Dynamics (3 parameters)**
+**1. Reference Transport Dynamics (3 parameters)**
 
 .. math::
 
-   J(t) = J_0 \cdot (t-t_0)^{\alpha} + J_{\text{offset}}
+   D_{\text{ref}}(t) = D_{0,\text{ref}} \cdot t^{\alpha_{\text{ref}}} + D_{\text{offset,ref}}
 
-* :math:`J_0` [Å²/s]: Reference transport coefficient (labeled as "D₀" in code for compatibility)
-* :math:`\alpha` [dimensionless]: Time-scaling exponent
-* :math:`J_{\text{offset}}` [Å²/s]: Baseline transport component (labeled as "D_offset" in code)
+* :math:`D_{0,\text{ref}}` [Å²/s]: Reference field transport coefficient
+* :math:`\alpha_{\text{ref}}` [dimensionless]: Reference time-scaling exponent
+* :math:`D_{\text{offset,ref}}` [Å²/s]: Reference baseline transport component
 
-**Note:** For equilibrium Wiener processes, :math:`J = 6D` where D is the traditional diffusion coefficient.
-This implementation uses J(t) directly for nonequilibrium dynamics.
+**2. Sample Transport Dynamics (3 parameters)**
 
-**2. Velocity Dynamics (3 parameters)**
+.. math::
+
+   D_{\text{sample}}(t) = D_{0,\text{sample}} \cdot t^{\alpha_{\text{sample}}} + D_{\text{offset,sample}}
+
+* :math:`D_{0,\text{sample}}` [Å²/s]: Sample field transport coefficient
+* :math:`\alpha_{\text{sample}}` [dimensionless]: Sample time-scaling exponent
+* :math:`D_{\text{offset,sample}}` [Å²/s]: Sample baseline transport component
+
+**3. Velocity Dynamics (3 parameters)**
 
 .. math::
 
@@ -185,7 +193,7 @@ This implementation uses J(t) directly for nonequilibrium dynamics.
 * :math:`\beta` [dimensionless]: Velocity scaling exponent
 * :math:`v_{\text{offset}}` [nm/s]: Baseline velocity component
 
-**3. Time-Dependent Fraction (4 parameters)**
+**4. Time-Dependent Fraction (4 parameters)**
 
 .. math::
 
@@ -198,33 +206,40 @@ with constraint :math:`0 \leq f(t) \leq 1`
 * :math:`f_2` [s]: Time shift parameter
 * :math:`f_3` [dimensionless]: Constant offset
 
-**4. Flow Geometry (1 parameter)**
+**5. Flow Geometry (1 parameter)**
 
 * :math:`\phi_0` [degrees]: Flow direction angle relative to scattering vector
 
 Nonequilibrium Correlation Function (As Implemented)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The implemented two-time correlation function uses **Equation S-95** with a **single transport coefficient**
-:math:`J(t)` for both components (:math:`J_r(t) = J_s(t) = J(t)`):
+The implemented two-time correlation function uses **Equation S-95** with **separate transport coefficients**
+for reference and sample fields:
 
 .. math::
 
-   c_2(\vec{q}, t_1, t_2) = 1 + \beta \Bigg[
-   [1-f(t_1)][1-f(t_2)] e^{-q^2 \int_{t_1}^{t_2} J(t) dt} + \\
-   f(t_1)f(t_2) e^{-q^2 \int_{t_1}^{t_2} J(t) dt} + \\
-   2\sqrt{f(t_1)f(t_2)[1-f(t_1)][1-f(t_2)]} e^{-q^2 \int_{t_1}^{t_2} J(t) dt} \times \\
-   \cos\left[q \cos(\phi_0) \int_{t_1}^{t_2} v(t) dt\right]
-   \Bigg]
+   g_2 = \text{offset} + \text{contrast} \times |g_1^{\text{ref}} + g_1^{\text{sample}}|^2
 
-where :math:`J(t) = J_0 \cdot t^\alpha + J_{\text{offset}}`.
+where each field correlation has independent transport:
+
+.. math::
+
+   g_1^{\text{ref}}(t_1, t_2) &= \exp\left(-q^2 \int_{t_1}^{t_2} D_{\text{ref}}(t) dt\right) \\
+   g_1^{\text{sample}}(t_1, t_2) &= \exp\left(-q^2 \int_{t_1}^{t_2} D_{\text{sample}}(t) dt\right)
+
+with separate power-law transport:
+
+.. math::
+
+   D_{\text{ref}}(t) &= D_{0,\text{ref}} \cdot t^{\alpha_{\text{ref}}} + D_{\text{offset,ref}} \\
+   D_{\text{sample}}(t) &= D_{0,\text{sample}} \cdot t^{\alpha_{\text{sample}}} + D_{\text{offset,sample}}
 
 **Key Implementation Features:**
 
-* **Transport coefficient J(t)**: Direct implementation (not 6D relationship)
-* **Single J for both components**: Computational efficiency and appropriate for many systems
+* **Separate transport coefficients**: Independent D_ref(t) and D_sample(t) for comprehensive characterization
+* **Two-component heterodyne**: Full heterodyne correlation with distinct reference and sample dynamics
 * **Time-dependent fraction**: :math:`f(t) = f_0 \cdot \exp[f_1(t - f_2)] + f_3`
-* **Aging dynamics**: Power-law time dependence of transport coefficient J(t)
+* **Aging dynamics**: Power-law time dependence of both transport coefficients
 * **Transient flow**: Time-evolving velocity fields v(t)
 * **Component evolution**: Dynamic changes in composition fractions f(t)
 * **Nonequilibrium structure**: Departure from equilibrium Wiener process
@@ -301,7 +316,7 @@ Optimal parameters are determined by minimizing the chi-squared objective:
 
 where:
 
-* :math:`\boldsymbol{\theta}` = [D₀, α, D_offset, v₀, β, v_offset, f₀, f₁, f₂, f₃, φ₀] is the 11-parameter vector
+* :math:`\boldsymbol{\theta}` = [D₀_ref, α_ref, D_offset_ref, D₀_sample, α_sample, D_offset_sample, v₀, β, v_offset, f₀, f₁, f₂, f₃, φ₀] is the 14-parameter vector
 * :math:`c_2^{\text{exp}}` is experimental data
 * :math:`c_2^{\text{model}}` is the theoretical prediction
 * :math:`\sigma_{ij}` is measurement uncertainty

@@ -41,12 +41,12 @@ The fraction evolves according to:
 
 with physical constraint: :math:`0 \leq f(t) \leq 1` for all times.
 
-11-Parameter System
+14-Parameter System
 -------------------
 
-The model uses 11 parameters organized into four groups:
+The model uses 14 parameters organized into five groups:
 
-**Transport Coefficient Parameters (3)**:
+**Reference Transport Parameters (3)**:
 
 .. list-table::
    :widths: 15 25 15 45
@@ -56,20 +56,41 @@ The model uses 11 parameters organized into four groups:
      - Range
      - Units
      - Physical Meaning
-   * - **D₀**
+   * - **D₀_ref**
      - [1.0, 1×10⁶]
      - Å²/s
-     - Reference transport coefficient J₀ at t=1s (labeled "D" for historical compatibility)
-   * - **α**
+     - Reference field transport coefficient at t=1s
+   * - **α_ref**
      - [-2.0, 2.0]
      - dimensionless
-     - Transport coefficient time-scaling exponent
-   * - **D_offset**
+     - Reference transport time-scaling exponent
+   * - **D_offset_ref**
      - [-100, 100]
      - Å²/s
-     - Baseline transport coefficient J_offset
+     - Reference baseline transport coefficient
 
-**Note**: For equilibrium Wiener processes, J = 6D where D is the traditional diffusion coefficient. This implementation uses J(t) directly for nonequilibrium dynamics.
+**Sample Transport Parameters (3)**:
+
+.. list-table::
+   :widths: 15 25 15 45
+   :header-rows: 1
+
+   * - Parameter
+     - Range
+     - Units
+     - Physical Meaning
+   * - **D₀_sample**
+     - [1.0, 1×10⁶]
+     - Å²/s
+     - Sample field transport coefficient at t=1s
+   * - **α_sample**
+     - [-2.0, 2.0]
+     - dimensionless
+     - Sample transport time-scaling exponent
+   * - **D_offset_sample**
+     - [-100, 100]
+     - Å²/s
+     - Sample baseline transport coefficient
 
 **Velocity Parameters (3)**:
 
@@ -141,18 +162,19 @@ Physical Interpretation
 
 **Transport Coefficient Contribution**:
 
-The time-dependent transport coefficient is:
+The time-dependent transport coefficients for reference and sample fields are:
 
 .. math::
 
-   J(t) = J_0 \times t^\alpha + J_{\text{offset}}
+   D_{\text{ref}}(t) &= D_{0,\text{ref}} \times t^{\alpha_{\text{ref}}} + D_{\text{offset,ref}} \\
+   D_{\text{sample}}(t) &= D_{0,\text{sample}} \times t^{\alpha_{\text{sample}}} + D_{\text{offset,sample}}
 
 This captures:
 
 - **Anomalous transport**: α ≠ 0 indicates sub-diffusive (α < 0) or super-diffusive (α > 0) dynamics
+- **Separate field dynamics**: Independent reference and sample transport properties
 - **Aging effects**: Time-dependent transport in nonequilibrium systems
-- **Baseline transport**: Constant background transport contribution
-- **Equilibrium limit**: J = 6D for Wiener processes
+- **Baseline transport**: Constant background transport contributions
 
 **Velocity Contribution**:
 
@@ -180,7 +202,7 @@ The time-dependent fraction mixing describes:
 Configuration Examples
 -----------------------
 
-**Full 11-Parameter Heterodyne Configuration**:
+**Full 14-Parameter Heterodyne Configuration**:
 
 .. code-block:: javascript
 
@@ -191,19 +213,23 @@ Configuration Examples
      },
      "initial_parameters": {
        "parameter_names": [
-         "D0", "alpha", "D_offset",
+         "D0_ref", "alpha_ref", "D_offset_ref",
+         "D0_sample", "alpha_sample", "D_offset_sample",
          "v0", "beta", "v_offset",
          "f0", "f1", "f2", "f3",
          "phi0"
        ],
-       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
-       "active_parameters": ["D0", "alpha", "v0", "beta", "f0", "f1"]
+       "values": [1000.0, -0.5, 100.0, 1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0_ref", "alpha_ref", "D0_sample", "alpha_sample", "v0", "beta", "f0", "f1"]
      },
      "parameter_space": {
        "bounds": [
-         {"name": "D0", "min": 1.0, "max": 1000000, "type": "Normal"},
-         {"name": "alpha", "min": -2.0, "max": 2.0, "type": "Normal"},
-         {"name": "D_offset", "min": -100, "max": 100, "type": "Normal"},
+         {"name": "D0_ref", "min": 1.0, "max": 1000000, "type": "Normal"},
+         {"name": "alpha_ref", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "D_offset_ref", "min": -100, "max": 100, "type": "Normal"},
+         {"name": "D0_sample", "min": 1.0, "max": 1000000, "type": "Normal"},
+         {"name": "alpha_sample", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "D_offset_sample", "min": -100, "max": 100, "type": "Normal"},
          {"name": "v0", "min": 1e-5, "max": 10.0, "type": "Normal"},
          {"name": "beta", "min": -2.0, "max": 2.0, "type": "Normal"},
          {"name": "v_offset", "min": -0.1, "max": 0.1, "type": "Normal"},
@@ -225,13 +251,14 @@ For initial exploration, you can fix some parameters:
    {
      "initial_parameters": {
        "parameter_names": [
-         "D0", "alpha", "D_offset",
+         "D0_ref", "alpha_ref", "D_offset_ref",
+         "D0_sample", "alpha_sample", "D_offset_sample",
          "v0", "beta", "v_offset",
          "f0", "f1", "f2", "f3",
          "phi0"
        ],
-       "values": [1000.0, -0.5, 0.0, 0.01, 0.0, 0.0, 0.5, 0.0, 50.0, 0.3, 0.0],
-       "active_parameters": ["D0", "alpha", "v0", "f0"]  // Optimize only 4 parameters
+       "values": [1000.0, -0.5, 0.0, 1000.0, -0.5, 0.0, 0.01, 0.0, 0.0, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0_ref", "D0_sample", "v0", "f0"]  // Optimize only 4 parameters
      }
    }
 
@@ -280,15 +307,16 @@ Parameter Selection Guidelines
 
 **Start with Essential Parameters**:
 
-- **D₀, α**: Core diffusion dynamics
+- **D₀_ref, D₀_sample**: Core transport dynamics for both fields
 - **v₀**: Flow velocity (if flow present)
 - **f₀**: Reference/sample mixing amplitude
 
 **Add Complexity as Needed**:
 
+- **α_ref, α_sample**: For time-dependent transport in each field
 - **β**: If flow shows time-dependent behavior
 - **f₁, f₂**: If fraction mixing shows temporal dynamics
-- **D_offset, v_offset**: For baseline corrections
+- **D_offset_ref, D_offset_sample, v_offset**: For baseline corrections
 - **f₃**: For steady-state fraction adjustment
 - **φ₀**: For flow direction refinement
 

@@ -10,10 +10,10 @@ ______________________________________________________________________
 
 ### Added
 
-- **Heterodyne Model (11 Parameters)**: Comprehensive documentation of the two-component heterodyne scattering model
-  - Model equation with reference and sample components
+- **Heterodyne Model (14 Parameters)**: Comprehensive documentation of the two-component heterodyne scattering model
+  - Model equation with separate reference and sample field correlations
   - Time-dependent fraction: `f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃`
-  - Complete parameter descriptions for all 11 parameters
+  - Complete parameter descriptions for all 14 parameters
   - Physical constraint documentation: `0 ≤ f(t) ≤ 1`
 - **Comprehensive API Documentation**: Complete API reference for all modules
   - Core analysis engine documentation
@@ -29,25 +29,26 @@ ______________________________________________________________________
   - Developer guide for contributors
   - Research documentation with theoretical framework
 - **User Guide - Analysis Modes (`docs/user-guide/analysis-modes.rst`)**:
-  - Comprehensive 11-parameter heterodyne model documentation
-  - Detailed parameter tables for diffusion, velocity, fraction, and flow angle
+  - Comprehensive 14-parameter heterodyne model documentation
+  - Detailed parameter tables for reference transport, sample transport, velocity, fraction, and flow angle
   - Physical interpretation sections for each parameter group
   - Configuration examples and workflow guidelines
 - **User Guide - Configuration (`docs/user-guide/configuration.rst`)**:
-  - Complete configuration guide for 11-parameter heterodyne model
-  - Parameter bounds tables for all 11 parameters
+  - Complete configuration guide for 14-parameter heterodyne model
+  - Parameter bounds tables for all 14 parameters
   - Configuration templates and best practices
   - Optimization method selection guide
 - **User Guide - Quick Start (`docs/user-guide/quickstart.rst`)**:
   - 5-minute tutorial for getting started
-  - Python API examples with 11-parameter model
+  - Python API examples with 14-parameter model
   - Command-line interface guide
   - Configuration tips and performance optimization
 
 ### Features
 
-- **11-Parameter Model**: Native implementation of two-component heterodyne scattering
-  - Diffusion parameters (3): D₀, α, D_offset
+- **14-Parameter Model**: Native implementation of two-component heterodyne scattering with separate reference and sample correlations
+  - Reference transport (3): D₀_ref, α_ref, D_offset_ref
+  - Sample transport (3): D₀_sample, α_sample, D_offset_sample
   - Velocity parameters (3): v₀, β, v_offset
   - Fraction parameters (4): f₀, f₁, f₂, f₃
   - Flow angle (1): φ₀

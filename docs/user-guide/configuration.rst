@@ -39,10 +39,10 @@ Quick Configuration
 
 .. code-block:: bash
 
-   # Create 11-parameter heterodyne configuration
+   # Create 14-parameter heterodyne configuration
    heterodyne-config --mode heterodyne --sample my_experiment
 
-**Basic Structure** (11-Parameter Heterodyne Model):
+**Basic Structure** (14-Parameter Heterodyne Model):
 
 .. code-block:: javascript
 
@@ -57,13 +57,14 @@ Quick Configuration
      },
      "initial_parameters": {
        "parameter_names": [
-         "D0", "alpha", "D_offset",
+         "D0_ref", "alpha_ref", "D_offset_ref",
+         "D0_sample", "alpha_sample", "D_offset_sample",
          "v0", "beta", "v_offset",
          "f0", "f1", "f2", "f3",
          "phi0"
        ],
-       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
-       "active_parameters": ["D0", "alpha", "v0", "f0"]
+       "values": [1000.0, -0.5, 100.0, 1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0_ref", "D0_sample", "v0", "f0"]
      }
    }
 
@@ -146,20 +147,21 @@ Specify input data locations:
 Initial Parameters
 ~~~~~~~~~~~~~~~~~~
 
-Starting values for 11-parameter heterodyne model:
+Starting values for 14-parameter heterodyne model:
 
 .. code-block:: javascript
 
    {
      "initial_parameters": {
        "parameter_names": [
-         "D0", "alpha", "D_offset",      // Diffusion (3)
-         "v0", "beta", "v_offset",       // Velocity (3)
-         "f0", "f1", "f2", "f3",         // Fraction (4)
-         "phi0"                          // Flow angle (1)
+         "D0_ref", "alpha_ref", "D_offset_ref",          // Reference transport (3)
+         "D0_sample", "alpha_sample", "D_offset_sample", // Sample transport (3)
+         "v0", "beta", "v_offset",                       // Velocity (3)
+         "f0", "f1", "f2", "f3",                         // Fraction (4)
+         "phi0"                                          // Flow angle (1)
        ],
-       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
-       "active_parameters": ["D0", "alpha", "v0", "f0"]  // Parameters to optimize
+       "values": [1000.0, -0.5, 100.0, 1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0_ref", "D0_sample", "v0", "f0"]  // Parameters to optimize
      }
    }
 
@@ -168,17 +170,21 @@ Starting values for 11-parameter heterodyne model:
 Parameter Bounds and Constraints
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Optimization constraints for 11-parameter heterodyne model:
+Optimization constraints for 14-parameter heterodyne model:
 
 .. code-block:: javascript
 
    {
      "parameter_space": {
        "bounds": [
-         // Diffusion parameters
-         {"name": "D0", "min": 1.0, "max": 1000000, "type": "Normal"},
-         {"name": "alpha", "min": -2.0, "max": 2.0, "type": "Normal"},
-         {"name": "D_offset", "min": -100, "max": 100, "type": "Normal"},
+         // Reference transport parameters
+         {"name": "D0_ref", "min": 1.0, "max": 1000000, "type": "Normal"},
+         {"name": "alpha_ref", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "D_offset_ref", "min": -100, "max": 100, "type": "Normal"},
+         // Sample transport parameters
+         {"name": "D0_sample", "min": 1.0, "max": 1000000, "type": "Normal"},
+         {"name": "alpha_sample", "min": -2.0, "max": 2.0, "type": "Normal"},
+         {"name": "D_offset_sample", "min": -100, "max": 100, "type": "Normal"},
          // Velocity parameters
          {"name": "v0", "min": 1e-5, "max": 10.0, "type": "Normal"},
          {"name": "beta", "min": -2.0, "max": 2.0, "type": "Normal"},
@@ -195,14 +201,14 @@ Optimization constraints for 11-parameter heterodyne model:
    }
 
 .. note::
-   **Parameter Bounds**: The ``type`` field specifies the parameter distribution type. All 11 parameters use Normal distributions for bounds specification. The package automatically enforces physical constraints: D(t) ≥ 0, v(t) ≥ 0, 0 ≤ f(t) ≤ 1.
+   **Parameter Bounds**: The ``type`` field specifies the parameter distribution type. All 14 parameters use Normal distributions for bounds specification. The package automatically enforces physical constraints: D(t) ≥ 0, v(t) ≥ 0, 0 ≤ f(t) ≤ 1.
 
-Parameter Constraints and Ranges (11-Parameter Heterodyne Model)
+Parameter Constraints and Ranges (14-Parameter Heterodyne Model)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The heterodyne package implements comprehensive physical constraints for all 11 parameters:
+The heterodyne package implements comprehensive physical constraints for all 14 parameters:
 
-**Diffusion Parameters (3)**
+**Reference Transport Parameters (3)**
 
 .. list-table::
    :header-rows: 1
@@ -212,15 +218,38 @@ The heterodyne package implements comprehensive physical constraints for all 11 
      - Range
      - Distribution
      - Physical Constraint
-   * - ``D0``
+   * - ``D0_ref``
      - [1.0, 1×10⁶] Å²/s
      - TruncatedNormal(μ=1e4, σ=1000)
      - Must be positive
-   * - ``alpha``
+   * - ``alpha_ref``
      - [-2.0, 2.0]
      - Normal(μ=-1.5, σ=0.1)
      - none
-   * - ``D_offset``
+   * - ``D_offset_ref``
+     - [-100, 100] Å²/s
+     - Normal(μ=0.0, σ=10.0)
+     - none
+
+**Sample Transport Parameters (3)**
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 25 30 25
+
+   * - Parameter
+     - Range
+     - Distribution
+     - Physical Constraint
+   * - ``D0_sample``
+     - [1.0, 1×10⁶] Å²/s
+     - TruncatedNormal(μ=1e4, σ=1000)
+     - Must be positive
+   * - ``alpha_sample``
+     - [-2.0, 2.0]
+     - Normal(μ=-1.5, σ=0.1)
+     - none
+   * - ``D_offset_sample``
      - [-100, 100] Å²/s
      - Normal(μ=0.0, σ=10.0)
      - none

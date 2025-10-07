@@ -18,11 +18,12 @@ A high-performance Python package for analyzing heterodyne scattering in X-ray P
 Overview
 --------
 
-This package analyzes time-dependent intensity correlation functions c₂(φ,t₁,t₂) in complex fluids under nonequilibrium conditions, capturing the interplay between Brownian diffusion and advective shear flow. The implementation provides:
+This package analyzes two-component heterodyne X-ray Photon Correlation Spectroscopy (XPCS) under nonequilibrium conditions. The implementation provides:
 
-- **Heterodyne Scattering Model** (11 parameters): Two-component system with time-dependent fraction mixing
+- **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne with separate reference and sample correlations
 
-  - Diffusion (3 params): D₀, α, D_offset
+  - Reference transport (3 params): D₀_ref, α_ref, D_offset_ref
+  - Sample transport (3 params): D₀_sample, α_sample, D_offset_sample
   - Velocity (3 params): v₀, β, v_offset
   - Fraction (4 params): f₀, f₁, f₂, f₃
   - Flow angle (1 param): φ₀
@@ -72,19 +73,27 @@ Quick Start
        c2_experimental=c2_data
    )
 
-   print(f"D₀ = {params[0]:.3e} Å²/s")
+   # Extract parameters (14 total)
+   D0_ref, alpha_ref, D_offset_ref = params[0:3]
+   D0_sample, alpha_sample, D_offset_sample = params[3:6]
+   v0, beta, v_offset = params[6:9]
+   f0, f1, f2, f3 = params[9:13]
+   phi0 = params[13]
+
+   print(f"D₀_ref = {D0_ref:.3e} Å²/s")
+   print(f"D₀_sample = {D0_sample:.3e} Å²/s")
    print(f"χ² = {results.chi_squared:.6e}")
 
 **Command Line Interface:**
 
 .. code-block:: bash
 
-   # Create heterodyne configuration (11 parameters)
-   cp heterodyne/config/heterodyne_11param_example.json my_config.json
+   # Create heterodyne configuration (14 parameters)
+   cp heterodyne/config/template.json my_config.json
    # Edit my_config.json with your experimental parameters
 
    # Main analysis command
-   heterodyne --config my_config.json            # Run with 11-parameter heterodyne model
+   heterodyne --config my_config.json            # Run with 14-parameter heterodyne model
    heterodyne --method robust                    # Robust optimization for noisy data
    heterodyne --method all --verbose             # All methods with debug logging
 
@@ -100,11 +109,11 @@ Quick Start
 Core Features
 -------------
 
-**11-Parameter Heterodyne Model (PNAS 2024)**
+**14-Parameter Heterodyne Model (PNAS 2024)**
 
-* **Two-component heterodyne scattering**: Implements He et al. PNAS 2024 **Equation S-95** (general time-dependent form) with transport coefficients
-* **Transport coefficient approach**: Uses J(t) directly for nonequilibrium dynamics (J = 6D for equilibrium Wiener processes)
-* **Comprehensive parameter set**: 11 parameters covering transport (3), velocity (3), fraction (4), and flow angle (1)
+* **Two-component heterodyne scattering**: Implements He et al. PNAS 2024 **Equation S-95** with separate reference and sample field correlations
+* **Separate transport coefficients**: Independent reference and sample transport parameters for comprehensive characterization
+* **Comprehensive parameter set**: 14 parameters covering reference transport (3), sample transport (3), velocity (3), fraction (4), and flow angle (1)
 * **Time-dependent fraction**: ``f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃`` with physical constraint ``0 ≤ f(t) ≤ 1``
 * **Physical constraint enforcement**: Automatic validation during optimization to ensure meaningful results
 
@@ -121,39 +130,34 @@ Core Features
 * **Vectorized operations**: Optimized NumPy array processing throughout
 * **Computational efficiency**: Optimized algorithms for large-scale XPCS data analysis
 
-Heterodyne Model (11 Parameters)
+Heterodyne Model (14 Parameters)
 ---------------------------------
 
-The package implements the **general two-component heterodyne scattering model** from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ **Equation S-95**, which uses time-dependent transport coefficients J(t) for nonequilibrium dynamics.
+The package implements the **two-component heterodyne scattering model** from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_ **Equation S-95**, with separate reference and sample field correlations.
 
 **Model Equation (Equation S-95):**
 
-The implementation uses Equation S-95 (general time-dependent form) with transport coefficients:
+The heterodyne correlation g₂ is composed of separate reference and sample field correlations:
 
 .. math::
 
-   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f^2} \left[
-   [x_r(t_1)x_r(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
-   [x_s(t_1)x_s(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
-   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2) \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) \cos(...)
-   \right]
+   g_2 = \text{offset} + \text{contrast} \times |g_1^{\text{ref}} + g_1^{\text{sample}}|^2
 
-where:
+where each field correlation has independent time-dependent transport:
 
-* :math:`J(t)` - Time-dependent transport coefficient [Å²/s]
-* :math:`x_n(t)` - Time-dependent fraction of component n (reference/sample)
-* :math:`\mathbb{E}[v(t)]` - Time-dependent mean velocity
-* :math:`\phi` - Angle between scattering vector and flow direction
-* :math:`\beta` - Contrast factor
-* :math:`f^2` - Normalization factor
+.. math::
 
-**Relationship to Equilibrium Form (Equation S-98):**
+   g_1^{\text{ref}}(t_1, t_2) &= \exp\left(-q^2 \int_{t_1}^{t_2} D_{\text{ref}}(t) dt\right) \\
+   g_1^{\text{sample}}(t_1, t_2) &= \exp\left(-q^2 \int_{t_1}^{t_2} D_{\text{sample}}(t) dt\right)
 
-For equilibrium Wiener processes, the transport coefficient reduces to J = 6D, where D is the traditional diffusion coefficient. Equation S-98 is the equilibrium simplification. This package implements the more general S-95.
+**Transport Parameterization:**
 
-**Nonequilibrium Implementation:**
+Each transport coefficient is parameterized as power-law with offset:
 
-This package parameterizes J(t) as :math:`J(t) = J_0 \cdot t^\alpha + J_{offset}` to capture nonequilibrium dynamics including aging, yielding, and shear banding phenomena. Parameters labeled "D" in the code (D₀, α, D_offset) are actually transport coefficient parameters (J₀, α, J_offset) for historical compatibility.
+.. math::
+
+   D_{\text{ref}}(t) &= D_{0,\text{ref}} \cdot t^{\alpha_{\text{ref}}} + D_{\text{offset,ref}} \\
+   D_{\text{sample}}(t) &= D_{0,\text{sample}} \cdot t^{\alpha_{\text{sample}}} + D_{\text{offset,sample}}
 
 **Parameter Categories:**
 
@@ -164,9 +168,12 @@ This package parameterizes J(t) as :math:`J(t) = J_0 \cdot t^\alpha + J_{offset}
    * - Category
      - Count
      - Parameters
-   * - **Diffusion**
+   * - **Reference Transport**
      - 3
-     - D₀ (reference diffusion coefficient, nm²/s), α (power-law exponent), D_offset (baseline offset, nm²/s)
+     - D₀_ref (reference diffusion coefficient, nm²/s), α_ref (power-law exponent), D_offset_ref (baseline offset, nm²/s)
+   * - **Sample Transport**
+     - 3
+     - D₀_sample (sample diffusion coefficient, nm²/s), α_sample (power-law exponent), D_offset_sample (baseline offset, nm²/s)
    * - **Velocity**
      - 3
      - v₀ (reference velocity, nm/s), β (power-law exponent), v_offset (baseline offset, nm/s)
@@ -188,8 +195,8 @@ with physical constraint :math:`0 \leq f(t) \leq 1` for all times (enforced duri
 Key Features
 ------------
 
-**Heterodyne Scattering Model (11 Parameters)**
-   Two-component system with time-dependent fraction mixing, covering diffusion, velocity, fraction dynamics, and flow angle
+**Heterodyne Scattering Model (14 Parameters)**
+   Two-component heterodyne with separate reference and sample correlations, covering reference transport, sample transport, velocity, fraction dynamics, and flow angle
 
 **Multiple Optimization Methods**
    Classical (Nelder-Mead, Powell) and Robust (Wasserstein DRO, Scenario-based, Ellipsoidal) optimization with comprehensive parameter validation

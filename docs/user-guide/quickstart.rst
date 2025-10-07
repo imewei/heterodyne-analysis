@@ -17,7 +17,7 @@ Installation
 
 .. code-block:: bash
 
-   # Create an 11-parameter heterodyne configuration
+   # Create a 14-parameter heterodyne configuration
    heterodyne-config --mode heterodyne --sample my_sample
 
    # Tab completion works automatically in most shells:
@@ -61,7 +61,7 @@ Results are saved to the ``heterodyne_results/`` directory with organized subdir
 - **Robust** (``./robust/``): Noise-resistant optimization with method-specific directories (wasserstein, scenario, ellipsoidal)
 - **All methods**: Save experimental, fitted, and residuals data in consolidated ``fitted_data.npz`` files per method
 
-Python API Example (11-Parameter Heterodyne Model)
+Python API Example (14-Parameter Heterodyne Model)
 ---------------------------------------------------
 
 .. code-block:: python
@@ -73,11 +73,11 @@ Python API Example (11-Parameter Heterodyne Model)
    from heterodyne.optimization.robust import RobustHeterodyneOptimizer
    from heterodyne.data.xpcs_loader import load_xpcs_data
 
-   # Load 11-parameter heterodyne configuration
+   # Load 14-parameter heterodyne configuration
    with open("my_heterodyne_config.json", 'r') as f:
        config = json.load(f)
 
-   # Initialize analysis core with 11-parameter model
+   # Initialize analysis core with 14-parameter model
    core = HeterodyneAnalysisCore(config)
 
    # Load experimental data
@@ -95,8 +95,10 @@ Python API Example (11-Parameter Heterodyne Model)
        c2_experimental=c2_data
    )
 
-   # Display results for 11 parameters
-   param_names = ["D0", "alpha", "D_offset", "v0", "beta", "v_offset",
+   # Display results for 14 parameters
+   param_names = ["D0_ref", "alpha_ref", "D_offset_ref",
+                  "D0_sample", "alpha_sample", "D_offset_sample",
+                  "v0", "beta", "v_offset",
                   "f0", "f1", "f2", "f3", "phi0"]
    print("Optimized Parameters:")
    for name, value in zip(param_names, params):
@@ -125,7 +127,8 @@ The package implements **Equation S-95** (general time-dependent form) from `He 
 
 **Parameter Groups:**
 
-- **Transport Coefficients (3)**: D₀, α, D_offset - Controls transport dynamics (labeled "D" for historical compatibility; actually J₀, α, J_offset)
+- **Reference Transport (3)**: D₀_ref, α_ref, D_offset_ref - Controls reference transport dynamics
+- **Sample Transport (3)**: D₀_sample, α_sample, D_offset_sample - Controls sample transport dynamics
 - **Velocity (3)**: v₀, β, v_offset - Controls flow dynamics
 - **Fraction (4)**: f₀, f₁, f₂, f₃ - Controls time-dependent component mixing
 - **Flow Angle (1)**: φ₀ - Controls flow direction
@@ -142,7 +145,7 @@ The package implements **Equation S-95** (general time-dependent form) from `He 
 Configuration Tips
 ------------------
 
-**Quick 11-Parameter Heterodyne Configuration:**
+**Quick 14-Parameter Heterodyne Configuration:**
 
 .. code-block:: javascript
 
@@ -157,13 +160,14 @@ Configuration Tips
      },
      "initial_parameters": {
        "parameter_names": [
-         "D0", "alpha", "D_offset",
+         "D0_ref", "alpha_ref", "D_offset_ref",
+         "D0_sample", "alpha_sample", "D_offset_sample",
          "v0", "beta", "v_offset",
          "f0", "f1", "f2", "f3",
          "phi0"
        ],
-       "values": [1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
-       "active_parameters": ["D0", "alpha", "v0", "f0"]
+       "values": [1000.0, -0.5, 100.0, 1000.0, -0.5, 100.0, 0.01, 0.5, 0.001, 0.5, 0.0, 50.0, 0.3, 0.0],
+       "active_parameters": ["D0_ref", "D0_sample", "v0", "f0"]
      }
    }
 
