@@ -11,17 +11,17 @@
 # =============================================================================
 # Essential Scientific Computing Libraries
 # =============================================================================
-numpy>=2.1.0              # Core array operations and mathematical functions
-scipy>=1.14.0             # Scientific computing algorithms and optimization
-matplotlib>=3.9.0         # Basic plotting and visualization
-h5py>=3.12.0              # HDF5 file support for XPCS data loading
+numpy>=2.3.3              # Core array operations and mathematical functions
+scipy>=1.16.2             # Scientific computing algorithms and optimization
+matplotlib>=3.10.6        # Basic plotting and visualization
+h5py>=3.14.0              # HDF5 file support for XPCS data loading
 
 # =============================================================================
 # Configuration and CLI Tools
 # =============================================================================
-pydantic>=2.9.0           # Data validation and settings management
-typer>=0.13.0             # Modern CLI framework with type hints
-rich>=13.9.0              # Rich terminal output and progress bars
+pydantic>=2.12.0          # Data validation and settings management
+typer>=0.19.2             # Modern CLI framework with type hints
+rich>=14.1.0              # Rich terminal output and progress bars
 typing-extensions>=4.12.0 # Backport of latest typing features (Python <3.13)
 
 # =============================================================================

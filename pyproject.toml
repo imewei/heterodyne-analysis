@@ -44,7 +44,7 @@ dependencies = [
     "scipy>=1.16.2",
     "matplotlib>=3.10.6",
     "h5py>=3.14.0",
-    "pydantic>=2.11.9",
+    "pydantic>=2.12.0",
     "typer>=0.19.2",
     "rich>=14.1.0",
     "typing-extensions>=4.12.0; python_version<'3.13'",
@@ -54,8 +54,8 @@ dependencies = [
 # Core optional dependencies
 performance = [
     "numba>=0.62.1",
-    "psutil>=6.0.0",
-    "numexpr>=2.10.0",
+    "psutil>=7.1.0",
+    "numexpr>=2.13.1",
     "bottleneck>=1.4.0",
     "threadpoolctl>=3.5.0",
     "py-cpuinfo>=9.0.0",
@@ -64,7 +64,7 @@ performance = [
 ]
 robust = [
     "cvxpy>=1.7.3",
-    "gurobipy>=11.0.0",
+    "gurobipy>=12.0.3",
     "mosek>=10.2.0",
 ]
 # GPU dependencies removed for CPU-only optimization
@@ -115,7 +115,7 @@ test = [
 
 # Modern code quality and linting ecosystem
 quality = [
-    "ruff>=0.13.2",                  # Fast Python linter and formatter
+    "ruff>=0.13.3",                  # Fast Python linter and formatter
     "black>=25.9.0",                 # Code formatting (matches pre-commit)
     "isort>=6.1.0",                  # Import sorting (matches pre-commit)
     "mypy>=1.18.2",                  # Static type checking
@@ -141,7 +141,7 @@ dev = [
 
 # Documentation
 docs = [
-    "sphinx>=8.2.0",
+    "sphinx>=8.2.3",
     "sphinx-rtd-theme>=3.0.2",
     "sphinx-autodoc-typehints>=3.2.0",
     "myst-parser>=4.0.0",

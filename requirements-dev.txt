@@ -20,8 +20,8 @@
 # Modern Testing Framework and Utilities
 # =============================================================================
 # Core pytest framework with latest features
-pytest>=8.4.0            # Modern testing framework with fixtures and parametrization
-pytest-cov>=6.0.0        # Coverage reporting for test suite
+pytest>=8.4.2            # Modern testing framework with fixtures and parametrization
+pytest-cov>=7.0.0        # Coverage reporting for test suite
 pytest-xdist>=3.8.0      # Parallel test execution across multiple cores
 pytest-benchmark>=5.1.0  # Performance benchmarking and regression testing
 pytest-timeout>=2.3.0    # Test timeout handling
@@ -58,7 +58,7 @@ pydantic>=2.5.0          # Data validation and settings management
 # =============================================================================
 # Modern Code Quality and Formatting Tools
 # =============================================================================
-ruff>=0.13.2             # Fast Python linter and formatter (Rust-based)
+ruff>=0.13.3             # Fast Python linter and formatter (Rust-based)
 black>=25.9.0            # Code formatting with consistent style
 isort>=6.1.0             # Import sorting and organization
 mypy>=1.18.2             # Static type checking with type hints
@@ -73,7 +73,7 @@ flake8>=7.3.0            # Traditional linting and style checking
 # =============================================================================
 # Documentation Generation Tools
 # =============================================================================
-sphinx>=8.2.0                    # Documentation generator with RST/Markdown support
+sphinx>=8.2.3                    # Documentation generator with RST/Markdown support
 sphinx-rtd-theme>=3.0.0          # Read the Docs theme for professional docs
 myst-parser>=4.0.0               # Markdown support for Sphinx documentation
 sphinx-autodoc-typehints>=2.5.0  # Automatic type hints in API documentation
