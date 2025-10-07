@@ -1,0 +1,720 @@
+{
+  "_template_info": {
+    "_comment": "COMPREHENSIVE 14-PARAMETER HETERODYNE CONFIGURATION TEMPLATE",
+    "_creation_date": "2025-10-07",
+    "_model": "Two-component heterodyne scattering with separate g₁_ref and g₁_sample field correlations",
+    "_based_on_analysis": "He et al. PNAS 2024 Equation S-95 - Separate reference and sample transport coefficients",
+    "_usage": "Copy this template and customize for your heterodyne XPCS experiment",
+    "_version": "1.0.0"
+  },
+  "metadata": {
+    "_comment": "Heterodyne-specific metadata - Describes the 14-parameter model",
+    "config_version": "1.0.0",
+    "description": "14-Parameter Heterodyne Scattering Analysis - Two-component model with independent reference and sample dynamics",
+    "based_on": "He et al. PNAS 2024 - Transport coefficient approach (Equation S-95)",
+    "analysis_mode": "heterodyne",
+    "model_features": {
+      "separate_transport_coefficients": "Independent D_ref(t) and D_sample(t) for comprehensive characterization",
+      "two_component_correlation": "g₂ = |g₁^ref + g₁^sample|² - heterodyne field correlation",
+      "time_dependent_fraction": "f(t) = f₀·exp[f₁(t - f₂)] + f₃",
+      "aging_dynamics": "Power-law transport coefficients with separate alpha_ref and alpha_sample",
+      "flow_geometry": "Angular dependence with phi₀ parameter"
+    },
+    "parameters_optimized": "[D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample, v0, beta, v_offset, f0, f1, f2, f3, phi0]",
+    "script_compatibility": "heterodyne v1.0.0 with Gurobi Trust Region SQP and robust optimization",
+    "_solver_optimization": {
+      "optimized_for": "Heterodyne XPCS experiments with large datasets (0.1M - 4M datapoints)",
+      "optimization_date": "2025-10-07",
+      "key_improvements": [
+        "Nelder-Mead maxiter: 15000 for 14-parameter space",
+        "Gurobi Trust Region SQP: max_iterations 2500",
+        "Robust methods: Wasserstein, Scenario, Ellipsoidal",
+        "Cache size: 2000 MB for large correlation matrices",
+        "Max threads: 16 for parallel heterodyne calculations"
+      ],
+      "expected_performance": "25-60% faster for large heterodyne datasets"
+    }
+  },
+  "experimental_data": {
+    "_comment": "CUSTOMIZE: Update paths for your heterodyne XPCS experiment",
+    "data_folder_path": "./data/YOUR_HETERODYNE_SAMPLE/",
+    "data_file_name": "heterodyne_correlation.hdf",
+    "phi_angles_path": "./data/phi_angles/",
+    "phi_angles_file": "phi_list.txt",
+    "exchange_key": "exchange",
+    "cache_file_path": "./data/YOUR_HETERODYNE_SAMPLE/",
+    "cache_filename_template": "cached_c2_heterodyne_{start_frame}_{end_frame}.npz",
+    "cache_compression": true,
+    "data_type": "float64",
+    "file_format": "NPZ",
+    "preprocessing": {
+      "apply_diagonal_correction": true,
+      "vectorized_correction": true,
+      "cache_processed_data": true,
+      "normalize_data": true,
+      "normalization_method": "baseline"
+    }
+  },
+  "analyzer_parameters": {
+    "_comment": "CUSTOMIZE: Physics parameters for your heterodyne experiment",
+    "temporal": {
+      "dt": 0.1,
+      "_dt_note": "Time step between frames in seconds - CUSTOMIZE for your XPCS acquisition",
+      "dt_unit": "seconds",
+      "start_frame": 100,
+      "_start_frame_note": "Skip initial frames for equilibration (typical: 50-200)",
+      "end_frame": 1000,
+      "_end_frame_note": "Total analysis window - ensure good statistics",
+      "frame_description": "Heterodyne correlation analysis time window"
+    },
+    "scattering": {
+      "wavevector_q": 0.001,
+      "_q_note": "CUSTOMIZE: Scattering wavevector q = 4π sin(θ/2)/λ for your geometry",
+      "q_unit": "Å⁻¹",
+      "typical_range": [0.001, 0.1],
+      "_heterodyne_note": "Heterodyne scattering is sensitive to q-dependent dynamics"
+    },
+    "geometry": {
+      "stator_rotor_gap": 2000000,
+      "_gap_note": "CUSTOMIZE: Rheometer gap in Angstroms (typical: 100-500 μm = 1e6-5e6 Å)",
+      "gap_unit": "Å",
+      "gap_in_microns": 200,
+      "_heterodyne_geometry_note": "Gap size affects flow profile and heterodyne signal strength"
+    },
+    "computational": {
+      "num_threads": "auto",
+      "auto_detect_cores": true,
+      "max_threads_limit": 16,
+      "_max_threads_note": "Heterodyne calculations benefit from parallelization",
+      "memory_limit_gb": 32,
+      "_memory_limit_note": "Large correlation matrices for heterodyne analysis"
+    }
+  },
+  "initial_parameters": {
+    "_comment": "HETERODYNE MODEL: 14 parameters optimized for typical aging colloids under shear",
+    "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 100.0, 0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.0],
+    "parameter_names": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "_parameter_organization": {
+      "reference_transport": {
+        "parameters": ["D0_ref", "alpha_ref", "D_offset_ref"],
+        "indices": [0, 1, 2],
+        "description": "Reference beam transport coefficient parameters"
+      },
+      "sample_transport": {
+        "parameters": ["D0_sample", "alpha_sample", "D_offset_sample"],
+        "indices": [3, 4, 5],
+        "description": "Sample beam transport coefficient parameters"
+      },
+      "velocity": {
+        "parameters": ["v0", "beta", "v_offset"],
+        "indices": [6, 7, 8],
+        "description": "Flow velocity parameters"
+      },
+      "fractions": {
+        "parameters": ["f0", "f1", "f2", "f3"],
+        "indices": [9, 10, 11, 12],
+        "description": "Time-dependent fraction parameters"
+      },
+      "flow_angle": {
+        "parameters": ["phi0"],
+        "indices": [13],
+        "description": "Flow direction angle"
+      }
+    },
+    "units": ["Å²/s", "dimensionless", "Å²/s", "Å²/s", "dimensionless", "Å²/s", "Å/s", "dimensionless", "Å/s", "dimensionless", "dimensionless", "dimensionless", "dimensionless", "degrees"],
+    "physical_meaning": {
+      "D0_ref": "Reference transport coefficient J₀ - characteristic diffusion amplitude for reference beam",
+      "alpha_ref": "Reference transport time-scaling exponent - aging (α<0) or rejuvenation (α>0) of reference",
+      "D_offset_ref": "Reference baseline transport coefficient J_offset - steady-state diffusion of reference",
+      "D0_sample": "Sample transport coefficient J₀ - characteristic diffusion amplitude for sample beam",
+      "alpha_sample": "Sample transport time-scaling exponent - aging (α<0) or rejuvenation (α>0) of sample",
+      "D_offset_sample": "Sample baseline transport coefficient J_offset - steady-state diffusion of sample",
+      "v0": "Reference velocity magnitude - characteristic flow speed",
+      "beta": "Velocity power-law exponent - flow evolution over time",
+      "v_offset": "Baseline velocity offset - constant flow component",
+      "f0": "Fraction amplitude - controls magnitude of time-dependent fraction",
+      "f1": "Fraction rate constant - controls time evolution speed",
+      "f2": "Fraction time offset - controls temporal shift",
+      "f3": "Fraction baseline - constant component of fraction",
+      "phi0": "Flow direction angle relative to scattering vector - 0° = parallel, 90° = perpendicular"
+    },
+    "active_parameters": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "parameter_units": {
+      "D0_ref": "Å²/s",
+      "alpha_ref": "dimensionless",
+      "D_offset_ref": "Å²/s",
+      "D0_sample": "Å²/s",
+      "alpha_sample": "dimensionless",
+      "D_offset_sample": "Å²/s",
+      "v0": "Å/s",
+      "beta": "dimensionless",
+      "v_offset": "Å/s",
+      "f0": "dimensionless",
+      "f1": "dimensionless",
+      "f2": "dimensionless",
+      "f3": "dimensionless",
+      "phi0": "degrees"
+    },
+    "_heterodyne_initialization_strategy": {
+      "reference_sample_coupling": "Initialize ref and sample parameters equally for backward compatibility",
+      "optimization_behavior": "During fitting, sample parameters will diverge from reference as needed",
+      "fraction_constraint": "Ensure 0 ≤ f(t) ≤ 1 for all times by adjusting f0, f1, f2, f3",
+      "typical_aging_colloids": "alpha_ref ≈ alpha_sample ≈ -0.5 for aging systems",
+      "typical_flow": "v0 ~ 100 Å/s for moderate shear, beta ≈ 0 for steady-state"
+    }
+  },
+  "optimization_config": {
+    "_comment": "Comprehensive optimization settings for 14-parameter heterodyne model",
+    "angle_filtering": {
+      "_comment": "Angle filtering for anisotropic heterodyne analysis",
+      "enabled": true,
+      "target_ranges": [
+        {"min_angle": -10.0, "max_angle": 10.0},
+        {"min_angle": 80.0, "max_angle": 100.0},
+        {"min_angle": 170.0, "max_angle": 190.0},
+        {"min_angle": 260.0, "max_angle": 280.0}
+      ],
+      "fallback_to_all_angles": true,
+      "_heterodyne_note": "Four-quadrant coverage captures anisotropic heterodyne dynamics"
+    },
+    "classical_optimization": {
+      "methods": ["Nelder-Mead", "Gurobi"],
+      "_heterodyne_note": "Gurobi Trust Region SQP handles 14-parameter heterodyne space efficiently",
+      "method_options": {
+        "Nelder-Mead": {
+          "maxiter": 15000,
+          "_heterodyne_note": "Extended iterations for complex 14-parameter heterodyne optimization",
+          "xatol": 1e-10,
+          "fatol": 1e-10,
+          "adaptive": true
+        },
+        "Gurobi": {
+          "_comment": "Enhanced Trust Region SQP for heterodyne optimization",
+          "_algorithm": "Iterative trust region SQP with quadratic approximation",
+          "max_iterations": 2500,
+          "tolerance": 1e-6,
+          "output_flag": 0,
+          "method": 2,
+          "time_limit": 1800,
+          "_trust_region_settings": {
+            "initial_radius": 1.0,
+            "max_radius": 10.0,
+            "eta1": 0.25,
+            "eta2": 0.75,
+            "gamma1": 0.25,
+            "gamma2": 2.0,
+            "max_trust_iterations": 100
+          },
+          "_heterodyne_advantages": "Better convergence for coupled ref/sample transport coefficients"
+        }
+      },
+      "selection_strategy": "best_chi_squared",
+      "subsampling": {
+        "_comment": "Subsampling for large heterodyne correlation datasets",
+        "enabled": true,
+        "max_data_points": 100000,
+        "time_subsample_factor": 4,
+        "angle_subsample_factor": 2,
+        "_heterodyne_note": "Maintains heterodyne signal quality while improving optimization speed"
+      }
+    },
+    "robust_optimization": {
+      "_comment": "Robust optimization for heterodyne analysis with measurement uncertainty",
+      "enabled": true,
+      "uncertainty_model": "wasserstein",
+      "uncertainty_radius": 0.05,
+      "n_scenarios": 15,
+      "regularization_alpha": 0.02,
+      "regularization_beta": 0.001,
+      "jacobian_epsilon": 1e-6,
+      "enable_caching": true,
+      "preferred_solver": "CLARABEL",
+      "solver_settings": {
+        "Method": 2,
+        "CrossOver": 0,
+        "BarHomogeneous": 1,
+        "TimeLimit": 2400,
+        "MIPGap": 0.0001,
+        "NumericFocus": 2,
+        "OutputFlag": 0
+      },
+      "method_options": {
+        "wasserstein": {
+          "uncertainty_radius": 0.05,
+          "regularization_alpha": 0.02
+        },
+        "scenario": {
+          "n_scenarios": 15,
+          "bootstrap_method": "residual"
+        },
+        "ellipsoidal": {
+          "gamma": 0.15,
+          "regularization_alpha": 0.02
+        }
+      },
+      "_heterodyne_note": "Robust methods handle heterodyne signal fluctuations effectively"
+    },
+    "scaling_parameters": {
+      "_comment": "Physical scaling for heterodyne correlation: c2_fitted = c2_theory * contrast + offset",
+      "fitted_range": {"min": 1.0, "max": 2.0},
+      "theory_range": {"min": 0.0, "max": 1.0},
+      "contrast": {
+        "min": 0.05,
+        "max": 0.5,
+        "prior_mu": 0.3,
+        "prior_sigma": 0.1,
+        "type": "TruncatedNormal"
+      },
+      "offset": {
+        "min": 0.05,
+        "max": 1.95,
+        "prior_mu": 1.0,
+        "prior_sigma": 0.2,
+        "type": "TruncatedNormal"
+      }
+    }
+  },
+  "parameter_space": {
+    "_comment": "14-parameter heterodyne model bounds and priors - CUSTOMIZE based on your physical system",
+    "bounds": [
+      {
+        "name": "D0_ref",
+        "min": 1.0,
+        "max": 1000000.0,
+        "_heterodyne_note": "Reference transport amplitude - adjust based on expected reference beam dynamics",
+        "type": "TruncatedNormal",
+        "prior_mu": 100.0,
+        "prior_sigma": 50.0,
+        "unit": "Å²/s"
+      },
+      {
+        "name": "alpha_ref",
+        "min": -2.0,
+        "max": 2.0,
+        "_heterodyne_note": "Reference aging exponent - typically negative for aging reference",
+        "type": "Normal",
+        "prior_mu": -0.5,
+        "prior_sigma": 0.3,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "D_offset_ref",
+        "min": 0.0,
+        "max": 1000.0,
+        "_heterodyne_note": "Reference baseline transport - positive for physical validity",
+        "type": "TruncatedNormal",
+        "prior_mu": 10.0,
+        "prior_sigma": 5.0,
+        "unit": "Å²/s"
+      },
+      {
+        "name": "D0_sample",
+        "min": 1.0,
+        "max": 1000000.0,
+        "_heterodyne_note": "Sample transport amplitude - can differ significantly from reference",
+        "type": "TruncatedNormal",
+        "prior_mu": 100.0,
+        "prior_sigma": 50.0,
+        "unit": "Å²/s"
+      },
+      {
+        "name": "alpha_sample",
+        "min": -2.0,
+        "max": 2.0,
+        "_heterodyne_note": "Sample aging exponent - independent of reference in heterodyne model",
+        "type": "Normal",
+        "prior_mu": -0.5,
+        "prior_sigma": 0.3,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "D_offset_sample",
+        "min": 0.0,
+        "max": 1000.0,
+        "_heterodyne_note": "Sample baseline transport - positive for physical validity",
+        "type": "TruncatedNormal",
+        "prior_mu": 10.0,
+        "prior_sigma": 5.0,
+        "unit": "Å²/s"
+      },
+      {
+        "name": "v0",
+        "min": 0.0,
+        "max": 10000.0,
+        "_heterodyne_note": "Flow velocity amplitude - adjust for your shear conditions",
+        "type": "TruncatedNormal",
+        "prior_mu": 100.0,
+        "prior_sigma": 50.0,
+        "unit": "Å/s"
+      },
+      {
+        "name": "beta",
+        "min": -2.0,
+        "max": 2.0,
+        "_heterodyne_note": "Velocity evolution exponent - typically near 0 for steady flow",
+        "type": "Normal",
+        "prior_mu": 0.0,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "v_offset",
+        "min": -1000.0,
+        "max": 1000.0,
+        "_heterodyne_note": "Velocity offset - typically small for well-controlled flow",
+        "type": "Normal",
+        "prior_mu": 0.0,
+        "prior_sigma": 10.0,
+        "unit": "Å/s"
+      },
+      {
+        "name": "f0",
+        "min": 0.0,
+        "max": 1.0,
+        "_heterodyne_note": "Fraction amplitude - controls heterodyne signal strength variation",
+        "type": "TruncatedNormal",
+        "prior_mu": 0.25,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "f1",
+        "min": -1.0,
+        "max": 1.0,
+        "_heterodyne_note": "Fraction rate - controls temporal evolution of heterodyne mixing",
+        "type": "Normal",
+        "prior_mu": 0.0,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "f2",
+        "min": 0.0,
+        "max": 200.0,
+        "_heterodyne_note": "Fraction time offset - controls when fraction evolution starts",
+        "type": "TruncatedNormal",
+        "prior_mu": 50.0,
+        "prior_sigma": 20.0,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "f3",
+        "min": 0.0,
+        "max": 1.0,
+        "_heterodyne_note": "Fraction baseline - ensures f(t) stays physical",
+        "type": "TruncatedNormal",
+        "prior_mu": 0.25,
+        "prior_sigma": 0.1,
+        "unit": "dimensionless"
+      },
+      {
+        "name": "phi0",
+        "min": -180.0,
+        "max": 180.0,
+        "_heterodyne_note": "Flow angle - 0° parallel to q-vector, 90° perpendicular",
+        "type": "Normal",
+        "prior_mu": 0.0,
+        "prior_sigma": 10.0,
+        "unit": "degrees"
+      }
+    ]
+  },
+  "analysis_settings": {
+    "_comment": "Heterodyne-specific analysis model description",
+    "model_description": "14-parameter two-component heterodyne scattering: g₂ = offset + contrast × |g₁^ref + g₁^sample|²",
+    "field_correlations": {
+      "g1_ref": "exp(-q²/2 ∫ D_ref(t)dt) - Reference field correlation with independent transport",
+      "g1_sample": "exp(-q²/2 ∫ D_sample(t)dt) - Sample field correlation with independent transport"
+    },
+    "transport_coefficients": {
+      "D_ref": "D₀_ref · t^α_ref + D_offset_ref - Reference beam transport",
+      "D_sample": "D₀_sample · t^α_sample + D_offset_sample - Sample beam transport"
+    },
+    "heterodyne_interpretation": "Separate transport coefficients enable comprehensive characterization of reference stability and sample dynamics"
+  },
+  "advanced_settings": {
+    "_comment": "Advanced computational settings for heterodyne analysis",
+    "data_loading": {
+      "use_diagonal_correction": true,
+      "vectorized_diagonal_fix": true
+    },
+    "chi_squared_calculation": {
+      "method": "standard",
+      "_heterodyne_scaling_note": "Scaling optimization critical for proper heterodyne chi-squared",
+      "uncertainty_estimation_factor": 0.1,
+      "minimum_sigma": 1e-10,
+      "fast_computation": true,
+      "uncertainty_calculation": {
+        "enable_uncertainty": true,
+        "report_uncertainty": true,
+        "minimum_angles_for_uncertainty": 2
+      },
+      "validity_check": {
+        "check_positive_D0": true,
+        "check_positive_v0": true,
+        "check_positive_time_dependent": true,
+        "check_parameter_bounds": true,
+        "check_fraction_sum": true,
+        "_heterodyne_checks": "Validates both ref and sample transport positivity"
+      }
+    },
+    "numerical_integration": {
+      "method": "simpson",
+      "relative_tolerance": 1e-8,
+      "absolute_tolerance": 1e-12,
+      "_heterodyne_note": "High precision for heterodyne integral calculations"
+    },
+    "optimization_controls": {
+      "convergence_tolerance": 1e-8,
+      "max_function_evaluations": 15000,
+      "_heterodyne_note": "Extended evaluations for 14-parameter heterodyne space",
+      "parameter_scaling": "auto",
+      "finite_difference_step": 1e-8
+    }
+  },
+  "performance_settings": {
+    "_comment": "Performance optimization for heterodyne correlation calculations",
+    "caching": {
+      "enable_memory_cache": true,
+      "enable_disk_cache": true,
+      "cache_size_limit_mb": 2000,
+      "auto_cleanup": true,
+      "_heterodyne_note": "Large cache beneficial for heterodyne correlation matrices"
+    },
+    "parallel_processing": {
+      "enable_multiprocessing": true,
+      "chunk_size": "auto",
+      "backend": "threading"
+    },
+    "memory_management": {
+      "low_memory_mode": false,
+      "garbage_collection_frequency": 10,
+      "memory_monitoring": true
+    },
+    "numba_optimization": {
+      "enable_numba": true,
+      "warmup_numba": true,
+      "parallel_numba": true,
+      "cache_numba": true,
+      "stability_enhancements": {
+        "enable_kernel_warmup": true,
+        "warmup_iterations": 5,
+        "optimize_memory_layout": true,
+        "enable_nogil": true,
+        "environment_optimization": {
+          "auto_configure": true,
+          "max_threads": 16,
+          "gc_optimization": true
+        }
+      },
+      "performance_monitoring": {
+        "enable_profiling": true,
+        "stable_benchmarking": false,
+        "adaptive_benchmarking": false,
+        "performance_baselines": false,
+        "target_cv": 0.1,
+        "memory_monitoring": true,
+        "smart_caching": {
+          "enabled": true,
+          "max_items": 200,
+          "max_memory_mb": 1000.0
+        }
+      },
+      "_heterodyne_note": "Numba provides 10-17x speedup for heterodyne calculations"
+    },
+    "noise_model": {
+      "use_simple_forward_model": false,
+      "sigma_prior": 0.1
+    }
+  },
+  "validation_rules": {
+    "_comment": "Quality control and validation for heterodyne analysis",
+    "data_quality": {
+      "check_data_range": true,
+      "correlation_minimum": 0.0,
+      "correlation_maximum": 10.0,
+      "check_nan_values": true,
+      "nan_handling": "raise"
+    },
+    "parameter_validation": {
+      "check_bounds": true,
+      "physics_constraints": true,
+      "correlation_checks": true,
+      "_heterodyne_constraints": {
+        "transport_positivity": "Ensure D_ref(t) > 0 and D_sample(t) > 0 for all times",
+        "fraction_range": "Verify 0 ≤ f(t) ≤ 1 for all times",
+        "intensity_conservation": "Check that total heterodyne intensity is conserved"
+      }
+    },
+    "fit_quality": {
+      "_comment": "Chi-squared quality thresholds for heterodyne fits",
+      "overall_chi_squared": {
+        "excellent_threshold": 5.0,
+        "acceptable_threshold": 10.0,
+        "warning_threshold": 20.0,
+        "critical_threshold": 50.0
+      },
+      "per_angle_chi_squared": {
+        "excellent_threshold": 5.0,
+        "acceptable_threshold": 10.0,
+        "warning_threshold": 20.0,
+        "outlier_threshold_multiplier": 2.5,
+        "max_outlier_fraction": 0.25,
+        "min_good_angles": 2
+      },
+      "_heterodyne_quality_notes": {
+        "ref_sample_balance": "Check that both g₁_ref and g₁_sample contribute to signal",
+        "angular_consistency": "Verify consistent fit quality across multiple phi angles",
+        "component_validation": "Monitor chi-squared contributions from ref and sample separately"
+      }
+    },
+    "frame_range": {
+      "minimum_frames": 10,
+      "maximum_frames": null,
+      "check_continuity": true
+    }
+  },
+  "workflow_integration": {
+    "_comment": "Heterodyne analysis workflow settings",
+    "analysis_workflow": {
+      "auto_generate_plots": true,
+      "plot_integration_enabled": true,
+      "plot_experimental_data_on_load": false,
+      "cache_plot_data": true,
+      "save_intermediate_plots": false
+    },
+    "data_management": {
+      "experimental_data_cache": true,
+      "theoretical_data_cache": true,
+      "cache_directory": "./cache",
+      "auto_cleanup_cache": false,
+      "cache_retention_days": 30
+    },
+    "error_handling": {
+      "continue_on_plot_errors": true,
+      "log_plot_errors": true,
+      "fallback_plotting": true,
+      "validate_plot_data": true
+    }
+  },
+  "output_settings": {
+    "_comment": "Output configuration for heterodyne analysis results",
+    "results_directory": "./heterodyne_results",
+    "file_formats": {
+      "results_format": "json",
+      "save_intermediate": false,
+      "compression": true,
+      "precision": "float64"
+    },
+    "file_naming": {
+      "timestamp_format": "%Y%m%d_%H%M%S",
+      "include_config_name": true,
+      "include_chi_squared": true
+    },
+    "reporting": {
+      "generate_plots": true,
+      "plot_formats": ["png", "pdf"],
+      "detailed_summary": true,
+      "convergence_diagnostics": true
+    },
+    "plotting": {
+      "_comment": "Comprehensive plotting for heterodyne correlation analysis",
+      "general": {
+        "create_plots": true,
+        "plot_format": "png",
+        "dpi": 300,
+        "figure_size": [12, 8],
+        "style": "publication",
+        "save_plots": true,
+        "show_plots": false
+      },
+      "c2_heatmaps": {
+        "enabled": true,
+        "_heterodyne_heatmaps": "Separate plots for experimental, theoretical, and residuals",
+        "layout": "single_row",
+        "include_experimental": true,
+        "include_theoretical": true,
+        "include_residuals": true,
+        "colormap": "viridis",
+        "colorbar_position": "right",
+        "title_prefix": "Heterodyne C2 Correlation",
+        "figsize": [18, 6]
+      },
+      "diagnostic_plots": {
+        "enabled": true,
+        "chi_squared_summary": true,
+        "parameter_correlations": true,
+        "residual_analysis": true,
+        "convergence_history": true,
+        "_heterodyne_diagnostics": "Include ref/sample component separation plots"
+      },
+      "output": {
+        "base_directory": "./plots",
+        "subdirectories": {
+          "c2_heatmaps": "c2_correlation",
+          "parameter_plots": "parameters",
+          "diagnostics": "diagnostics"
+        },
+        "filename_template": "heterodyne_{analysis_type}_{start_frame}_{end_frame}_{method}_{timestamp}",
+        "include_timestamp": true,
+        "overwrite_existing": false
+      }
+    },
+    "logging": {
+      "log_level": "INFO",
+      "log_to_file": true,
+      "log_to_console": true,
+      "log_filename": "heterodyne_analysis.log",
+      "rotation": {
+        "max_bytes": 10485760,
+        "backup_count": 3
+      }
+    }
+  },
+  "heterodyne_specific_notes": {
+    "_model_implementation": "Implements He et al. PNAS 2024 Equation S-95 with separate g₁_ref and g₁_sample field correlations",
+    "_key_features": [
+      "Independent transport coefficients D_ref(t) and D_sample(t)",
+      "Separate aging dynamics via alpha_ref and alpha_sample",
+      "Two-component heterodyne correlation g₂ = |g₁^ref + g₁^sample|²",
+      "Time-dependent fraction f(t) = f₀·exp[f₁(t - f₂)] + f₃",
+      "Flow geometry with angular dependence phi₀"
+    ],
+    "_physical_interpretation": {
+      "reference_beam": "Provides stable heterodyne reference with slow dynamics (typically alpha_ref < 0)",
+      "sample_beam": "Carries dynamic sample information (alpha_sample can differ from alpha_ref)",
+      "heterodyne_advantage": "Separate ref/sample transport enables comprehensive characterization of both components",
+      "fraction_dynamics": "f(t) tracks evolution of sample/reference intensity ratio over time"
+    },
+    "_validation_guidance": {
+      "transport_positivity": "Always verify D_ref(t) > 0 and D_sample(t) > 0 for all times",
+      "fraction_bounds": "Check that 0 ≤ f(t) ≤ 1 throughout the experiment",
+      "component_balance": "Monitor that both g₁_ref and g₁_sample contribute meaningfully to signal",
+      "angular_consistency": "Verify consistent results across multiple scattering angles",
+      "chi_squared_quality": "Aim for χ² < 10 for excellent heterodyne fits"
+    },
+    "_optimization_strategy": {
+      "initialization": "Start with ref = sample parameters for backward compatibility",
+      "convergence": "Let optimizer find optimal ref/sample parameter differences",
+      "solver_choice": "Gurobi Trust Region SQP recommended for 14-parameter heterodyne space",
+      "robust_methods": "Wasserstein robust optimization handles heterodyne signal fluctuations",
+      "subsampling": "Use subsampling for datasets > 100k points to maintain speed"
+    },
+    "_typical_parameter_ranges": {
+      "aging_colloids": "alpha_ref ≈ alpha_sample ≈ -0.5 to -1.5",
+      "rejuvenation": "alpha > 0 indicates shear rejuvenation",
+      "steady_state": "alpha ≈ 0 for time-independent dynamics",
+      "moderate_flow": "v0 ~ 100-1000 Å/s for typical shear rates",
+      "stable_reference": "D0_ref typically < D0_sample for good heterodyne contrast"
+    },
+    "_customization_workflow": [
+      "1. Update experimental_data paths for your heterodyne experiment",
+      "2. Customize analyzer_parameters (dt, q, gap) for your XPCS geometry",
+      "3. Adjust initial_parameters based on expected dynamics",
+      "4. Modify parameter_space bounds for your physical system",
+      "5. Configure optimization_config solvers and methods",
+      "6. Set validation_rules thresholds for your data quality",
+      "7. Customize output_settings for your analysis workflow"
+    ]
+  }
+}
