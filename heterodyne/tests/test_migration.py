@@ -2,7 +2,7 @@
 Unit tests for heterodyne migration utilities.
 
 Tests migration from legacy 7-parameter laminar flow model to
-11-parameter heterodyne model.
+14-parameter heterodyne model.
 """
 
 import json
@@ -115,16 +115,18 @@ class TestConfigFileMigration:
         output_file = tmp_path / "migrated_config.json"
         migrated = HeterodyneMigration.migrate_config_file(input_file, output_file)
 
-        # Verify migration
+        # Verify migration to 14 parameters
         assert migrated["initial_parameters"]["values"] == [
-            1324.1, -0.014, -0.674,  # D params
+            1324.1, -0.014, -0.674,  # D_ref params
+            1324.1, -0.014, -0.674,  # D_sample params (initially equal to ref)
             0.03, -0.909, 0.0,       # v params (0.003*10, beta, 0.0*10)
             0.5, 0.0, 50.0, 0.3,     # f params (defaults)
             0.0                       # phi0
         ]
 
         assert migrated["initial_parameters"]["parameter_names"] == [
-            "D0", "alpha", "D_offset",
+            "D0_ref", "alpha_ref", "D_offset_ref",
+            "D0_sample", "alpha_sample", "D_offset_sample",
             "v0", "beta", "v_offset",
             "f0", "f1", "f2", "f3",
             "phi0"
@@ -133,7 +135,7 @@ class TestConfigFileMigration:
         # Migration metadata should be added
         assert "migration_info" in migrated
         assert migrated["migration_info"]["source_version"] == "7-param-laminar"
-        assert migrated["migration_info"]["target_version"] == "11-param-heterodyne"
+        assert migrated["migration_info"]["target_version"] == "14-param-heterodyne"
 
         # Output file should exist
         assert output_file.exists()
@@ -164,8 +166,8 @@ class TestConfigFileMigration:
         with pytest.raises(ValueError, match="Cannot automatically migrate"):
             HeterodyneMigration.migrate_config_file(input_file)
 
-    def test_migrate_11_param_config_unchanged(self, tmp_path):
-        """Test that 11-param configs are not modified."""
+    def test_migrate_11_param_config_to_14(self, tmp_path):
+        """Test that 11-param configs are migrated to 14-parameter."""
         heterodyne_config = {
             "initial_parameters": {
                 "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
@@ -183,11 +185,25 @@ class TestConfigFileMigration:
         with open(input_file, 'w') as f:
             json.dump(heterodyne_config, f)
 
-        # Migrate (should detect no migration needed)
+        # Migrate to 14 parameters
         migrated = HeterodyneMigration.migrate_config_file(input_file)
 
-        # Parameters should be unchanged
-        assert migrated["initial_parameters"]["values"] == heterodyne_config["initial_parameters"]["values"]
+        # Should expand to 14 parameters with sample=reference
+        assert migrated["initial_parameters"]["values"] == [
+            100.0, -0.5, 10.0,  # D_ref
+            100.0, -0.5, 10.0,  # D_sample (initially = ref)
+            0.1, 0.0, 0.01,     # velocity
+            0.5, 0.0, 50.0, 0.3,  # fraction
+            0.0                  # phi0
+        ]
+
+        assert migrated["initial_parameters"]["parameter_names"] == [
+            "D0_ref", "alpha_ref", "D_offset_ref",
+            "D0_sample", "alpha_sample", "D_offset_sample",
+            "v0", "beta", "v_offset",
+            "f0", "f1", "f2", "f3",
+            "phi0"
+        ]
 
 
 class TestMigrationGuide:
@@ -209,9 +225,9 @@ class TestMigrationGuide:
 
         # Guide should mention migration
         assert "Migration Required" in guide
-        assert "7-parameter → 11-parameter" in guide
+        assert "7-parameter → 14-parameter" in guide
         assert "OLD PARAMETERS (7)" in guide
-        assert "NEW PARAMETERS (11)" in guide
+        assert "NEW PARAMETERS (14)" in guide
 
         # Should show parameter mapping
         assert "D0" in guide
@@ -220,7 +236,7 @@ class TestMigrationGuide:
         assert "phi0" in guide
 
     def test_generate_guide_for_11_param_config(self, tmp_path):
-        """Test migration guide for already-migrated config."""
+        """Test migration guide for 11-param config (needs migration to 14)."""
         config = {
             "initial_parameters": {
                 "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
@@ -234,8 +250,8 @@ class TestMigrationGuide:
 
         guide = HeterodyneMigration.generate_migration_guide(config_file)
 
-        # Should indicate no migration needed
-        assert "Already using 11-parameter heterodyne" in guide or "No migration needed" in guide
+        # Should indicate migration to 14 params
+        assert "Migration Required" in guide or "11-parameter → 14-parameter" in guide
 
     def test_generate_guide_for_static_config(self, tmp_path):
         """Test migration guide for static config."""

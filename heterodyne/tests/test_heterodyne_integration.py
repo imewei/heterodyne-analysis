@@ -288,13 +288,14 @@ class TestHeterodyneMigrationIntegration:
     """Integration tests for migration workflow."""
 
     def test_end_to_end_migration_workflow(self, tmp_path):
-        """Test complete migration from 7-param to 11-param and analysis."""
+        """Test complete migration from 7-param to 14-param and analysis."""
         from heterodyne.core.migration import HeterodyneMigration
 
-        # Create legacy 7-parameter config
+        # Create legacy 7-parameter config with valid parameters
+        # Use beta=0.0 to avoid divide-by-zero at t=0
         legacy_config = {
             "initial_parameters": {
-                "values": [1324.1, -0.014, -0.674, 0.003, -0.909, 0.0, 0.0],
+                "values": [1324.1, -0.014, -0.674, 0.003, 0.0, 0.0, 0.0],
                 "parameter_names": [
                     "D0", "alpha", "D_offset",
                     "gamma_dot_t0", "beta", "gamma_dot_t_offset", "phi0"

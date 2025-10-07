@@ -576,18 +576,10 @@ def main():
             logger.info("Transfer learning enabled")
 
     # Log analysis mode selection
-    if args.static_isotropic:
-        logger.info(
-            "Command-line mode: static isotropic (3 parameters, no angle selection)"
-        )
-    elif hasattr(args, "static_anisotropic") and args.static_anisotropic:
-        logger.info(
-            "Command-line mode: static anisotropic (3 parameters, with angle selection)"
-        )
-    elif args.laminar_flow:
-        logger.info("Command-line mode: laminar flow (7 parameters)")
+    if hasattr(args, "laminar_flow") and args.laminar_flow:
+        logger.info("Command-line mode: laminar flow (7 parameters, legacy)")
     else:
-        logger.info("Analysis mode: from configuration file")
+        logger.info("Analysis mode: heterodyne (from configuration file)")
 
     # Handle special plotting modes
     if args.plot_simulated_data:

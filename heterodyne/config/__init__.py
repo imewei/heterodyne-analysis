@@ -9,11 +9,10 @@ from pathlib import Path
 # Configuration template directory
 CONFIG_DIR = Path(__file__).parent
 
-# Template file mapping for backward compatibility
+# Template file mapping (static modes removed in v1.0.0)
 TEMPLATE_FILES = {
-    "static_isotropic": "static_isotropic.json",
-    "static_anisotropic": "static_anisotropic.json",
     "laminar_flow": "laminar_flow.json",
+    "heterodyne_11param": "heterodyne_11param_example.json",
     "template": "template.json",
 }
 
@@ -25,7 +24,7 @@ def get_template_path(template_name: str) -> Path:
     Parameters
     ----------
     template_name : str
-        Name of the template ('static_isotropic', 'static_anisotropic', 'laminar_flow', 'template')
+        Name of the template ('laminar_flow', 'heterodyne_11param', 'template')
 
     Returns
     -------
