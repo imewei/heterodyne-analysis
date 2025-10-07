@@ -420,8 +420,8 @@ class TestDistributedOptimizationPerformance:
         coordinator = DistributedOptimizationCoordinator()
         coordinator.initialize(["multiprocessing"])
 
-        # Submit tasks with varying complexity
-        parameter_sets = [np.random.rand(3) for _ in range(10)]
+        # Submit tasks with varying complexity (14 parameters for heterodyne model)
+        parameter_sets = [np.random.rand(14) for _ in range(10)]
         methods = ["Nelder-Mead"] * 10
         objective_configs = [{"complexity": i} for i in range(10)]
 

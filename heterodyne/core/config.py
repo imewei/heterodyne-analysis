@@ -1089,15 +1089,19 @@ class ConfigManager:
         Returns
         -------
         str
-            "static_isotropic", "static_anisotropic", or "laminar_flow"
-        """
-        if not self.is_static_mode_enabled():
-            return "laminar_flow"
+            "heterodyne" (14-parameter model, default)
 
-        submode = self.get_static_submode()
-        if submode == "isotropic":
-            return "static_isotropic"
-        return "static_anisotropic"
+        Note
+        ----
+        Static modes ("static_isotropic", "static_anisotropic") were removed in v1.0.0.
+        Legacy "laminar_flow" (7-parameter) configs are auto-migrated to heterodyne.
+        """
+        # Static mode check will raise error if enabled (removed in v1.0.0)
+        if self.is_static_mode_enabled():
+            raise ValueError("Static mode has been removed. Use heterodyne model.")
+
+        # Modern heterodyne model (14 parameters)
+        return "heterodyne"
 
     def get_active_parameters(self) -> list[str]:
         """
