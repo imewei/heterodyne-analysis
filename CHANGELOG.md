@@ -6,6 +6,81 @@ this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2025-10-06
+
+### ⚠️ BREAKING CHANGES - 14-Parameter Heterodyne Model
+
+This release implements the mathematically correct 14-parameter heterodyne model with separate reference and sample transport coefficients, as specified in He et al. PNAS 2024 Equation S-95.
+
+**Migration Required**: All 11-parameter and 7-parameter configurations must be migrated.
+
+```bash
+# Automatic migration
+python -m heterodyne.core.migration input_config.json output_config.json
+```
+
+### Added
+
+- **14-Parameter Heterodyne Model**: Correctly implements independent g₁_ref and g₁_sample field correlations
+  - Reference transport (3): `D0_ref`, `alpha_ref`, `D_offset_ref`
+  - Sample transport (3): `D0_sample`, `alpha_sample`, `D_offset_sample`
+  - Velocity (3): `v0`, `beta`, `v_offset`
+  - Fraction (4): `f0`, `f1`, `f2`, `f3`
+  - Flow angle (1): `phi0`
+
+- **Migration Utilities** (`heterodyne/core/migration.py`):
+  - Automated 7→14 and 11→14 parameter migration
+  - `migrate_config_file()` - Automated config migration with validation
+  - `generate_migration_guide()` - Human-readable migration instructions
+  - Backward compatibility: initializes sample = reference parameters
+
+- **Example Scripts**:
+  - `examples/heterodyne_14_param_example.py` - Comprehensive usage examples
+  - Demonstrates backward-compatible mode and independent configurations
+  - Parameter validation examples and migration workflows
+
+- **Regression Tests** (`heterodyne/tests/test_14_param_regression.py`):
+  - 7 new tests verifying backward compatibility and numerical stability
+  - Test suite: 43/44 tests passing (98% success rate)
+
+### Fixed
+
+- **Critical Mathematical Bug**: Lines 1143-1144 in `core.py`
+  - **Before**: `g1_ref = g1_sample = g1` (mathematically incorrect)
+  - **After**: g₁_ref and g₁_sample computed independently (correct per He et al. equation)
+
+- **Parameter Index Bugs** (discovered during validation):
+  - Line 978 (`core.py`): Fixed velocity extraction `parameters[3:6]` → `parameters[6:9]`
+  - Lines 1352-1355 (`core.py`): Fixed parallel function pre-computation
+  - Lines 1388, 1407 (`core.py`): Removed invalid `precomputed_D_t` parameter
+  - Multiple locations (`classical.py`): Updated hardcoded counts `7/11` → `14`
+
+### Changed
+
+- **Parameter Structure**: Expanded from 11 to 14 parameters
+- **Configuration Format**: Updated to include separate ref/sample parameter names
+- **Test Files**: Renamed `test_11_parameter_system.py` → `test_14_parameter_system.py`
+- **Degrees of Freedom**: Chi-squared DOF updated from 359,989 to 359,986
+
+### Removed
+
+- **Static Mode**: Removed deprecated 3-parameter static mode configuration
+- **11-Parameter Defaults**: Replaced with 14-parameter defaults throughout codebase
+
+### Technical Details
+
+**Mathematical Model** (He et al. PNAS 2024, Eq. S-95):
+```
+C₂(t₁, t₂, φ) = f(t₁)f(t₂)|g₁_s|² + [1-f(t₁)][1-f(t₂)]|g₁_r|²
+                + f(t₁)[1-f(t₂)]g₁_r*g₁_s + [1-f(t₁)]f(t₂)g₁_rg₁_s*
+```
+
+Where:
+- g₁_r = exp(-q²/2 ∫Jᵣ(t)dt) from reference transport coefficients
+- g₁_s = exp(-q²/2 ∫Jₛ(t)dt) from sample transport coefficients
+
+**Contributors**: Implementation and testing by Claude (Anthropic) with human oversight
+
 ## [1.0.0] - 2025-10-01
 
 ### Major Release - Production Ready
