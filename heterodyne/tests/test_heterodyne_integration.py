@@ -24,10 +24,11 @@ class TestHeterodyneIntegration:
             "model": "heterodyne",
             "version": "2.0",
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0],
+                "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
                 "parameter_names": [
-                    "D0", "alpha", "D_offset",
+                    "D0_ref", "alpha_ref", "D_offset_ref",
+                    "D0_sample", "alpha_sample", "D_offset_sample",
                     "v0", "beta", "v_offset",
                     "f0", "f1", "f2", "f3",
                     "phi0"
@@ -66,7 +67,8 @@ class TestHeterodyneIntegration:
         # Get active parameters (this is the source of truth)
         active_params = core.config_manager.get_active_parameters()
         expected_params = [
-            "D0", "alpha", "D_offset",
+            "D0_ref", "alpha_ref", "D_offset_ref",
+            "D0_sample", "alpha_sample", "D_offset_sample",
             "v0", "beta", "v_offset",
             "f0", "f1", "f2", "f3",
             "phi0"
@@ -75,14 +77,14 @@ class TestHeterodyneIntegration:
 
         # Verify count matches active parameters
         param_count = len(active_params)
-        assert param_count == 11, f"Expected 14 parameters, got {param_count}"
+        assert param_count == 14, f"Expected 14 parameters, got {param_count}"
 
     def test_heterodyne_correlation_calculation(self, heterodyne_config_file):
         """Test heterodyne correlation function calculation."""
         core = HeterodyneAnalysisCore(heterodyne_config_file)
 
-        params = np.array([100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0])
+        params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
         phi_angle = 0.0
 
         # Calculate heterodyne correlation
@@ -101,14 +103,14 @@ class TestHeterodyneIntegration:
         core = HeterodyneAnalysisCore(heterodyne_config_file)
 
         # Valid parameters should work
-        valid_params = np.array([100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                                0.5, 0.0, 50.0, 0.3, 0.0])
+        valid_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                                0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
         c2 = core.calculate_heterodyne_correlation(valid_params, 0.0)
         assert c2 is not None
 
         # Invalid parameters should raise error
-        invalid_params = np.array([100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                                  2.0, 0.0, 50.0, -0.5, 0.0])  # f(t) may go outside [0,1]
+        invalid_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                                  0.1, 0.0, 0.01, 2.0, 0.0, 50.0, -0.5, 0.0])  # f(t) may go outside [0,1]
 
         with pytest.raises(ValueError, match="Fraction"):
             core.calculate_heterodyne_correlation(invalid_params, 0.0)
@@ -119,8 +121,8 @@ class TestHeterodyneIntegration:
 
         # Use stronger velocity to ensure angular dependence
         # v0=1.0 (10x larger) and beta=0.3 (positive to avoid division by zero at t=0)
-        params = np.array([100.0, -0.5, 10.0, 1.0, 0.3, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0])
+        params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                          1.0, 0.3, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
         phi_angles = np.array([0, 45, 90, 135])
 
         # Calculate for all angles
@@ -144,10 +146,12 @@ class TestHeterodyneIntegration:
 
         # Get metadata
         metadata = config_manager.get_parameter_metadata()
-        assert len(metadata) == 11
+        assert len(metadata) == 14
 
         # Verify each parameter has metadata
-        for param_name in ["D0", "alpha", "D_offset", "v0", "beta", "v_offset",
+        for param_name in ["D0_ref", "alpha_ref", "D_offset_ref",
+                           "D0_sample", "alpha_sample", "D_offset_sample",
+                           "v0", "beta", "v_offset",
                            "f0", "f1", "f2", "f3", "phi0"]:
             assert param_name in metadata
             assert "unit" in metadata[param_name]
@@ -156,7 +160,7 @@ class TestHeterodyneIntegration:
 
         # Get bounds
         bounds = config_manager.get_parameter_bounds()
-        assert len(bounds) == 11
+        assert len(bounds) == 14
         assert all(isinstance(b, tuple) and len(b) == 2 for b in bounds)
 
     def test_backward_incompatibility_with_7_params(self, tmp_path):
@@ -196,15 +200,17 @@ class TestHeterodyneOptimizationIntegration:
             "model": "heterodyne",
             "version": "2.0",
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0],
+                "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
                 "parameter_names": [
-                    "D0", "alpha", "D_offset",
+                    "D0_ref", "alpha_ref", "D_offset_ref",
+                    "D0_sample", "alpha_sample", "D_offset_sample",
                     "v0", "beta", "v_offset",
                     "f0", "f1", "f2", "f3",
                     "phi0"
                 ],
                 "bounds": [
+                    [0, 1000], [-2, 2], [0, 100],
                     [0, 1000], [-2, 2], [0, 100],
                     [-10, 10], [-2, 2], [-1, 1],
                     [0, 1], [-1, 1], [0, 200], [0, 1],
@@ -246,8 +252,8 @@ class TestHeterodyneOptimizationIntegration:
         optimizer = ClassicalOptimizer(core, config)
 
         # Initial parameters
-        initial_params = np.array([100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                                  0.5, 0.0, 50.0, 0.3, 0.0])
+        initial_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                                  0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
 
         # Generate synthetic data
         phi_angles = np.array([0, 90])
@@ -264,18 +270,18 @@ class TestHeterodyneOptimizationIntegration:
 
         # Verify result
         assert "parameters" in result
-        assert len(result["parameters"]) == 11
+        assert len(result["parameters"]) == 14
 
     def test_default_parameter_fallback(self):
         """Test that default 14-parameter fallback works."""
         from heterodyne.core.config import ConfigManager
 
         config_manager = ConfigManager()
-        defaults = config_manager.get_default_11_parameters()
+        defaults = config_manager.get_default_14_parameters()
 
-        assert len(defaults) == 11
-        assert defaults == [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                           0.5, 0.0, 50.0, 0.3, 0.0]
+        assert len(defaults) == 14
+        assert defaults == [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                           0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0]
 
 
 class TestHeterodyneMigrationIntegration:
@@ -310,7 +316,7 @@ class TestHeterodyneMigrationIntegration:
         migrated = HeterodyneMigration.migrate_config_file(legacy_file, migrated_file)
 
         # Verify migrated config
-        assert len(migrated["initial_parameters"]["values"]) == 11
+        assert len(migrated["initial_parameters"]["values"]) == 14
         assert "migration_info" in migrated
 
         # Use migrated config in analysis

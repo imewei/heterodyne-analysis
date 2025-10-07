@@ -975,7 +975,7 @@ class HeterodyneAnalysisCore:
         # Pre-compute velocity if not provided
         precomputed_v_t = None
         if precomputed_D_t is None:
-            velocity_params = parameters[3:6]
+            velocity_params = parameters[6:9]
             precomputed_v_t = self.calculate_velocity_coefficient(velocity_params)
         
         return self.calculate_heterodyne_correlation(
@@ -1348,11 +1348,10 @@ class HeterodyneAnalysisCore:
                 "parallel_execution", True
             )
 
-        # Pre-compute time-dependent coefficients once
-        diffusion_params = parameters[0:3]
-        velocity_params = parameters[3:6]
-        
-        D_t = self.calculate_diffusion_coefficient_optimized(diffusion_params)
+        # Pre-compute time-dependent velocity coefficient once
+        # Note: Diffusion coefficients (D_ref and D_sample) are computed separately
+        # within calculate_heterodyne_correlation for each component
+        velocity_params = parameters[6:9]
         v_t = self.calculate_velocity_coefficient(velocity_params)
 
         # Avoid threading conflicts with Numba parallel operations
@@ -1386,7 +1385,6 @@ class HeterodyneAnalysisCore:
                 c2_results[i] = self.calculate_heterodyne_correlation(
                     parameters,
                     phi_angles[i],
-                    precomputed_D_t=D_t,
                     precomputed_v_t=v_t,
                 )
 
@@ -1406,8 +1404,7 @@ class HeterodyneAnalysisCore:
                     self.calculate_heterodyne_correlation,
                     parameters,
                     angle,
-                    D_t,
-                    v_t,
+                    precomputed_v_t=v_t,
                 )
                 for angle in phi_angles
             ]

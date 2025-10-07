@@ -194,21 +194,22 @@ class ClassicalOptimizer:
                 ]
             else:
                 # Use defaults
-                effective_param_count = 7
+                effective_param_count = 14
                 if hasattr(self.core, "config_manager") and self.core.config_manager:
                     try:
                         effective_param_count = int(
                             self.core.config_manager.get_effective_parameter_count()
                         )
                     except (TypeError, ValueError, AttributeError):
-                        effective_param_count = 7
+                        effective_param_count = 14
                 default_params = {
                     3: [1e-3, 0.9, 1e-4],
                     7: [1e-3, 0.9, 1e-4, 0.01, 0.8, 0.001, 0.0],
                     11: [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
+                    14: [100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
                 }
                 result_dict["initial_parameters"] = default_params.get(
-                    effective_param_count, default_params[11]
+                    effective_param_count, default_params[14]
                 )
 
         return result_dict
@@ -311,9 +312,9 @@ class ClassicalOptimizer:
                 self.core.config_manager.get_effective_parameter_count()
             )
         else:
-            # Fallback to laminar flow defaults
-            analysis_mode = "laminar_flow"
-            effective_param_count = 7
+            # Fallback to heterodyne defaults
+            analysis_mode = "heterodyne"
+            effective_param_count = 14
 
         print(f"  Analysis mode: {analysis_mode} ({effective_param_count} parameters)")
         logger.info(
@@ -356,9 +357,10 @@ class ClassicalOptimizer:
                         0.001,
                         0.0,
                     ],  # Laminar flow (all 7 parameters)
+                    14: [100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],  # Heterodyne (14 parameters)
                 }
                 initial_parameters = np.array(
-                    default_params.get(effective_param_count, default_params[7]),
+                    default_params.get(effective_param_count, default_params[14]),
                     dtype=np.float64,
                 )
 
@@ -368,9 +370,9 @@ class ClassicalOptimizer:
             effective_param_count = int(effective_param_count)
         except (TypeError, ValueError):
             logger.warning(
-                f"Invalid effective_param_count: {effective_param_count}, defaulting to 7"
+                f"Invalid effective_param_count: {effective_param_count}, defaulting to 14"
             )
-            effective_param_count = 7
+            effective_param_count = 14
 
         # Ensure we have the correct number of parameters for laminar flow
         if len(initial_parameters) < effective_param_count:
@@ -1752,11 +1754,11 @@ class ClassicalOptimizer:
                     self.core.config_manager.get_effective_parameter_count()
                 )
             else:
-                effective_param_count = 7  # Default to laminar flow
+                effective_param_count = 14  # Default to heterodyne
 
         # Ensure effective_param_count is not None for type checking
         if effective_param_count is None:
-            effective_param_count = 7  # Final fallback to laminar flow
+            effective_param_count = 14  # Final fallback to heterodyne
 
         # Extract bounds for the effective parameters
         for i, bound in enumerate(param_bounds):
