@@ -12,20 +12,24 @@ The package implements **Equation S-95** (general time-dependent form) from He e
 
 .. math::
 
-   c_2(\vec{q}, t_1, t_2) = 1 + \frac{\beta}{f^2} \left[
-   [x_r(t_1)x_r(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
-   [x_s(t_1)x_s(t_2)]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) +
-   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2) \exp\left(-q^2 \int_{t_1}^{t_2} J(t) dt\right) \cos(...)
-   \right]
+   c_2(\vec{q}, t_1, t_2, \phi) = 1 + \frac{\beta}{f^2} \Bigg[
+   [x_r(t_1)x_r(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_r(t) dt} + \\
+   [x_s(t_1)x_s(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_s(t) dt} + \\
+   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2) e^{-\frac{1}{2}q^2 \int_{t_1}^{t_2} [J_s(t)+J_r(t)] dt}
+   \cos\left[q \cos(\phi) \int_{t_1}^{t_2} v(t) dt\right]
+   \Bigg]
 
-where:
+where :math:`f^2 = [x_s(t_1)^2 + x_r(t_1)^2][x_s(t_2)^2 + x_r(t_2)^2]`.
 
-- **J(t)**: Time-dependent transport coefficient [Å²/s]
-- **x_n(t)**: Time-dependent fraction of component n (reference/sample)
-- **𝔼[v(t)]**: Time-dependent mean velocity
-- **φ**: Angle between scattering vector and flow direction
-- **β**: Contrast factor
-- **f²**: Normalization factor
+**Key Parameters:**
+
+- **J_r(t), J_s(t)**: Separate time-dependent transport coefficients for reference and sample [Å²/s]
+- **x_s(t_1), x_s(t_2)**: Sample fraction evaluated at times t₁ and t₂ (each in [0,1])
+- **x_r(t) = 1 - x_s(t)**: Reference fraction
+- **v(t)**: Time-dependent mean velocity [nm/s]
+- **φ**: Relative angle = φ₀ - φ_scattering (flow angle minus scattering angle)
+- **β**: Contrast factor (implicit in experimental measurements)
+- **f²**: Two-time normalization factor
 
 **Relationship to Equilibrium Form**: For equilibrium Wiener processes, J = 6D where D is the traditional diffusion coefficient. The "commonly used heterodyne equation" (Equation S-98) is this equilibrium simplification. This package implements the more general S-95.
 

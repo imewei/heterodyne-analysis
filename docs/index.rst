@@ -137,7 +137,29 @@ The package implements the **two-component heterodyne scattering model** from `H
 
 **Model Equation (Equation S-95):**
 
-The heterodyne correlation g₂ is composed of separate reference and sample field correlations:
+The full two-time heterodyne correlation function:
+
+.. math::
+
+   c_2(\vec{q}, t_1, t_2, \phi) = 1 + \frac{\beta}{f^2} \Bigg[
+   [x_r(t_1)x_r(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_r(t) dt} + \\
+   [x_s(t_1)x_s(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_s(t) dt} + \\
+   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2)e^{-\frac{1}{2}q^2 \int_{t_1}^{t_2} [J_s(t)+J_r(t)] dt}
+   \cos\left[q \cos(\phi) \int_{t_1}^{t_2} v(t) dt\right]
+   \Bigg]
+
+where :math:`f^2 = [x_s(t_1)^2 + x_r(t_1)^2][x_s(t_2)^2 + x_r(t_2)^2]`.
+
+**Key Features:**
+
+* **Two-time correlation**: Fractions :math:`x_s(t_1)`, :math:`x_s(t_2)` evaluated at both times
+* **Angle notation**: :math:`\phi = \phi_0 - \phi_{\text{scattering}}` (flow angle minus scattering angle)
+* **Three terms**: Reference term, sample term, and cross-correlation term with flow
+* **Independent transport**: Separate :math:`J_r(t)` and :math:`J_s(t)` for reference and sample
+
+**Implementation Form:**
+
+The heterodyne correlation can also be expressed as:
 
 .. math::
 

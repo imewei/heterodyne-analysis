@@ -282,28 +282,75 @@ dependencies.
 
 ### Heterodyne Scattering Model
 
-The package implements the **14-parameter heterodyne scattering model** from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**. This model analyzes two-component heterodyne X-ray photon correlation spectroscopy (XPCS) with separate reference and sample field correlations.
+The package implements the **14-parameter heterodyne scattering model** from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**. This model analyzes two-component heterodyne X-ray photon correlation spectroscopy (XPCS) with separate reference and sample field correlations under nonequilibrium conditions.
 
-**Model Equation:**
+#### Mathematical Foundation
 
-The heterodyne intensity correlation function g₂ combines separate first-order field correlations g₁_ref and g₁_sample for reference and sample components, with time-dependent fraction mixing that captures nonequilibrium dynamics.
+**Heterodyne Correlation Function (Equation S-95):**
 
-**14-Parameter Structure:**
+The two-time correlation function for heterodyne scattering:
 
-- **Reference transport** (3): D₀_ref, α_ref, D_offset_ref - Transport properties of reference component [Å²/s]
-- **Sample transport** (3): D₀_sample, α_sample, D_offset_sample - Transport properties of sample component [Å²/s]
+```
+c₂(q⃗,t₁,t₂,φ) = 1 + (β/f²) [
+    [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁ᵗ² Jᵣ(t)dt) +
+    [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁ᵗ² Jₛ(t)dt) +
+    2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁ᵗ²[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁ᵗ² v(t)dt]
+]
+
+where:
+    f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+```
+
+**Key Notation:**
+- **Two-time structure**: Fractions evaluated at BOTH t₁ and t₂
+  - `xₛ(t₁)`, `xₛ(t₂)`: Sample fraction at time 1 and time 2
+  - `xᵣ(t₁) = 1 - xₛ(t₁)`: Reference fraction at time 1
+  - `xᵣ(t₂) = 1 - xₛ(t₂)`: Reference fraction at time 2
+- **Normalization**: f² uses fractions at both times
+- **Integrals**: All integrals from t₁ to t₂
+- **Transport coefficients**: Jᵣ(t), Jₛ(t) for reference and sample
+- **Velocity**: v(t) for flow-induced decorrelation
+- **Angles**:
+  - φ in equation represents relative angle between flow and scattering directions
+  - Implementation: φ = φ₀ - φ_scattering (flow angle minus scattering angle)
+  - φ₀: Flow direction parameter (14th parameter)
+- **Contrast**: β (implicit in experimental measurements)
+- **Baseline**: 1 (zero-delay limit)
+
+**Physical Components:**
+
+1. **Transport Coefficients** (separate for reference and sample):
+   ```
+   Jᵣ(t) = J₀_ref × t^(α_ref) + J_offset_ref
+   Jₛ(t) = J₀_sample × t^(α_sample) + J_offset_sample
+   ```
+   Note: Parameters labeled "D" are transport coefficients J. For equilibrium: J = 6D.
+
+2. **Velocity Coefficient** (shared between components):
+   ```
+   v(t) = v₀ × t^β + v_offset
+   ```
+
+3. **Sample Fraction Function**:
+   ```
+   fₛ(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
+   ```
+
+#### 14-Parameter Structure
+
+- **Reference transport** (3): J₀_ref, α_ref, J_offset_ref - Reference component transport [Å²/s]
+- **Sample transport** (3): J₀_sample, α_sample, J_offset_sample - Sample component transport [Å²/s]
 - **Velocity** (3): v₀, β, v_offset - Time-dependent flow velocity [nm/s]
 - **Fraction** (4): f₀, f₁, f₂, f₃ - Time-dependent mixing fraction (dimensionless)
 - **Flow angle** (1): φ₀ - Angle between flow direction and scattering vector [degrees]
 
-**Key Features:**
+#### Key Physical Features
 
-- Separate diffusion dynamics for reference and sample components
-- Time-dependent fraction evolution: f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
-- Power-law transport for both components:
-  - Reference: D_ref(t) = D₀_ref × t^(α_ref) + D_offset_ref
-  - Sample: D_sample(t) = D₀_sample × t^(α_sample) + D_offset_sample
-- Flow-induced decorrelation with angle dependence
+- **Independent transport dynamics**: Reference and sample components can exhibit different diffusive behaviors
+- **Three correlation terms**: Reference-reference, sample-sample, and reference-sample cross-correlation
+- **Cross-term velocity modulation**: Cosine factor captures flow-induced decorrelation
+- **Time-dependent mixing**: Exponential fraction evolution captures compositional changes
+- **Power-law transport**: Generalizes equilibrium diffusion to nonequilibrium regimes (α ≠ 0)
 
 ## Frame Counting Convention
 

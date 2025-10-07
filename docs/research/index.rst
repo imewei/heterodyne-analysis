@@ -50,20 +50,26 @@ Experimental Integration
 Mathematical Framework
 ----------------------
 
-The package analyzes time-dependent intensity correlation functions:
+The package implements the **two-component heterodyne scattering model** (Equation S-95):
 
 .. math::
 
-   c_2(\vec{q}, t_1, t_2) = 1 + \beta\left[e^{-q^2\int J(t)dt}\right] \times
-   \text{sinc}^2\left[\frac{1}{2\pi} qh \int\dot{\gamma}(t)\cos(\phi(t))dt\right]
+   c_2(\vec{q}, t_1, t_2, \phi) = 1 + \frac{\beta}{f^2} \Bigg[
+   [x_r(t_1)x_r(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_r(t) dt} + \\
+   [x_s(t_1)x_s(t_2)]^2 e^{-q^2 \int_{t_1}^{t_2} J_s(t) dt} + \\
+   2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2)e^{-\frac{1}{2}q^2 \int_{t_1}^{t_2} [J_s(t)+J_r(t)] dt}
+   \cos\left[q \cos(\phi) \int_{t_1}^{t_2} v(t) dt\right]
+   \Bigg]
 
-where:
+where :math:`f^2 = [x_s(t_1)^2 + x_r(t_1)^2][x_s(t_2)^2 + x_r(t_2)^2]`.
+
+**Key Parameters:**
 
 * :math:`\vec{q}`: scattering wavevector [Å⁻¹]
-* :math:`h`: gap between stator and rotor [Å]
-* :math:`\phi(t)`: angle between shear/flow direction and :math:`\vec{q}` [degrees]
-* :math:`\dot{\gamma}(t)`: time-dependent shear rate [s⁻¹]
-* :math:`D(t)`: time-dependent diffusion coefficient [Å²/s]
+* :math:`J_r(t), J_s(t)`: transport coefficients for reference and sample [Å²/s]
+* :math:`x_s(t_1), x_s(t_2)`: sample fraction at times t₁ and t₂ (two-time correlation)
+* :math:`v(t)`: time-dependent mean velocity [nm/s]
+* :math:`\phi`: relative angle = :math:`\phi_0 - \phi_{\text{scattering}}` (flow minus scattering)
 * :math:`\beta`: instrumental contrast parameter
 
 Analysis Modes

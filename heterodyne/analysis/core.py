@@ -9,38 +9,39 @@ separate reference and sample scattering components, based on He et al. PNAS 202
 
 Physical Theory - Heterodyne Model
 -----------------------------------
-The heterodyne scattering model describes the time-dependent correlation function
-C₂(t₁,t₂,φ) for X-ray photon correlation spectroscopy (XPCS) measurements of
+The heterodyne scattering model describes the two-time correlation function
+c₂(t₁,t₂,φ) for X-ray photon correlation spectroscopy (XPCS) measurements of
 two-component systems (reference + sample) under nonequilibrium conditions.
 
 The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):
 
-    C₂(t₁,t₂,φ) = f(t₁)f(t₂)|g₁ₛ(t₁,t₂,φ)|²
-                  + [1-f(t₁)][1-f(t₂)]|g₁ᵣ(t₁,t₂,φ)|²
-                  + f(t₁)[1-f(t₂)]g₁ᵣ*(t₁,t₂,φ)g₁ₛ(t₁,t₂,φ)
-                  + [1-f(t₁)]f(t₂)g₁ᵣ(t₁,t₂,φ)g₁ₛ*(t₁,t₂,φ)
+    c₂(q⃗,t₁,t₂,φ) = 1 + (β/f²)[
+        [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
+        [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
+        2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
+    ]
 
-where:
-- g₁ᵣ: Reference component field correlation
-- g₁ₛ: Sample component field correlation
-- f(t): Time-dependent fraction of sample component
-- * denotes complex conjugate
+    where: f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
-Field Correlation Functions:
-    g₁ᵣ(t₁,t₂,φ) = exp[-q²/2 ∫Jᵣ(t)dt] * g₁_shear(φ,t₁,t₂)
-    g₁ₛ(t₁,t₂,φ) = exp[-q²/2 ∫Jₛ(t)dt] * g₁_shear(φ,t₁,t₂)
+Two-time correlation structure:
+- xₛ(t₁), xₛ(t₂): Sample fraction at time t₁ and t₂ (each in [0,1])
+- xᵣ(t₁) = 1 - xₛ(t₁): Reference fraction at time t₁
+- xᵣ(t₂) = 1 - xₛ(t₂): Reference fraction at time t₂
+- All integrals: From t₁ to t₂
+- Normalization f²: Uses fractions at BOTH times
+- Angle φ: Relative angle = φ₀ - φ_scattering (flow minus scattering direction)
+- Baseline: 1 (uncorrelated limit)
+- Contrast: β (absorbed in experimental measurements)
 
 Transport Coefficients (separate for reference and sample):
-    Jᵣ(t) = D0_ref * t^(alpha_ref) + D_offset_ref
-    Jₛ(t) = D0_sample * t^(alpha_sample) + D_offset_sample
+    Jᵣ(t) = J0_ref * t^(alpha_ref) + J_offset_ref
+    Jₛ(t) = J0_sample * t^(alpha_sample) + J_offset_sample
 
-Velocity Contribution (shared):
-    g₁_shear(φ,t₁,t₂) = [sinc(Φ(φ,t₁,t₂))]²
-    Φ(φ,t₁,t₂) = (1/2π) q L cos(φ₀-φ) ∫v(t')dt'
+Velocity Coefficient (shared between components):
     v(t) = v0 * t^β + v_offset
 
-Fraction Function:
-    f(t) = f0 * exp(f1 * (t - f2)) + f3
+Sample Fraction Function:
+    fₛ(t) = f0 * exp(f1 * (t - f2)) + f3
 
 Note: Parameters labeled "D" are transport coefficients J following He et al.
 For equilibrium: J = 6D where D is traditional diffusion coefficient.
@@ -72,7 +73,6 @@ Flow Angle (1):
 
 Experimental Parameters:
 - q: Scattering wavevector magnitude [Å⁻¹]
-- L: Characteristic length scale (gap size) [Å]
 - φ: Scattering angle [degrees]
 - dt: Time step between frames [s/frame]
 
@@ -610,6 +610,8 @@ class HeterodyneAnalysisCore:
                 with np.load(cache_file) as data:
                     c2_experimental = data["c2_exp"].astype(np.float64)
 
+            cache_needs_save = False
+
             # Validate cached data dimensions and auto-adjust if needed
             if (
                 c2_experimental.shape[1] != self.time_length
@@ -648,22 +650,40 @@ class HeterodyneAnalysisCore:
             logger.info(f"Raw data loaded with shape: {c2_experimental.shape}")
             logger.debug(f"Extracted {num_angles} phi angles from HDF5")
 
-            # Save to cache
-            compression_enabled = self.config["experimental_data"].get(
-                "cache_compression", True
-            )
-            logger.debug(
-                f"Saving data to cache with compression="
-                f"{'enabled' if compression_enabled else 'disabled'}: "
-                f"{cache_file}"
-            )
-            if compression_enabled:
-                np.savez_compressed(cache_file, c2_exp=c2_experimental)
-            else:
-                np.savez(cache_file, c2_exp=c2_experimental)
-            logger.debug(f"Data cached successfully to: {cache_file}")
+            # Note: Cache will be saved AFTER diagonal correction (with UNFILTERED data)
+            cache_needs_save = True
 
-        # Apply angle filtering if enabled (AFTER loading cache, BEFORE validation)
+        # Validate and auto-adjust angle dimensions if needed
+        if c2_experimental.shape[0] != len(phi_angles):
+            logger.warning(
+                f"Angle dimension mismatch: phi_angles has {len(phi_angles)} angles "
+                f"but cached data has {c2_experimental.shape[0]} angles. "
+                f"Auto-adjusting phi_angles to match experimental data."
+            )
+            # Trim or extend phi_angles to match data
+            if c2_experimental.shape[0] < len(phi_angles):
+                phi_angles = phi_angles[: c2_experimental.shape[0]]
+                logger.info(
+                    f"Trimmed phi_angles to {len(phi_angles)} angles to match data"
+                )
+            else:
+                # Data has more angles than phi_angles - this is unusual
+                logger.error(
+                    f"Data has {c2_experimental.shape[0]} angles but only "
+                    f"{len(phi_angles)} phi_angles provided. Cannot extend phi_angles."
+                )
+                raise ValueError(
+                    f"Insufficient phi_angles: need {c2_experimental.shape[0]}, "
+                    f"but only {len(phi_angles)} provided"
+                )
+            num_angles = len(phi_angles)
+
+        # Store unfiltered data for cache saving (before angle filtering)
+        c2_unfiltered = c2_experimental
+        phi_angles_unfiltered = phi_angles
+
+        # Apply angle filtering if enabled (AFTER loading cache, BEFORE diagonal correction)
+        # This matches homodyne's workflow where filtering is applied fresh every time
         opt_config = self.config.get("optimization_config", {})
         angle_config = opt_config.get("angle_filtering", {})
         if angle_config.get("enabled", False):
@@ -697,38 +717,42 @@ class HeterodyneAnalysisCore:
                     num_angles = len(phi_angles)
                     logger.info(f"Filtered data shape: {c2_experimental.shape}")
 
-        # Validate and auto-adjust angle dimensions if needed
-        if c2_experimental.shape[0] != len(phi_angles):
-            logger.warning(
-                f"Angle dimension mismatch: phi_angles has {len(phi_angles)} angles "
-                f"but cached data has {c2_experimental.shape[0]} angles. "
-                f"Auto-adjusting phi_angles to match experimental data."
-            )
-            # Trim or extend phi_angles to match data
-            if c2_experimental.shape[0] < len(phi_angles):
-                phi_angles = phi_angles[: c2_experimental.shape[0]]
-                logger.info(
-                    f"Trimmed phi_angles to {len(phi_angles)} angles to match data"
-                )
-            else:
-                # Data has more angles than phi_angles - this is unusual
-                logger.error(
-                    f"Data has {c2_experimental.shape[0]} angles but only "
-                    f"{len(phi_angles)} phi_angles provided. Cannot extend phi_angles."
-                )
-                raise ValueError(
-                    f"Insufficient phi_angles: need {c2_experimental.shape[0]}, "
-                    f"but only {len(phi_angles)} provided"
-                )
-            num_angles = len(phi_angles)
-
-        # Apply diagonal correction
-        if self.config["advanced_settings"]["data_loading"].get(
+        # Apply diagonal correction (only for raw HDF5 data, not cached data)
+        # Apply to FILTERED data since correction is computationally expensive
+        if cache_needs_save and self.config["advanced_settings"]["data_loading"].get(
             "use_diagonal_correction", True
         ):
-            logger.debug("Applying diagonal correction to correlation matrices")
+            logger.debug("Applying diagonal correction to filtered correlation matrices")
             c2_experimental = self._fix_diagonal_correction_vectorized(c2_experimental)
+
+            # Also apply to unfiltered data for cache saving
+            logger.debug("Applying diagonal correction to unfiltered data for cache")
+            c2_unfiltered = self._fix_diagonal_correction_vectorized(c2_unfiltered)
             logger.debug("Diagonal correction completed")
+        elif not cache_needs_save:
+            logger.debug("Skipping diagonal correction (loading from corrected cache)")
+
+        # Save to disk cache if needed (save UNFILTERED corrected data)
+        if cache_needs_save:
+            compression_enabled = self.config["experimental_data"].get(
+                "cache_compression", True
+            )
+            logger.debug(
+                f"Saving unfiltered corrected data to cache with compression="
+                f"{'enabled' if compression_enabled else 'disabled'}: "
+                f"{cache_file}"
+            )
+            if compression_enabled:
+                np.savez_compressed(cache_file, c2_exp=c2_unfiltered)
+            else:
+                np.savez(cache_file, c2_exp=c2_unfiltered)
+            logger.debug(f"Unfiltered corrected data cached successfully to: {cache_file}")
+
+            # Save unfiltered phi angles to match cached data
+            phi_angles_path = self.config["experimental_data"].get("phi_angles_path", ".")
+            phi_file = os.path.join(phi_angles_path, "phi_angles_list.txt")
+            np.savetxt(phi_file, phi_angles_unfiltered, fmt="%.6f", header="Phi angles (degrees)")
+            logger.info(f"Saved {len(phi_angles_unfiltered)} unfiltered phi angles to {phi_file}")
 
         # Cache in memory
         self.cached_experimental_data = c2_experimental
@@ -794,17 +818,22 @@ class HeterodyneAnalysisCore:
             logger.debug(f"Loaded data shape: {c2_experimental.shape}")
             logger.debug(f"Phi angles loaded: {len(phi_angles_loaded)}")
 
-            # Save phi angles to phi_angles_list.txt for future cache-based runs
-            phi_angles_path = self.config["experimental_data"].get(
-                "phi_angles_path", "."
-            )
-            phi_file = os.path.join(phi_angles_path, "phi_angles_list.txt")
-            np.savetxt(
-                phi_file, phi_angles_loaded, fmt="%.6f", header="Phi angles (degrees)"
-            )
-            logger.info(
-                f"Saved {len(phi_angles_loaded)} phi angles to {phi_file} for future runs"
-            )
+            # Note: phi_angles_list.txt will be saved AFTER angle filtering
+            # to ensure it matches the cached data
+
+            # Save wavevector q to wavevector_q_list.txt (for feature parity with homodyne)
+            if hasattr(self, 'wavevector_q') and self.wavevector_q is not None:
+                data_folder = self.config["experimental_data"].get(
+                    "data_folder_path", "."
+                )
+                q_file = os.path.join(data_folder, "wavevector_q_list.txt")
+                np.savetxt(
+                    q_file, [self.wavevector_q], fmt="%.8e",
+                    header="Wavevector q (1/Angstrom)"
+                )
+                logger.info(f"Saved wavevector q={self.wavevector_q:.8e} to {q_file}")
+            else:
+                logger.debug("Wavevector q not set, skipping wavevector_q_list.txt generation")
 
             # Validate loaded data dimensions and auto-adjust if needed
             if (
@@ -1000,7 +1029,7 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            11-parameter array for heterodyne model
+            14-parameter array for heterodyne model
         phi_angle : float
             Scattering angle in degrees
 
@@ -1037,7 +1066,13 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            14-parameter array for heterodyne model
+            14-parameter array for heterodyne model:
+            [J0_ref, alpha_ref, J_offset_ref,           # reference transport (3)
+             J0_sample, alpha_sample, J_offset_sample,  # sample transport (3)
+             v0, beta, v_offset,                        # velocity (3)
+             f0, f1, f2, f3,                            # fraction (4)
+             phi0]                                      # flow angle (1)
+            Note: Transport coefficients labeled "D0", "D_offset" in code
 
         Raises
         ------
@@ -1113,14 +1148,20 @@ class HeterodyneAnalysisCore:
         """
         Compute g1 field correlation from transport coefficient parameters.
 
-        This helper function calculates the field correlation g1 from diffusion
-        (transport coefficient) parameters, used for separate reference and sample
-        components in the 14-parameter heterodyne model.
+        This helper function calculates the field correlation g1 from transport
+        coefficient parameters, used for separate reference and sample components
+        in the 14-parameter heterodyne model.
+
+        **Formula:**
+        g₁(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ J(t)dt)
+
+        where J(t) = J₀·t^α + J_offset is the time-dependent transport coefficient.
 
         Parameters
         ----------
         diffusion_params : np.ndarray
-            Transport coefficient parameters [D0, alpha, D_offset]
+            Transport coefficient parameters [J0, alpha, J_offset]
+            Note: Labeled "D" in parameter names for legacy compatibility
         param_hash_suffix : str, optional
             Suffix for cache key to distinguish reference vs sample
 
@@ -1154,40 +1195,60 @@ class HeterodyneAnalysisCore:
         precomputed_v_t: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Calculate 2-component heterodyne correlation function.
+        Calculate 2-component heterodyne two-time correlation function.
 
-        Implements **Equation S-95** (general time-dependent form) from He et al. PNAS 2024,
-        using separate transport coefficients for reference and sample components:
+        Implements **Equation S-95** from He et al. PNAS 2024, using separate transport
+        coefficients for reference and sample components.
 
-        c₂(q⃗,t₁,t₂) = 1 + β/f² [
-            [xᵣ(t₁)xᵣ(t₂)]² g₁_r² +
-            [xₛ(t₁)xₛ(t₂)]² g₁_s² +
-            2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) g₁_r·g₁_s cos(...)
+        **Theoretical Equation S-95:**
+
+        c₂(q⃗,t₁,t₂,φ) = 1 + β/f² [
+            [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
+            [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
+            2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
         ]
 
-        where:
-            g₁_r = exp(-q²/2 ∫Jᵣ(t)dt)  # Reference field correlation
-            g₁_s = exp(-q²/2 ∫Jₛ(t)dt)  # Sample field correlation
+        where: f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
-        **Implementation Notes:**
-        - Uses separate transport coefficients: Jᵣ(t) and Jₛ(t)
-        - J(t) = J₀·t^α + J_offset
-        - For equilibrium: J = 6D (Wiener process)
-        - Parameters labeled "D" are actually J (transport coefficients)
+        **Two-Time Correlation Structure:**
+
+        The correlation function is computed as a matrix where each element (i,j)
+        represents the correlation between times t₁[i] and t₂[j]:
+
+        - Fractions: xₛ(t₁), xₛ(t₂) evaluated at each time (meshgrid)
+        - Reference: xᵣ(t) = 1 - xₛ(t) at each time
+        - Normalization: f² computed from fractions at BOTH times
+        - Integrals: ∫ₜ₁^ₜ₂ computed over time interval for each (t₁,t₂) pair
+        - Angle: φ in cos(φ) = φ₀ - φ_scattering (relative angle between flow and scattering)
+
+        **Implementation Using Field Correlations:**
+
+        The implementation uses:
+            g₁_r(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ Jᵣ(t)dt)  # Reference field correlation
+            g₁_s(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ Jₛ(t)dt)  # Sample field correlation
+
+        Note: g₁² = exp(-q²∫ Jdt) and g₁_r·g₁_s = exp(-½q²∫[Jₛ+Jᵣ]dt)
+
+        **Transport Coefficient Model:**
+        - Separate transport: Jᵣ(t) and Jₛ(t) for reference and sample
+        - Power-law form: J(t) = J₀·t^α + J_offset
+        - Equilibrium limit: J = 6D (Wiener process)
+        - Legacy naming: Parameters labeled "D" are transport coefficients J
 
         Parameters
         ----------
         parameters : np.ndarray
             14-parameter array:
-            [D0_ref, alpha_ref, D_offset_ref,      # reference transport coefficients (3)
-             D0_sample, alpha_sample, D_offset_sample,  # sample transport coefficients (3)
-             v0, beta, v_offset,                    # velocity params (3)
-             f0, f1, f2, f3,                        # fraction params (4)
-             phi0]                                   # flow angle (1)
+            [J0_ref, alpha_ref, J_offset_ref,           # reference transport (3)
+             J0_sample, alpha_sample, J_offset_sample,  # sample transport (3)
+             v0, beta, v_offset,                        # velocity (3)
+             f0, f1, f2, f3,                            # fraction (4)
+             phi0]                                      # flow angle (1)
+            Note: Transport coefficients labeled "D0", "D_offset" in code
         phi_angle : float
             Scattering angle in degrees
         precomputed_D_t : np.ndarray, optional
-            Pre-computed transport coefficient array (labeled "D" for compatibility)
+            Pre-computed transport coefficient array (labeled "D" for legacy compatibility)
         precomputed_v_t : np.ndarray, optional
             Pre-computed velocity array
 
@@ -1370,16 +1431,21 @@ class HeterodyneAnalysisCore:
         """
         Calculate 2-component heterodyne correlation function for all angles with parallel processing.
 
-        Uses the heterodyne scattering model with 14 parameters (2 shear bands).
+        Uses the heterodyne scattering model with 14 parameters for reference and sample
+        components with independent transport coefficients.
 
         Parameters
         ----------
         parameters : np.ndarray
             14-parameter array for heterodyne model:
-            [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample,
-             v0, beta, v_offset, f0, f1, f2, f3, phi0]
+            [J0_ref, alpha_ref, J_offset_ref,           # reference transport (3)
+             J0_sample, alpha_sample, J_offset_sample,  # sample transport (3)
+             v0, beta, v_offset,                        # velocity (3)
+             f0, f1, f2, f3,                            # fraction (4)
+             phi0]                                      # flow angle (1)
+            Note: Transport coefficients labeled "D0", "D_offset" in code
         phi_angles : np.ndarray
-            Array of scattering angles
+            Array of scattering angles in degrees
 
         Returns
         -------
@@ -3136,8 +3202,19 @@ class HeterodyneAnalysisCore:
                 angle_data = c2_experimental[angle_idx, :, :]
                 phi_deg = phi_angles[angle_idx] if len(phi_angles) > angle_idx else 0.0
 
+                # Calculate statistics first (needed for colorbar limits)
+                mean_val = np.mean(angle_data)
+                std_val = np.std(angle_data)
+                min_val = np.min(angle_data)
+                max_val = np.max(angle_data)
+
                 # 1. C2 heatmap (left panel)
                 ax1 = fig.add_subplot(gs[i, 0])
+
+                # Set colorbar limits: vmin = max(1.0, min), vmax = min(2.0, max)
+                vmin = max(1.0, min_val)
+                vmax = min(2.0, max_val)
+
                 im1 = ax1.imshow(
                     angle_data,
                     aspect="equal",
@@ -3149,6 +3226,8 @@ class HeterodyneAnalysisCore:
                         time_t2[-1],
                     ],  # type: ignore
                     cmap="viridis",
+                    vmin=vmin,
+                    vmax=vmax,
                 )
                 ax1.set_xlabel(r"Time $t_1$ (s)")
                 ax1.set_ylabel(r"Time $t_2$ (s)")
@@ -3158,12 +3237,6 @@ class HeterodyneAnalysisCore:
                 # 2. Statistics (right panel)
                 ax2 = fig.add_subplot(gs[i, 1])
                 ax2.axis("off")
-
-                # Calculate statistics
-                mean_val = np.mean(angle_data)
-                std_val = np.std(angle_data)
-                min_val = np.min(angle_data)
-                max_val = np.max(angle_data)
                 diagonal = np.diag(angle_data)
                 diag_mean = np.mean(diagonal)
 
@@ -3198,7 +3271,7 @@ Diagonal mean: {diag_mean:.4f}
 Contrast: {contrast_str}
 
 Validation:
-{"✓" if 0.9 < mean_val < 1.2 else "✗"} Mean around 1.0
+{"✓" if 1 < mean_val < 2 else "✗"} Mean around 1.0
 {"✓" if diag_mean > mean_val else "✗"} Diagonal enhanced
 {"✓" if contrast > 0.001 else "✗"} Sufficient contrast"""
 

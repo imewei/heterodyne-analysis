@@ -69,6 +69,21 @@ where:
 
    f^2 = [x_s(t_1)^2 + x_r(t_1)^2][x_s(t_2)^2 + x_r(t_2)^2]
 
+**Two-Time Correlation Structure:**
+
+This is a **two-time correlation function** where fractions are evaluated at BOTH time points:
+
+* :math:`x_s(t_1)`, :math:`x_s(t_2)`: Sample fraction at time :math:`t_1` and :math:`t_2` (each in [0,1])
+* :math:`x_r(t_1) = 1 - x_s(t_1)`: Reference fraction at time :math:`t_1`
+* :math:`x_r(t_2) = 1 - x_s(t_2)`: Reference fraction at time :math:`t_2`
+* The correlation matrix element :math:`c_2(i,j)` represents the correlation between times :math:`t_1[i]` and :math:`t_2[j]`
+
+**Angle Notation:**
+
+* :math:`\phi` in :math:`\cos(\phi)` represents the **relative angle** between flow and scattering directions
+* Implementation: :math:`\phi = \phi_0 - \phi_{\text{scattering}}` (flow angle minus scattering angle)
+* :math:`\phi_0`: Flow direction parameter (14th model parameter)
+
 Equilibrium Wiener Process Form (Equation S-96)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

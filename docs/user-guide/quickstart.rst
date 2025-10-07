@@ -123,7 +123,25 @@ Python API Example (14-Parameter Heterodyne Model)
 Heterodyne Model Quick Reference
 ----------------------------------
 
-The package implements **Equation S-95** (general time-dependent form) from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_, using transport coefficients J(t) for nonequilibrium dynamics:
+The package implements **Equation S-95** (general time-dependent form) from `He et al. PNAS 2024 <https://doi.org/10.1073/pnas.2401162121>`_, using transport coefficients J(t) for nonequilibrium dynamics.
+
+**Equation S-95 Summary:**
+
+The heterodyne correlation has three terms: reference decay, sample decay, and cross-correlation with flow:
+
+.. math::
+
+   c_2(t_1, t_2, \phi) = 1 + \frac{\beta}{f^2} \left[
+   \text{reference}^2 \cdot e^{-q^2\int J_r dt} +
+   \text{sample}^2 \cdot e^{-q^2\int J_s dt} +
+   2 \cdot \text{cross} \cdot e^{-q^2\int \frac{J_r+J_s}{2} dt} \cos(q\cos\phi\int v dt)
+   \right]
+
+**Key Features:**
+
+- **Two-time**: Fractions evaluated at both t₁ and t₂
+- **Separate transport**: Independent J_r(t) and J_s(t) for reference and sample
+- **Angle**: φ = φ₀ - φ_scattering (relative angle between flow and scattering)
 
 **Parameter Groups:**
 
