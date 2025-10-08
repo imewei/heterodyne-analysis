@@ -4,7 +4,7 @@
 
 OVERVIEW
 --------
-This package implements the 11-parameter heterodyne scattering model based on
+This package implements the 14-parameter heterodyne scattering model based on
 Equation S-95 from He et al. PNAS 2024. The chi-squared calculation assesses
 how well the two-component heterodyne model fits experimental correlation data.
 
@@ -12,7 +12,7 @@ Model: Two-component heterodyne system (reference + sample)
 - Transport coefficient J(t) for nonequilibrium dynamics
 - Time-dependent velocity v(t) for flow effects
 - Time-dependent fraction f(t) for component mixing
-- 11 total parameters optimized simultaneously
+- 14 total parameters optimized simultaneously
 
 
 MATHEMATICAL FORMULA
@@ -40,18 +40,26 @@ HETERODYNE CORRELATION FUNCTION (Equation S-95)
 
 The theoretical model with separate reference and sample field correlations:
 
-c₂(q⃗,t₁,t₂) = 1 + β/f² [
-    [x_r(t₁)x_r(t₂)]² g₁_r² +
-    [x_s(t₁)x_s(t₂)]² g₁_s² +
-    2x_r(t₁)x_r(t₂)x_s(t₁)x_s(t₂) g₁_r·g₁_s cos(Φ)
+c₂(q⃗,t₁,t₂,φ) = 1 + β/f² [
+    [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁ᵗ² Jᵣ(t)dt) +
+    [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁ᵗ² Jₛ(t)dt) +
+    2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁ᵗ²[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁ᵗ² v(t)dt]
 ]
 
 where:
-  x_r(t) = 1 - f(t)              # Reference component fraction
-  x_s(t) = f(t)                  # Sample component fraction
-  g₁_r = exp(-q²/2 ∫Jᵣ(t)dt)    # Reference field correlation
-  g₁_s = exp(-q²/2 ∫Jₛ(t)dt)    # Sample field correlation
-  Φ = shear phase term           # Flow-induced phase shift
+  f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]  # Two-time normalization
+
+Two-time correlation structure:
+  This is a two-time correlation function where fractions are evaluated at BOTH times:
+  - xₛ(t₁), xₛ(t₂): Sample fraction at time t₁ and t₂ (each in [0,1])
+  - xᵣ(t₁) = 1 - xₛ(t₁): Reference fraction at time t₁
+  - xᵣ(t₂) = 1 - xₛ(t₂): Reference fraction at time t₂
+  - Matrix element c₂(i,j) represents correlation between times t₁[i] and t₂[j]
+
+Angle notation:
+  - φ in cos(φ) represents the RELATIVE ANGLE between flow and scattering directions
+  - Implementation: φ = φ₀ - φ_scattering (flow angle minus scattering angle)
+  - φ₀ is the 14th model parameter (flow direction)
 
 Time-dependent coefficients:
   Jᵣ(t) = J₀_ref · t^α_ref + J_offset_ref         # Reference transport [Å²/s]
@@ -305,11 +313,11 @@ Traditional laminar flow (7-parameter):
 - Simple diffusion D(t)
 - No time-dependent fractions
 
-Heterodyne model (11-parameter):
+Heterodyne model (14-parameter):
 - Two-component system (reference + sample)
-- Transport coefficient J(t) for nonequilibrium
+- Separate transport coefficients Jᵣ(t) and Jₛ(t) for nonequilibrium
 - Time-dependent fraction mixing f(t)
-- Richer dynamics: f(t) · g₁² · cos(Φ) terms
+- Richer dynamics: three-term structure with reference, sample, and cross-correlation
 
 The heterodyne model is more general and can capture:
 - Component mixing effects
@@ -328,10 +336,14 @@ Equation S-95: He et al. "Transport coefficient approach for characterizing
 Implementation: heterodyne/analysis/core.py
                heterodyne/core/kernels.py
 
-Documentation: docs/research/theoretical_framework.rst
+Documentation: README.md
+               docs/index.rst
+               docs/research/index.rst
+               docs/research/theoretical_framework.rst
                docs/user-guide/analysis-modes.rst
+               docs/user-guide/quickstart.rst
 
 ═══════════════════════════════════════════════════════════════════════════════
-Last Updated: 2025-10-06
-Model Version: 11-parameter heterodyne (Equation S-95)
+Last Updated: 2025-10-07
+Model Version: 14-parameter heterodyne (Equation S-95)
 ═══════════════════════════════════════════════════════════════════════════════
