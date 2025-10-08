@@ -1061,6 +1061,19 @@ class ClassicalOptimizer:
             f_minus = objective_func(x_minus)
             grad[i] = (f_plus - f_minus) / (2 * epsilon)
             function_evaluations += 2
+            
+            # Sanitize NaN/Inf values that can cause Gurobi to fail
+            if not np.isfinite(grad[i]):
+                # Try one-sided difference as fallback
+                f_current = objective_func(x_current)
+                function_evaluations += 1
+                if np.isfinite(f_plus):
+                    grad[i] = (f_plus - f_current) / epsilon
+                elif np.isfinite(f_minus):
+                    grad[i] = (f_current - f_minus) / epsilon
+                else:
+                    # If all attempts fail, use zero gradient for this parameter
+                    grad[i] = 0.0
 
         if return_tuple:
             return grad, function_evaluations
@@ -1106,7 +1119,14 @@ class ClassicalOptimizer:
             f_plus = objective_func(x_plus)
             f_minus = objective_func(x_minus)
             second_deriv = (f_plus - 2 * f_current + f_minus) / (epsilon**2)
-            hessian_diag[i] = max(1e-6, second_deriv)  # Ensure positive
+            
+            # Sanitize NaN/Inf values and ensure positive diagonal
+            if np.isfinite(second_deriv):
+                hessian_diag[i] = max(1e-6, second_deriv)
+            else:
+                # Use default value if second derivative is invalid
+                hessian_diag[i] = 1.0
+            
             function_evaluations += 2
 
         return hessian_diag, function_evaluations

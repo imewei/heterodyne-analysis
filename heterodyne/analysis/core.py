@@ -1377,7 +1377,9 @@ class HeterodyneAnalysisCore:
             Fraction array f(t), clipped to [0, 1]
         """
         f0, f1, f2, f3 = fraction_params
-        f_t = f0 * np.exp(f1 * (self.time_abs - f2)) + f3
+        # Clip exponent argument to prevent overflow (exp(x) overflows for x > ~700)
+        exponent = np.clip(f1 * (self.time_abs - f2), -500, 500)
+        f_t = f0 * np.exp(exponent) + f3
         # Ensure physical validity: fractions must be in [0, 1]
         return np.clip(f_t, 0.0, 1.0)
 
