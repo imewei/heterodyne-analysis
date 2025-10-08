@@ -157,13 +157,13 @@ def run_classical_optimization(
             logger.info("=" * 50)
 
             for method_name, method_data in result.method_results.items():
-                if method_data.get("success", False) and method_data.get("parameters"):
+                if method_data.get("parameters") is not None:
                     logger.info(
                         f"{method_name:15s}: χ² = {method_data['chi_squared']:.6f}, "
                         f"success = {method_data['success']}"
                     )
 
-                    # Create result dict for this method
+                    # Create result dict for this method (save all results, not just successful ones)
                     all_classical_results[method_name.lower().replace("-", "_")] = {
                         "method": method_name.lower().replace("-", "_"),
                         "parameters": np.array(method_data["parameters"]),
