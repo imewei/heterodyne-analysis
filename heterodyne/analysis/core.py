@@ -1134,10 +1134,11 @@ class HeterodyneAnalysisCore:
         f_check = f0 * np.exp(exponent) + f3
 
         if not (np.all(f_check >= 0) and np.all(f_check <= 1)):
-            raise ValueError(
+            logger.debug(
                 f"Fraction parameters produce f(t) outside [0,1]. "
                 f"Range: [{f_check.min():.3f}, {f_check.max():.3f}]. "
-                f"Adjust f0={f0:.3f}, f1={f1:.3f}, f2={f2:.3f}, f3={f3:.3f}"
+                f"Values will be clipped to [0,1] during calculation. "
+                f"Parameters: f0={f0:.3f}, f1={f1:.3f}, f2={f2:.3f}, f3={f3:.3f}"
             )
 
         # Flow angle constraint
