@@ -303,9 +303,9 @@ class HeterodyneAnalysisCore:
         self.wavevector_q = params["scattering"]["wavevector_q"]
         self.stator_rotor_gap = params["geometry"]["stator_rotor_gap"]
 
-        # Parameter counts
-        self.num_diffusion_params = 3
-        self.num_shear_rate_params = 3
+        # Parameter counts (heterodyne has ref + sample diffusion)
+        self.num_diffusion_params = 6  # ref(3) + sample(3) for heterodyne
+        self.num_shear_rate_params = 3  # v0, beta, v_offset
 
         # Pre-compute constants
         self.wavevector_q_squared = self.wavevector_q**2
@@ -318,16 +318,20 @@ class HeterodyneAnalysisCore:
         self._diffusion_integral_cache = {}
         self._max_cache_size = 10  # Limit cache size to avoid memory bloat
 
-        # Time array (starts at 0 for t1=t2=0 correlation)
+        # Time array for all time-dependent calculations
+        # IMPORTANT: All coefficient calculations (diffusion, velocity, fraction)
+        # use this single time_array to ensure consistency during optimization
+        # with data subsampling. DO NOT create separate time arrays or aliases
+        # (e.g., time_abs), as they can become desynchronized when time_array
+        # is reassigned during subsampling, causing shape mismatches in forward
+        # model calculations. See heterodyne/optimization/classical.py for
+        # subsampling implementation.
         self.time_array = np.linspace(
             0,
             self.dt * (self.time_length - 1),
             self.time_length,
             dtype=np.float64,
         )
-
-        # Alias for backward compatibility and heterodyne model
-        self.time_abs = self.time_array
 
         # Memory pool for correlation calculations
         self._c2_results_pool: np.ndarray | None = None
@@ -1122,9 +1126,9 @@ class HeterodyneAnalysisCore:
             )
 
         # Fraction constraints - ensure f(t) stays in [0, 1] for all times
-        # Check at several time points (use representative range if time_abs not available)
-        if hasattr(self, 'time_abs') and self.time_abs is not None:
-            t_check = np.linspace(self.time_abs[0], self.time_abs[-1], 100)
+        # Check at several time points (use representative range if time_array not available)
+        if hasattr(self, 'time_array') and self.time_array is not None:
+            t_check = np.linspace(self.time_array[0], self.time_array[-1], 100)
         else:
             # Use default time range for validation
             t_check = np.linspace(0, 100, 100)
@@ -1351,15 +1355,15 @@ class HeterodyneAnalysisCore:
         # Handle negative beta: use physical limit at t=0
         if beta < 0:
             # Initialize with v_offset (physical limit as t→0)
-            v_t = np.full_like(self.time_abs, v_offset, dtype=np.float64)
+            v_t = np.full_like(self.time_array, v_offset, dtype=np.float64)
             # For t > threshold, use full formula
             threshold = 1e-10
-            mask = self.time_abs > threshold
+            mask = self.time_array > threshold
             if np.any(mask):
-                v_t[mask] = v0 * (self.time_abs[mask] ** beta) + v_offset
+                v_t[mask] = v0 * (self.time_array[mask] ** beta) + v_offset
             return v_t
         else:
-            return v0 * (self.time_abs ** beta) + v_offset
+            return v0 * (self.time_array ** beta) + v_offset
 
     def calculate_fraction_coefficient(self, fraction_params: np.ndarray) -> np.ndarray:
         """
@@ -1381,7 +1385,7 @@ class HeterodyneAnalysisCore:
         """
         f0, f1, f2, f3 = fraction_params
         # Clip exponent argument to prevent overflow (exp(x) overflows for x > ~700)
-        exponent = np.clip(f1 * (self.time_abs - f2), -500, 500)
+        exponent = np.clip(f1 * (self.time_array - f2), -500, 500)
         f_t = f0 * np.exp(exponent) + f3
         # Ensure physical validity: fractions must be in [0, 1]
         return np.clip(f_t, 0.0, 1.0)

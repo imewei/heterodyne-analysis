@@ -667,6 +667,35 @@ def create_all_plots(
 
     plot_status = {}
 
+    # Extract temporal parameters from config for time axes
+    t1 = None
+    t2 = None
+    if config is not None:
+        try:
+            dt = config.get("temporal", {}).get("dt", None)
+            if dt is not None:
+                # Get experimental data shape to determine array sizes
+                exp_data = results.get("experimental_data")
+                if exp_data is None:
+                    # Try method_results
+                    method_results = results.get("method_results", {})
+                    if method_results:
+                        # Get from first method
+                        first_method_data = next(iter(method_results.values()), {})
+                        exp_data = first_method_data.get("experimental_data")
+
+                if exp_data is not None and hasattr(exp_data, "shape"):
+                    # exp_data shape: [n_angles, n_t2, n_t1]
+                    n_t2 = exp_data.shape[1]
+                    n_t1 = exp_data.shape[2]
+                    # Create time arrays in seconds (same as validation plot)
+                    t2 = np.arange(n_t2) * dt
+                    t1 = np.arange(n_t1) * dt
+                    logger.debug(f"Created time arrays: t1={t1.shape}, t2={t2.shape}, dt={dt}")
+        except Exception as e:
+            logger.warning(f"Failed to extract temporal parameters from config: {e}")
+            logger.warning("Plots will use frame indices instead of time in seconds")
+
     # Handle method-specific plotting for classical optimization
     method_results = results.get("method_results", {})
 
@@ -696,6 +725,8 @@ def create_all_plots(
                     method_results_dict["phi_angles"],
                     method_outdir,
                     config,
+                    t2=t2,
+                    t1=t1,
                     method_name=method_name,
                 )
 
@@ -714,6 +745,8 @@ def create_all_plots(
                 results["phi_angles"],
                 outdir,
                 config,
+                t2=t2,
+                t1=t1,
             )
 
         # Diagnostic summary (if not method-specific)

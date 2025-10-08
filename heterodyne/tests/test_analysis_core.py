@@ -340,6 +340,87 @@ class TestHeterodyneAnalysisCore:
         assert np.all(np.isfinite(theoretical))
         assert np.all(theoretical >= 1.0)
 
+    def test_time_array_consistency_during_subsampling(self):
+        """
+        Regression test for time array consistency during data subsampling.
+
+        This test prevents a bug where separate time arrays (time_abs and time_array)
+        became desynchronized during optimization with subsampling, causing shape
+        mismatches in forward model calculations.
+
+        Bug scenario:
+        - Initially: time_abs = time_array (alias)
+        - After subsampling: time_array reassigned to smaller array
+        - Bug: time_abs still pointed to original full-length array
+        - Result: Shape mismatch in velocity/fraction calculations
+
+        Fix: Use single time_array for all calculations.
+        """
+        analyzer = HeterodyneAnalysisCore(config_override=self.config_data)
+
+        # Full 14-parameter heterodyne model
+        params = np.array([
+            100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
+            100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
+            0.1, 0.0, 0.01,     # v0, beta, v_offset
+            0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
+            0.0                 # phi0
+        ])
+
+        # Record original configuration
+        original_time_length = analyzer.time_length
+        original_dt = analyzer.dt
+
+        # Calculate coefficients at full resolution
+        diffusion_params = params[0:3]
+        velocity_params = params[6:9]
+        fraction_params = params[9:13]
+
+        D_full = analyzer.calculate_diffusion_coefficient_optimized(diffusion_params)
+        v_full = analyzer.calculate_velocity_coefficient(velocity_params)
+        f_full = analyzer.calculate_fraction_coefficient(fraction_params)
+
+        # Verify full resolution shapes
+        assert D_full.shape == (original_time_length,), \
+            f"Expected diffusion shape ({original_time_length},), got {D_full.shape}"
+        assert v_full.shape == (original_time_length,), \
+            f"Expected velocity shape ({original_time_length},), got {v_full.shape}"
+        assert f_full.shape == (original_time_length,), \
+            f"Expected fraction shape ({original_time_length},), got {f_full.shape}"
+
+        # Simulate subsampling (like classical.py does during optimization)
+        subsampled_length = original_time_length // 4  # 4x subsampling
+        analyzer.time_length = subsampled_length
+        analyzer.time_array = np.arange(subsampled_length) * original_dt * 4
+
+        # Calculate coefficients at subsampled resolution
+        # This would FAIL before the fix due to shape mismatch
+        D_sub = analyzer.calculate_diffusion_coefficient_optimized(diffusion_params)
+        v_sub = analyzer.calculate_velocity_coefficient(velocity_params)
+        f_sub = analyzer.calculate_fraction_coefficient(fraction_params)
+
+        # Verify subsampled shapes match new time_length
+        assert D_sub.shape == (subsampled_length,), \
+            f"Expected diffusion shape ({subsampled_length},), got {D_sub.shape}"
+        assert v_sub.shape == (subsampled_length,), \
+            f"Expected velocity shape ({subsampled_length},), got {v_sub.shape}"
+        assert f_sub.shape == (subsampled_length,), \
+            f"Expected fraction shape ({subsampled_length},), got {f_sub.shape}"
+
+        # Verify no NaN or Inf values
+        assert np.all(np.isfinite(D_sub)), "Diffusion coefficients contain NaN/Inf"
+        assert np.all(np.isfinite(v_sub)), "Velocity coefficients contain NaN/Inf"
+        assert np.all(np.isfinite(f_sub)), "Fraction coefficients contain NaN/Inf"
+
+        # Verify physical validity
+        assert np.all(D_sub > 0), "Diffusion coefficients must be positive"
+        assert np.all(v_sub >= 0), "Velocity coefficients must be non-negative"
+        assert np.all((f_sub >= 0) & (f_sub <= 1)), "Fractions must be in [0, 1]"
+
+        # Restore original configuration
+        analyzer.time_length = original_time_length
+        analyzer.time_array = np.arange(original_time_length) * original_dt
+
     def test_convergence_criteria(self):
         """Test convergence criteria handling."""
         HeterodyneAnalysisCore(config_override=self.config_data)
