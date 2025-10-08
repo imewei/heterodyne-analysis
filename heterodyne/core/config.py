@@ -472,9 +472,9 @@ class ConfigManager:
         Cached Values:
         - angle_filtering_enabled: Boolean flag for optimization filtering
         - target_angle_ranges: Pre-parsed angle ranges for filtering
-        - static_mode: Analysis mode flag (static vs laminar flow)
+        - static_mode: Analysis mode flag (deprecated, raises error if detected)
         - parameter_bounds: Parameter constraints for validation
-        - effective_param_count: Number of active parameters (3 or 7)
+        - effective_param_count: Number of active parameters (14 for heterodyne model)
         """
         if not self.config:
             return
@@ -1066,19 +1066,19 @@ class ConfigManager:
         Returns
         -------
         list[str]
-            List of parameter names to be optimized and displayed in plots.
-            Falls back to all parameters if not specified in configuration.
+            List of parameter names for the 14-parameter heterodyne model.
+            Always returns all 14 parameter names.
         """
         initial_params = self.get("initial_parameters", default={})
         active_params = cast("list[str]", initial_params.get("active_parameters", []))
 
-        # If no active_parameters specified, use all parameter names
+        # If no active_parameters specified, use all 14 heterodyne parameter names
         if not active_params:
             param_names = cast("list[str]", initial_params.get("parameter_names", []))
             if param_names:
                 active_params = param_names
             else:
-                # Ultimate fallback to heterodyne 14-parameter names
+                # Default to heterodyne 14-parameter names
                 active_params = [
                     "D0_ref", "alpha_ref", "D_offset_ref",        # Reference transport (3)
                     "D0_sample", "alpha_sample", "D_offset_sample",  # Sample transport (3)
@@ -1091,39 +1091,20 @@ class ConfigManager:
 
     def get_effective_parameter_count(self) -> int:
         """
-        Get the effective number of model parameters based on active_parameters configuration.
+        Get the effective number of model parameters.
 
         Returns
         -------
         int
-            Number of parameters used in the analysis based on active_parameters.
-            Falls back to mode-based logic if active_parameters not specified:
-            - Static mode: 3 (only diffusion parameters)
-            - Laminar flow mode: 7 (all parameters)
+            Always returns 14 for the heterodyne model.
+            The heterodyne model uses 14 parameters:
+            - Reference transport coefficients (3): D0_ref, alpha_ref, D_offset_ref
+            - Sample transport coefficients (3): D0_sample, alpha_sample, D_offset_sample
+            - Velocity coefficients (3): v0, beta, v_offset
+            - Fraction coefficients (4): f0, f1, f2, f3
+            - Flow angle (1): phi0
         """
-        # Use cached value for performance
-        if (
-            hasattr(self, "_cached_values")
-            and "effective_param_count" in self._cached_values
-        ):
-            return int(self._cached_values["effective_param_count"])
-
-        # Get active parameters from configuration
-        active_params = self.get_active_parameters()
-
-        # Use active_parameters if specified, otherwise default to heterodyne 14-parameter model
-        if active_params:
-            count = len(active_params)
-        else:
-            # Heterodyne model uses 14 parameters by default
-            count = 14
-
-        # Cache the result for performance
-        if not hasattr(self, "_cached_values"):
-            self._cached_values = {}
-        self._cached_values["effective_param_count"] = count
-
-        return count
+        return 14
 
     def get_parameter_metadata(self) -> dict[str, dict[str, str]]:
         """
@@ -1269,32 +1250,6 @@ class ConfigManager:
             50.0,    # f2
             0.3,     # f3
             # Flow angle
-            0.0      # phi0
-        ]
-
-    def get_default_11_parameters(self) -> list[float]:
-        """
-        Get default values for legacy 11-parameter model (deprecated).
-
-        This method is kept for backward compatibility only.
-        Use get_default_14_parameters() for the current heterodyne model.
-
-        Returns
-        -------
-        list[float]
-            Default parameter values (11 parameters)
-        """
-        return [
-            100.0,   # D0
-            -0.5,    # alpha
-            10.0,    # D_offset
-            0.1,     # v0
-            0.0,     # beta
-            0.01,    # v_offset
-            0.5,     # f0
-            0.0,     # f1
-            50.0,    # f2
-            0.3,     # f3
             0.0      # phi0
         ]
 

@@ -382,7 +382,6 @@ class CLIEnhancer:
             suggestions.append(
                 "Consider using angle filtering to reduce computation time"
             )
-            suggestions.append("Try static mode if your sample is not flowing")
 
         if memory_usage and memory_usage > 2000:  # 2GB
             suggestions.append("Consider processing smaller frame ranges")

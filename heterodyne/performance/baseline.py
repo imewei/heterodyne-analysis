@@ -832,7 +832,7 @@ class PerformanceProfiler:
         """Generate synthetic test data."""
         try:
             # Use the core to generate theoretical data
-            theoretical = core.calculate_c2_nonequilibrium_laminar_parallel(
+            theoretical = core.calculate_c2_heterodyne_parallel(
                 params, angles
             )
             # Add some noise

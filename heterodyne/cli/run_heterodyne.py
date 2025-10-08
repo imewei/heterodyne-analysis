@@ -8,7 +8,7 @@ Correlation Spectroscopy (XPCS) under nonequilibrium conditions.
 This script provides a unified interface for:
 - Classical optimization (Nelder-Mead, Gurobi) for fast parameter estimation
 - Robust optimization (Wasserstein DRO, Scenario-based, Ellipsoidal) for noise resistance
-- Dual analysis modes: Static (3 params) and Laminar Flow (7 params)
+- 14-parameter heterodyne model: Two-component analysis with separate transport dynamics
 - Comprehensive data validation and quality control
 - Automated result saving and visualization
 

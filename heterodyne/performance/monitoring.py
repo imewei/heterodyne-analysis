@@ -817,7 +817,7 @@ class PerformanceMonitor:
     ) -> np.ndarray:
         """Generate synthetic test data for benchmarking."""
         try:
-            theoretical = core.calculate_c2_nonequilibrium_laminar_parallel(
+            theoretical = core.calculate_c2_heterodyne_parallel(
                 params, angles
             )
             noise = np.random.normal(0, 0.01, theoretical.shape)

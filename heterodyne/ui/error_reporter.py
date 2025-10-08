@@ -188,7 +188,6 @@ class ErrorReporter:
                 "suggestions": [
                     "Reduce frame range in configuration (start_frame, end_frame)",
                     "Enable angle filtering to process fewer angles",
-                    "Use static mode instead of laminar flow if applicable",
                     "Close other applications to free memory",
                     "Consider processing data in smaller chunks",
                 ],

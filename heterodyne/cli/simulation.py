@@ -323,7 +323,7 @@ def generate_theoretical_c2_data(
 
         # Use the core's method to calculate theoretical C2 directly
         # This is much cleaner than the previous workaround approach
-        c2_theoretical = core.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_theoretical = core.calculate_c2_heterodyne_parallel(
             initial_params, phi_angles
         )
 

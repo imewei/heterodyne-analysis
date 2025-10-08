@@ -41,7 +41,7 @@ Analyzes 2-component heterodyne scattering with 14 parameters:
   • Fraction (4): f0, f1, f2, f3
   • Flow angle (1): phi0
 
-Replaces legacy 7-parameter homodyne/laminar flow model.
+Based on He et al. PNAS 2024 Equation S-95 for nonequilibrium dynamics.
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
@@ -59,7 +59,7 @@ Examples:
   %(prog)s --method all                       # Compare classical and robust methods
 
   Migration from Legacy Configs:
-  python -m heterodyne.core.migration old_config.json new_config.json  # Migrate 7→14 params
+  python -m heterodyne.core.migration old_config.json new_config.json  # Migrate legacy→14 params
   python -m heterodyne.core.migration old_config.json --guide           # Show migration guide
 
   Visualization:

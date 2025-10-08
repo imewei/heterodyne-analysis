@@ -1349,7 +1349,7 @@ class RobustHeterodyneOptimizer:
         """
         try:
             # Calculate theoretical correlation for heterodyne mode
-            c2_theory = self.core.calculate_c2_nonequilibrium_laminar_parallel(
+            c2_theory = self.core.calculate_c2_heterodyne_parallel(
                 theta, phi_angles
             )
             return c2_theory
@@ -2000,19 +2000,14 @@ class RobustHeterodyneOptimizer:
             initial_params = kwargs.get("initial_parameters")
 
         if initial_params is None:
-            # Create default initial parameters
-            n_params = 7  # Default to laminar flow
-            if hasattr(self.core, "get_effective_parameter_count"):
-                try:
-                    n_params = int(self.core.get_effective_parameter_count())
-                except (TypeError, ValueError, AttributeError):
-                    n_params = 7
-
-            default_params = {
-                3: [1e-3, 0.9, 1e-4],
-                7: [1e-3, 0.9, 1e-4, 0.01, 0.8, 0.001, 0.0],
-            }
-            initial_params = np.array(default_params.get(n_params, default_params[7]))
+            # Create default initial parameters for 14-parameter heterodyne model
+            initial_params = np.array([
+                100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
+                100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
+                0.1, 0.0, 0.01,     # v0, beta, v_offset
+                0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
+                0.0                 # phi0
+            ], dtype=np.float64)
 
         # Check if _solve_robust_optimization is mocked (for tests)
         try:

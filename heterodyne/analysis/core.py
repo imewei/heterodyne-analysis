@@ -473,16 +473,18 @@ class HeterodyneAnalysisCore:
 
     def get_effective_parameter_count(self) -> int:
         """
-        Get the effective number of parameters for laminar flow analysis.
+        Get the effective number of parameters for heterodyne analysis.
 
         Returns
         -------
         int
-            Number of parameters used in heterodyne analysis: 14
-            (ref transport coefficients (3) + sample transport coefficients (3) +
-             velocity (3) + fractions (4) + flow angle (1))
+            Always returns 14 for the heterodyne model:
+            - Reference transport coefficients (3): D0_ref, alpha_ref, D_offset_ref
+            - Sample transport coefficients (3): D0_sample, alpha_sample, D_offset_sample
+            - Velocity coefficients (3): v0, beta, v_offset
+            - Fraction coefficients (4): f0, f1, f2, f3
+            - Flow angle (1): phi0
         """
-        # Heterodyne model: 14 parameters total
         return 14
 
     def get_effective_parameters(self, parameters: np.ndarray) -> np.ndarray:
@@ -492,12 +494,14 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            Full parameter array [D0, alpha, D_offset, gamma_dot_t0, beta, gamma_dot_t_offset, phi0]
+            Full 14-parameter array for heterodyne model:
+            [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample,
+             v0, beta, v_offset, f0, f1, f2, f3, phi0]
 
         Returns
         -------
         np.ndarray
-            All parameters as provided (laminar flow mode uses all 7 parameters)
+            All 14 parameters as provided for heterodyne model
         """
         return parameters.copy()
 
@@ -683,7 +687,7 @@ class HeterodyneAnalysisCore:
         phi_angles_unfiltered = phi_angles
 
         # Apply angle filtering if enabled (AFTER loading cache, BEFORE diagonal correction)
-        # This matches homodyne's workflow where filtering is applied fresh every time
+        # Filtering is applied fresh every time to ensure consistency
         opt_config = self.config.get("optimization_config", {})
         angle_config = opt_config.get("angle_filtering", {})
         if angle_config.get("enabled", False):
@@ -821,7 +825,7 @@ class HeterodyneAnalysisCore:
             # Note: phi_angles_list.txt will be saved AFTER angle filtering
             # to ensure it matches the cached data
 
-            # Save wavevector q to wavevector_q_list.txt (for feature parity with homodyne)
+            # Save wavevector q to wavevector_q_list.txt for compatibility
             if hasattr(self, 'wavevector_q') and self.wavevector_q is not None:
                 data_folder = self.config["experimental_data"].get(
                     "data_folder_path", "."
@@ -1098,8 +1102,8 @@ class HeterodyneAnalysisCore:
             raise ValueError(
                 f"Power-law exponent alpha_ref must be in [-2, 2], got {alpha_ref}"
             )
-        if not (-100 <= D_offset_ref <= 100):
-            raise ValueError(f"D_offset_ref must be in [-100, 100], got {D_offset_ref}")
+        if not (-100000 <= D_offset_ref <= 100000):
+            raise ValueError(f"D_offset_ref must be in [-100000, 100000], got {D_offset_ref}")
 
         # Sample diffusion constraints
         if D0_sample < 0:
@@ -1108,8 +1112,8 @@ class HeterodyneAnalysisCore:
             raise ValueError(
                 f"Power-law exponent alpha_sample must be in [-2, 2], got {alpha_sample}"
             )
-        if not (-100 <= D_offset_sample <= 100):
-            raise ValueError(f"D_offset_sample must be in [-100, 100], got {D_offset_sample}")
+        if not (-100000 <= D_offset_sample <= 100000):
+            raise ValueError(f"D_offset_sample must be in [-100000, 100000], got {D_offset_sample}")
 
         # Velocity constraints (less strict - can be negative for flow direction)
         if not (-2.0 <= beta <= 2.0):
@@ -1324,6 +1328,11 @@ class HeterodyneAnalysisCore:
 
         Model: v(t) = v₀ × t^β + v_offset
 
+        Special handling for negative beta:
+        - For beta < 0, v(t) diverges as t→0
+        - Physical limit: v(0) = v_offset
+        - For t > threshold: v(t) = v₀ * t^beta + v_offset
+
         Parameters
         ----------
         velocity_params : np.ndarray
@@ -1335,7 +1344,19 @@ class HeterodyneAnalysisCore:
             Velocity array v(t)
         """
         v0, beta, v_offset = velocity_params
-        return v0 * (self.time_abs ** beta) + v_offset
+
+        # Handle negative beta: use physical limit at t=0
+        if beta < 0:
+            # Initialize with v_offset (physical limit as t→0)
+            v_t = np.full_like(self.time_abs, v_offset, dtype=np.float64)
+            # For t > threshold, use full formula
+            threshold = 1e-10
+            mask = self.time_abs > threshold
+            if np.any(mask):
+                v_t[mask] = v0 * (self.time_abs[mask] ** beta) + v_offset
+            return v_t
+        else:
+            return v0 * (self.time_abs ** beta) + v_offset
 
     def calculate_fraction_coefficient(self, fraction_params: np.ndarray) -> np.ndarray:
         """
@@ -1343,7 +1364,7 @@ class HeterodyneAnalysisCore:
 
         Model: f(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
 
-        Physical constraint: 0 ≤ f(t) ≤ 1
+        Physical constraint: 0 ≤ f(t) ≤ 1 (enforced by clipping)
 
         Parameters
         ----------
@@ -1353,10 +1374,12 @@ class HeterodyneAnalysisCore:
         Returns
         -------
         np.ndarray
-            Fraction array f(t)
+            Fraction array f(t), clipped to [0, 1]
         """
         f0, f1, f2, f3 = fraction_params
-        return f0 * np.exp(f1 * (self.time_abs - f2)) + f3
+        f_t = f0 * np.exp(f1 * (self.time_abs - f2)) + f3
+        # Ensure physical validity: fractions must be in [0, 1]
+        return np.clip(f_t, 0.0, 1.0)
 
     def _calculate_c2_single_angle_fast(
         self,
@@ -1370,12 +1393,12 @@ class HeterodyneAnalysisCore:
         Fast correlation function calculation with pre-computed values.
 
         This optimized version avoids redundant computations by accepting
-        pre-calculated common values for laminar flow mode.
+        pre-calculated common values for heterodyne mode.
 
         Parameters
         ----------
         parameters : np.ndarray
-            Model parameters (7 parameters for laminar flow)
+            Model parameters (14 parameters for heterodyne model)
         phi_angle : float
             Scattering angle in degrees
         D_integral : np.ndarray
@@ -3736,18 +3759,19 @@ Validation:
         if len(params) > 2 and (params[2] < 0 or params[2] > params[0]):
             return False
 
-        # For laminar flow parameters (if present)
-        if len(params) >= 7:
-            # Gamma_dot_0: shear rate should be reasonable
-            if params[3] < 0 or params[3] > 1000:
+        # For heterodyne model (14 parameters required)
+        if len(params) == 14:
+            # Velocity parameters validation (v0, beta, v_offset at indices 6, 7, 8)
+            # v0: velocity magnitude should be reasonable
+            if params[6] < 0 or params[6] > 1000:
                 return False
 
-            # Beta: shear exponent
-            if params[4] < -2.0 or params[4] > 2.0:
+            # beta: velocity exponent
+            if params[7] < -2.0 or params[7] > 2.0:
                 return False
 
-            # Gamma_dot_offset: should be non-negative
-            if params[5] < 0:
+            # v_offset: should be non-negative
+            if params[8] < 0:
                 return False
 
             # Phi_0: angular offset should be between -180 and 180
@@ -4063,19 +4087,15 @@ Validation:
             "nfev": result.nfev if hasattr(result, "nfev") else 0,
         }
 
-        # Add parameter names if available
-        if len(processed["parameters"]) >= 7:
+        # Add parameter names for 14-parameter heterodyne model
+        if len(processed["parameters"]) == 14:
             processed["parameter_names"] = [
-                "D0",
-                "alpha",
-                "D_offset",
-                "gamma0",
-                "beta",
-                "gamma_offset",
-                "phi0",
+                "D0_ref", "alpha_ref", "D_offset_ref",
+                "D0_sample", "alpha_sample", "D_offset_sample",
+                "v0", "beta", "v_offset",
+                "f0", "f1", "f2", "f3",
+                "phi0"
             ]
-        elif len(processed["parameters"]) >= 3:
-            processed["parameter_names"] = ["D0", "alpha", "D_offset"]
 
         return processed
 

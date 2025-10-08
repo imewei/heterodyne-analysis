@@ -192,7 +192,7 @@ def generate_classical_plots(
         logger.info("Generating classical optimization plots...")
 
         # Calculate theoretical C2 using optimized parameters
-        c2_theoretical_raw = analyzer.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_theoretical_raw = analyzer.calculate_c2_heterodyne_parallel(
             parameters, phi_angles
         )
 
@@ -316,7 +316,7 @@ def generate_robust_plots(
         logger.info("Generating robust optimization plots...")
 
         # Calculate theoretical C2 using optimized parameters
-        c2_theoretical_raw = analyzer.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_theoretical_raw = analyzer.calculate_c2_heterodyne_parallel(
             parameters, phi_angles
         )
 
@@ -442,10 +442,10 @@ def generate_comparison_plots(
         robust_params = robust_result["parameters"]
 
         # Calculate theoretical C2 for both methods
-        c2_classical_raw = analyzer.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_classical_raw = analyzer.calculate_c2_heterodyne_parallel(
             classical_params, phi_angles
         )
-        c2_robust_raw = analyzer.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_robust_raw = analyzer.calculate_c2_heterodyne_parallel(
             robust_params, phi_angles
         )
 
@@ -619,7 +619,7 @@ def save_individual_method_results(
 
         # Calculate theoretical fit with scaling
         parameters = results["parameters"]
-        c2_theoretical_raw = analyzer.calculate_c2_nonequilibrium_laminar_parallel(
+        c2_theoretical_raw = analyzer.calculate_c2_heterodyne_parallel(
             parameters, phi_angles
         )
 

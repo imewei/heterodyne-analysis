@@ -193,24 +193,14 @@ class ClassicalOptimizer:
                     "values"
                 ]
             else:
-                # Use defaults
-                effective_param_count = 14
-                if hasattr(self.core, "config_manager") and self.core.config_manager:
-                    try:
-                        effective_param_count = int(
-                            self.core.config_manager.get_effective_parameter_count()
-                        )
-                    except (TypeError, ValueError, AttributeError):
-                        effective_param_count = 14
-                default_params = {
-                    3: [1e-3, 0.9, 1e-4],
-                    7: [1e-3, 0.9, 1e-4, 0.01, 0.8, 0.001, 0.0],
-                    11: [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
-                    14: [100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
-                }
-                result_dict["initial_parameters"] = default_params.get(
-                    effective_param_count, default_params[14]
-                )
+                # Use 14-parameter heterodyne defaults
+                result_dict["initial_parameters"] = [
+                    100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
+                    100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
+                    0.1, 0.0, 0.01,     # v0, beta, v_offset
+                    0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
+                    0.0                 # phi0
+                ]
 
         return result_dict
 
@@ -344,50 +334,24 @@ class ClassicalOptimizer:
                     self.config["initial_parameters"]["values"], dtype=np.float64
                 )
             else:
-                # Create default initial parameters based on effective parameter count
-                logger.warning("No initial parameters in config, using defaults")
-                default_params = {
-                    3: [1e-3, 0.9, 1e-4],  # Transport coefficients only
-                    7: [
-                        1e-3,
-                        0.9,
-                        1e-4,
-                        0.01,
-                        0.8,
-                        0.001,
-                        0.0,
-                    ],  # Laminar flow (all 7 parameters)
-                    14: [100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],  # Heterodyne (14 parameters)
-                }
-                initial_parameters = np.array(
-                    default_params.get(effective_param_count, default_params[14]),
-                    dtype=np.float64,
-                )
+                # Create default initial parameters for 14-parameter heterodyne model
+                logger.warning("No initial parameters in config, using 14-parameter heterodyne defaults")
+                initial_parameters = np.array([
+                    100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
+                    100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
+                    0.1, 0.0, 0.01,     # v0, beta, v_offset
+                    0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
+                    0.0                 # phi0
+                ], dtype=np.float64)
 
-        # Adjust parameters based on analysis mode
-        # Ensure effective_param_count is an int, not a Mock
-        try:
-            effective_param_count = int(effective_param_count)
-        except (TypeError, ValueError):
-            logger.warning(
-                f"Invalid effective_param_count: {effective_param_count}, defaulting to 14"
-            )
-            effective_param_count = 14
-
-        # Ensure we have the correct number of parameters for laminar flow
-        if len(initial_parameters) < effective_param_count:
-            # Extend with zeros if not enough parameters provided
-            full_parameters = np.zeros(effective_param_count)
-            full_parameters[: len(initial_parameters)] = initial_parameters
-            initial_parameters = full_parameters
-            print(
-                f"  Extended to {effective_param_count} parameters for laminar flow mode"
-            )
-        elif len(initial_parameters) > effective_param_count:
-            # Truncate if too many parameters provided
-            initial_parameters = initial_parameters[:effective_param_count]
-            print(
-                f"  Using first {effective_param_count} parameters: {initial_parameters}"
+        # Validate parameter count - only 14-parameter heterodyne mode supported
+        if len(initial_parameters) != 14:
+            raise ValueError(
+                f"Invalid parameter count: {len(initial_parameters)}. "
+                "Only 14-parameter heterodyne mode is supported. "
+                "Parameters: [D0_ref, alpha_ref, D_offset_ref, "
+                "D0_sample, alpha_sample, D_offset_sample, "
+                "v0, beta, v_offset, f0, f1, f2, f3, phi0]"
             )
 
         if phi_angles is None or c2_experimental is None:
@@ -1736,7 +1700,7 @@ class ClassicalOptimizer:
         Parameters
         ----------
         effective_param_count : int, optional
-            Number of parameters to use (defaults to 7 for laminar flow)
+            Number of parameters to use (always 14 for heterodyne model)
 
         Returns
         -------

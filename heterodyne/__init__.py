@@ -16,8 +16,9 @@ H. He, H. Liang, M. Chu, Z. Jiang, J.J. de Pablo, M.V. Tirrell, S. Narayanan,
 dynamics in soft matter", Proc. Natl. Acad. Sci. U.S.A. 121 (31) e2401162121 (2024).
 
 Key Features:
-- Three analysis modes: Static Isotropic (3 params), Static Anisotropic (3 params),
-  Laminar Flow (7 params)
+- 14-parameter heterodyne model: Two-component analysis with separate reference and
+  sample transport coefficients (D_ref, D_sample), time-dependent velocity (v),
+  dynamic fractions (f), and flow angle (phi0)
 - Multiple optimization methods: Classical (Nelder-Mead, Gurobi), Robust
   (Wasserstein DRO, Scenario-based, Ellipsoidal)
 - Noise-resistant analysis: Robust optimization for measurement uncertainty and outliers
