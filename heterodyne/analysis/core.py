@@ -1129,7 +1129,9 @@ class HeterodyneAnalysisCore:
             # Use default time range for validation
             t_check = np.linspace(0, 100, 100)
 
-        f_check = f0 * np.exp(f1 * (t_check - f2)) + f3
+        # Clip exponent argument to prevent overflow (exp(x) overflows for x > ~700)
+        exponent = np.clip(f1 * (t_check - f2), -500, 500)
+        f_check = f0 * np.exp(exponent) + f3
 
         if not (np.all(f_check >= 0) and np.all(f_check <= 1)):
             raise ValueError(
