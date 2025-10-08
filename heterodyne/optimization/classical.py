@@ -376,13 +376,14 @@ class ClassicalOptimizer:
                 f"to match subsampled data dimensions"
             )
             self.core.time_length = c2_experimental.shape[1]
-            # Also update time_array to match new dimensions
+            # Update time_array to use the actual subsampled time points
+            # CRITICAL: Must use time_indices, not dense array, to match experimental data times
             # Check if dt is a valid numeric value (not Mock or invalid)
             try:
                 dt_value = float(self.core.dt)
-                self.core.time_array = np.arange(self.core.time_length) * dt_value
-                # Also update time_abs to stay synchronized with time_array
-                self.core.time_abs = self.core.time_array
+                # Use the actual subsampled time indices (e.g., [0, 4, 8, 12, ...])
+                # NOT a dense array [0, 1, 2, 3, ...], which would cause time mismatch
+                self.core.time_array = time_indices * dt_value
             except (TypeError, ValueError, AttributeError):
                 # dt is Mock or invalid - use default value or skip update
                 # For tests with Mock objects, time_array update is not critical
@@ -525,12 +526,10 @@ class ClassicalOptimizer:
                     f"Restoring core.time_length from {self.core.time_length} back to {original_time_length}"
                 )
                 self.core.time_length = original_time_length
-                # Restore time_array if dt is valid
+                # Restore time_array to full resolution
                 try:
                     dt_value = float(self.core.dt)
                     self.core.time_array = np.arange(self.core.time_length) * dt_value
-                    # Also restore time_abs to stay synchronized
-                    self.core.time_abs = self.core.time_array
                 except (TypeError, ValueError, AttributeError):
                     # dt is Mock or invalid - skip time_array restoration
                     logger.debug(
@@ -555,12 +554,10 @@ class ClassicalOptimizer:
                 f"Restoring core.time_length from {self.core.time_length} back to {original_time_length}"
             )
             self.core.time_length = original_time_length
-            # Restore time_array if dt is valid
+            # Restore time_array to full resolution
             try:
                 dt_value = float(self.core.dt)
                 self.core.time_array = np.arange(self.core.time_length) * dt_value
-                # Also restore time_abs to stay synchronized
-                self.core.time_abs = self.core.time_array
             except (TypeError, ValueError, AttributeError):
                 # dt is Mock or invalid - skip time_array restoration
                 logger.debug(
