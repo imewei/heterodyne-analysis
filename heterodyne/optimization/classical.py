@@ -381,6 +381,8 @@ class ClassicalOptimizer:
             try:
                 dt_value = float(self.core.dt)
                 self.core.time_array = np.arange(self.core.time_length) * dt_value
+                # Also update time_abs to stay synchronized with time_array
+                self.core.time_abs = self.core.time_array
             except (TypeError, ValueError, AttributeError):
                 # dt is Mock or invalid - use default value or skip update
                 # For tests with Mock objects, time_array update is not critical
@@ -527,6 +529,8 @@ class ClassicalOptimizer:
                 try:
                     dt_value = float(self.core.dt)
                     self.core.time_array = np.arange(self.core.time_length) * dt_value
+                    # Also restore time_abs to stay synchronized
+                    self.core.time_abs = self.core.time_array
                 except (TypeError, ValueError, AttributeError):
                     # dt is Mock or invalid - skip time_array restoration
                     logger.debug(
@@ -555,6 +559,8 @@ class ClassicalOptimizer:
             try:
                 dt_value = float(self.core.dt)
                 self.core.time_array = np.arange(self.core.time_length) * dt_value
+                # Also restore time_abs to stay synchronized
+                self.core.time_abs = self.core.time_array
             except (TypeError, ValueError, AttributeError):
                 # dt is Mock or invalid - skip time_array restoration
                 logger.debug(
