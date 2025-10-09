@@ -370,6 +370,15 @@ class RobustHeterodyneOptimizer:
         tuple[np.ndarray, np.ndarray, tuple[np.ndarray, np.ndarray]]
             (subsampled_phi_angles, subsampled_c2_data, (angle_indices, time_indices))
         """
+        # Check if subsampling is enabled in configuration
+        enabled = self.settings.get("enabled", False)
+        if not enabled:
+            logger.info("Subsampling disabled - using full dataset")
+            n_times = c2_experimental.shape[1]
+            angle_indices = np.arange(len(phi_angles))
+            time_indices = np.arange(n_times)
+            return phi_angles, c2_experimental, (angle_indices, time_indices)
+
         max_data_points = self.settings.get("max_data_points", 50000)
         time_subsample = self.settings.get("time_subsample_factor", 4)
         angle_subsample = self.settings.get("angle_subsample_factor", 2)
