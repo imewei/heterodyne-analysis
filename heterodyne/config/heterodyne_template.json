@@ -252,6 +252,20 @@
           "regularization_alpha": 0.02
         }
       },
+      "subsampling": {
+        "_comment": "Subsampling for robust optimization with CVXPY memory constraints",
+        "enabled": true,
+        "_enabled_note": "Robust optimization is memory-intensive with CVXPY. Enable subsampling for large datasets to prevent memory errors. Disable for small datasets (<50k points) or publication-quality fits.",
+        "max_data_points": 50000,
+        "_max_data_points_note": "Lower than classical (100k) due to CVXPY memory overhead in robust formulations (Wasserstein, Scenario, Ellipsoidal)",
+        "time_subsample_factor": 4,
+        "_time_subsample_note": "Subsample every Nth time point (4 = keep 1 in 4 points). Reduces 2000 frames → 500 frames.",
+        "angle_subsample_factor": 2,
+        "_angle_subsample_note": "Subsample every Nth angle (2 = keep 1 in 2 angles). Automatically skipped when n_angles < 4 to preserve angular information.",
+        "_memory_note": "Robust methods use CVXPY which requires large contiguous memory. Subsampling reduces memory usage by 16x-64x.",
+        "_when_to_enable": "Enable if you encounter CVXPY memory errors, slow convergence, or solver failures. Recommended for datasets > 50k points.",
+        "_heterodyne_note": "Maintains heterodyne signal quality in robust optimization while managing CVXPY memory requirements"
+      },
       "_heterodyne_note": "Robust methods handle heterodyne signal fluctuations effectively"
     },
     "scaling_parameters": {
