@@ -341,7 +341,8 @@ class CompletionEngine:
 
     def _complete_commands(self, context: CompletionContext) -> list[CompletionResult]:
         """Complete main commands."""
-        commands = ["heterodyne", "heterodyne-config", "heterodyne-gpu"]
+        # Only include commands that actually exist in pyproject.toml entry points
+        commands = ["heterodyne", "heterodyne-config"]
         matching = [cmd for cmd in commands if cmd.startswith(context.current_word)]
 
         if matching:
@@ -358,11 +359,29 @@ class CompletionEngine:
     def _complete_options(self, context: CompletionContext) -> list[CompletionResult]:
         """Complete command options based on previous option."""
         option_completions = {
+            # Core options
             "--method": self._complete_methods(context),
             "--config": self._complete_config_files(context),
+            "--data": self._complete_config_files(context),  # Same as config (paths)
+            "--output": self._complete_config_files(context),  # File paths
             "--output-dir": self._complete_directories(context),
-            "--mode": ["heterodyne"],
-            "--dataset-size": ["small", "standard", "large"],
+
+            # Plotting options
+            "--phi-angles": ["0,45,90,135", "0,36,72,108,144", "30,60,90"],
+
+            # Shell completion
+            "--install-completion": ["bash", "zsh", "fish", "powershell"],
+            "--uninstall-completion": ["bash", "zsh", "fish", "powershell"],
+
+            # Distributed computing
+            "--backend": ["auto", "ray", "mpi", "dask", "multiprocessing"],
+            "--distributed-config": self._complete_config_files(context),
+
+            # ML acceleration
+            "--ml-data-path": self._complete_directories(context),
+
+            # Advanced options
+            "--parameter-ranges": ["D0:10-100,alpha:-1-1"],  # Example format
         }
 
         if context.previous_word in option_completions:

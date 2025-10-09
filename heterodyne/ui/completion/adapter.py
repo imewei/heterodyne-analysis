@@ -205,21 +205,59 @@ class LegacyCompletionAdapter:
                 def dir_completer(prefix, parsed_args, **kwargs):
                     return self.get_directory_completions(prefix)
 
-                def mode_completer(prefix, parsed_args, **kwargs):
-                    return self.get_mode_completions(prefix)
+                def backend_completer(prefix, parsed_args, **kwargs):
+                    backends = ["auto", "ray", "mpi", "dask", "multiprocessing"]
+                    return [b for b in backends if b.startswith(prefix)]
+
+                def shell_completer(prefix, parsed_args, **kwargs):
+                    shells = ["bash", "zsh", "fish", "powershell"]
+                    return [s for s in shells if s.startswith(prefix)]
+
+                def phi_angles_completer(prefix, parsed_args, **kwargs):
+                    examples = ["0,45,90,135", "0,36,72,108,144", "30,60,90"]
+                    return [e for e in examples if e.startswith(prefix)]
+
+                def parameter_ranges_completer(prefix, parsed_args, **kwargs):
+                    examples = ["D0:10-100,alpha:-1-1", "D0_ref:1-100", "alpha_ref:-2-2"]
+                    return [e for e in examples if e.startswith(prefix)]
 
                 # Attach completers to actions
                 for action in parser._actions:
+                    # Core options
                     if action.dest == "method":
                         action.completer = method_completer
                     elif action.dest == "config":
                         action.completer = config_completer
-                    elif action.dest == "output_dir":
-                        action.completer = dir_completer
-                    elif action.dest == "mode":
-                        action.completer = mode_completer
+                    elif action.dest == "data":
+                        action.completer = config_completer
                     elif action.dest == "output":
                         action.completer = config_completer
+                    elif action.dest == "output_dir":
+                        action.completer = dir_completer
+
+                    # Plotting options
+                    elif action.dest == "phi_angles":
+                        action.completer = phi_angles_completer
+
+                    # Shell completion
+                    elif action.dest == "install_completion":
+                        action.completer = shell_completer
+                    elif action.dest == "uninstall_completion":
+                        action.completer = shell_completer
+
+                    # Distributed computing
+                    elif action.dest == "backend":
+                        action.completer = backend_completer
+                    elif action.dest == "distributed_config":
+                        action.completer = config_completer
+
+                    # ML acceleration
+                    elif action.dest == "ml_data_path":
+                        action.completer = dir_completer
+
+                    # Advanced options
+                    elif action.dest == "parameter_ranges":
+                        action.completer = parameter_ranges_completer
 
                 # Enable argcomplete
                 argcomplete.autocomplete(parser)
