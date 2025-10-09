@@ -10,6 +10,8 @@
 [![DOI](https://img.shields.io/badge/DOI-10.1073/pnas.2401162121-blue.svg)](https://doi.org/10.1073/pnas.2401162121)
 [![Research](https://img.shields.io/badge/Research-XPCS%20Nonequilibrium-purple.svg)](https://github.com/imewei/heterodyne_analysis)
 
+> **⚠️ Dataset Size Limitation:** This heterodyne analysis package is not recommended for large datasets exceeding 4M data points due to over-subsampling effects and reduced performance without adequate subsampling. For optimal results, use datasets with fewer than 4M data points or enable aggressive subsampling configurations.
+
 ## Overview
 
 **heterodyne-analysis** is a research-grade Python package for analyzing two-component heterodyne X-ray Photon Correlation Spectroscopy (XPCS) under nonequilibrium conditions. This package implements the 14-parameter heterodyne scattering model from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) (Equation S-95), which characterizes transport properties through separate reference and sample field correlations.
@@ -196,7 +198,6 @@ pip install -e .[dev]
 ```bash
 # Optimize for computational performance
 export OMP_NUM_THREADS=8
-export NUMBA_DISABLE_INTEL_SVML=1
 export HETERODYNE_PERFORMANCE_MODE=1
 
 # Enable advanced optimization (requires license)
@@ -812,7 +813,6 @@ heterodyne_results/
 
 ```bash
 export OMP_NUM_THREADS=8
-export NUMBA_DISABLE_INTEL_SVML=1
 export HETERODYNE_PERFORMANCE_MODE=1
 ```
 

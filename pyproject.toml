@@ -240,6 +240,7 @@ markers = [
     "integration: marks tests as integration tests",
     "e2e: marks tests as end-to-end tests",
     "regression: marks tests as regression tests",
+    "flaky: marks tests as flaky (may fail intermittently)",
 
     # Feature area markers
     "performance: marks tests as performance benchmarks",

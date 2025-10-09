@@ -37,7 +37,6 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from dataclasses import field
 from enum import Enum
-from multiprocessing import Pool
 from typing import Any
 
 import numpy as np
@@ -779,10 +778,16 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
             num_processes = config.get("num_processes", mp.cpu_count())
 
             # Use explicit context to avoid pickling issues
-            # Try 'fork' first for better compatibility, fall back to 'spawn'
-            if 'fork' in mp.get_all_start_methods():
+            # macOS (Darwin) has fork issues due to security restrictions, use spawn
+            # Linux can use fork for better performance
+            if sys.platform == "darwin":
+                # macOS: use spawn for reliable pickling
+                ctx = mp.get_context('spawn')
+            elif 'fork' in mp.get_all_start_methods():
+                # Linux/Unix: use fork for better performance
                 ctx = mp.get_context('fork')
             else:
+                # Fallback: use spawn
                 ctx = mp.get_context('spawn')
 
             self.pool = ctx.Pool(processes=num_processes)

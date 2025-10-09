@@ -593,8 +593,9 @@ if NUMBA_AVAILABLE:
         fastmath=True,
     )(_compute_g1_correlation_impl)
 
+    # Create both 1D and 2D versions with proper signatures
     compute_sinc_squared_numba = njit(
-        float64[:, :](float64[:, :], float64),
+        [float64[:, :](float64[:, :], float64)],  # 2D array version
         parallel=False,
         cache=True,
         fastmath=True,
