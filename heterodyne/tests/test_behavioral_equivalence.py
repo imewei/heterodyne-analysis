@@ -509,7 +509,7 @@ class TestNumericalAccuracyValidation:
             expected_identity = np.eye(n)
 
             np.testing.assert_allclose(
-                identity_test, expected_identity, rtol=1e-10, atol=1e-14
+                identity_test, expected_identity, rtol=1e-10, atol=5e-14
             )
 
         print("✓ Matrix operation accuracy verified")

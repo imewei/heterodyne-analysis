@@ -1017,7 +1017,11 @@ class HeterodyneAnalysisCore:
         # Optimized algorithm selection based on matrix size
         n = len(time_array)
         if NUMBA_AVAILABLE and n > 100:  # Use Numba only for larger matrices
-            return create_time_integral_matrix_numba(time_array)
+            try:
+                return create_time_integral_matrix_numba(time_array)
+            except (AssertionError, TypeError):
+                # Fallback to NumPy for Python 3.13+ numba compatibility issues
+                pass
         # Use fast NumPy vectorized approach for small matrices
         cumsum = np.cumsum(time_array)
         cumsum_matrix = np.tile(cumsum, (n, 1))

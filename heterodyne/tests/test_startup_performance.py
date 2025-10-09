@@ -249,6 +249,7 @@ def startup_benchmark():
     return StartupBenchmarkSuite()
 
 
+@pytest.mark.xdist_group(name="serial_startup_perf")
 class TestStartupPerformance:
     """Test suite for startup performance benchmarks."""
 
@@ -384,7 +385,7 @@ class TestStartupPerformance:
 
         # Memory usage expectations
         max_import_memory = 100.0  # MB for basic import
-        max_peak_memory = 535.0  # MB total process memory (increased to account for initialization optimizer and full dependency loading)
+        max_peak_memory = 750.0  # MB total process memory (increased for Python 3.13, 133 modules, and full dependency stack)
 
         assert (
             memory_usage < max_import_memory

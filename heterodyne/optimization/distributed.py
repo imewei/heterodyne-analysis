@@ -92,6 +92,23 @@ _BACKENDS_AVAILABLE["multiprocessing"] = True
 
 logger = logging.getLogger(__name__)
 
+# Ensure worker function is exportable for multiprocessing spawn mode
+__all__ = [
+    "DistributedBackend",
+    "OptimizationTask",
+    "OptimizationResult",
+    "DistributedOptimizationCoordinator",
+    "MultiprocessingBackend",
+    "RayDistributedBackend",
+    "MPIDistributedBackend",
+    "DaskDistributedBackend",
+    "create_distributed_optimizer",
+    "get_available_backends",
+    "integrate_with_classical_optimizer",
+    "integrate_with_robust_optimizer",
+    "_execute_optimization_task_standalone",  # Critical for multiprocessing pickling
+]
+
 
 class DistributedBackend(Enum):
     """Available distributed computing backends."""
@@ -778,16 +795,13 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
             num_processes = config.get("num_processes", mp.cpu_count())
 
             # Use explicit context to avoid pickling issues
-            # macOS (Darwin) has fork issues due to security restrictions, use spawn
-            # Linux can use fork for better performance
-            if sys.platform == "darwin":
-                # macOS: use spawn for reliable pickling
-                ctx = mp.get_context('spawn')
-            elif 'fork' in mp.get_all_start_methods():
-                # Linux/Unix: use fork for better performance
+            # Prefer fork when available for better performance and compatibility
+            # Fork avoids spawn's strict function identity checks that cause pickling errors
+            if 'fork' in mp.get_all_start_methods():
+                # Use fork for better performance and no pickling identity issues
                 ctx = mp.get_context('fork')
             else:
-                # Fallback: use spawn
+                # Fallback to spawn (Windows or systems without fork)
                 ctx = mp.get_context('spawn')
 
             self.pool = ctx.Pool(processes=num_processes)
@@ -825,16 +839,25 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
         results = []
         completed_tasks = []
 
+        # Use provided timeout or default to 60 seconds
+        wait_timeout = timeout if timeout is not None else 60.0
+
         for task_id, future in self.pending_futures.items():
             try:
-                if future.ready():
-                    result = future.get(timeout=0.1)
-                    results.append(result)
-                    completed_tasks.append(task_id)
+                # Actually wait for the result with timeout instead of just checking ready()
+                result = future.get(timeout=wait_timeout)
+                results.append(result)
+                completed_tasks.append(task_id)
+            except mp.TimeoutError:
+                # Task not completed within timeout - leave in pending
+                logger.debug(
+                    f"Task {task_id} not completed within {wait_timeout}s timeout"
+                )
             except Exception as e:
                 logger.error(
                     f"Error getting multiprocessing result for task {task_id}: {e}"
                 )
+                # Mark as completed (with error) to remove from pending
                 completed_tasks.append(task_id)
 
         # Clean up completed tasks

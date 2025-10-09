@@ -548,8 +548,6 @@ def _compute_chi_squared_batch_fallback(
 # Apply numba decorator if available, otherwise use fallback
 if NUMBA_AVAILABLE:
     compute_chi_squared_batch_numba = njit(
-        float64[:](float64[:, :], float64[:, :], float64[:], float64[:]),
-        parallel=False,
         cache=True,
         fastmath=True,
         nogil=True,
@@ -564,7 +562,6 @@ else:
 # implementations directly
 if NUMBA_AVAILABLE:
     create_time_integral_matrix_numba = njit(
-        float64[:, :](float64[:]),
         parallel=False,
         cache=True,
         fastmath=True,
@@ -572,7 +569,6 @@ if NUMBA_AVAILABLE:
     )(_create_time_integral_matrix_impl)
 
     calculate_diffusion_coefficient_numba = njit(
-        float64[:](float64[:], float64, float64, float64),
         cache=True,
         fastmath=True,
         parallel=False,
@@ -580,22 +576,20 @@ if NUMBA_AVAILABLE:
     )(_calculate_diffusion_coefficient_impl)
 
     calculate_shear_rate_numba = njit(
-        float64[:](float64[:], float64, float64, float64),
         cache=True,
         fastmath=True,
         parallel=False,
     )(_calculate_shear_rate_impl)
 
-    compute_g1_correlation_numba = njit(
-        float64[:, :](float64[:, :], float64),
+    # Create internal numba-compiled versions for matrix operations
+    # Note: We use these internally but expose flexible wrappers to avoid signature conflicts
+    _compute_g1_correlation_numba_internal = njit(
         parallel=False,
         cache=True,
         fastmath=True,
     )(_compute_g1_correlation_impl)
 
-    # Create both 1D and 2D versions with proper signatures
-    compute_sinc_squared_numba = njit(
-        [float64[:, :](float64[:, :], float64)],  # 2D array version
+    _compute_sinc_squared_numba_internal = njit(
         parallel=False,
         cache=True,
         fastmath=True,
@@ -604,16 +598,14 @@ else:
     create_time_integral_matrix_numba = _create_time_integral_matrix_impl
     calculate_diffusion_coefficient_numba = _calculate_diffusion_coefficient_impl
     calculate_shear_rate_numba = _calculate_shear_rate_impl
-    compute_g1_correlation_numba = _compute_g1_correlation_impl
-    compute_sinc_squared_numba = _compute_sinc_squared_impl
+    # Internal versions fallback to pure Python when numba unavailable
+    _compute_g1_correlation_numba_internal = _compute_g1_correlation_impl
+    _compute_sinc_squared_numba_internal = _compute_sinc_squared_impl
 
-    # Add empty signatures attribute for fallback functions when numba
-    # unavailable
+    # Add empty signatures attribute for fallback functions when numba unavailable
     create_time_integral_matrix_numba.signatures = []  # type: ignore[attr-defined]
     calculate_diffusion_coefficient_numba.signatures = []  # type: ignore[attr-defined]
     calculate_shear_rate_numba.signatures = []  # type: ignore[attr-defined]
-    compute_g1_correlation_numba.signatures = []  # type: ignore[attr-defined]
-    compute_sinc_squared_numba.signatures = []  # type: ignore[attr-defined]
 
 
 def refresh_kernel_functions():
@@ -627,7 +619,8 @@ def refresh_kernel_functions():
     bool
         True if Numba kernels are now available, False if using fallback functions
     """
-    global create_time_integral_matrix_numba, calculate_diffusion_coefficient_numba, calculate_shear_rate_numba, compute_g1_correlation_numba, compute_sinc_squared_numba
+    global create_time_integral_matrix_numba, calculate_diffusion_coefficient_numba, calculate_shear_rate_numba
+    global _compute_g1_correlation_numba_internal, _compute_sinc_squared_numba_internal
 
     # Re-check numba availability
     current_numba_available = _check_numba_availability()
@@ -643,7 +636,6 @@ def refresh_kernel_functions():
 
             # Recreate JIT-compiled functions
             create_time_integral_matrix_numba = njit(
-                float64[:, :](float64[:]),
                 parallel=False,
                 cache=True,
                 fastmath=True,
@@ -651,7 +643,6 @@ def refresh_kernel_functions():
             )(_create_time_integral_matrix_impl)
 
             calculate_diffusion_coefficient_numba = njit(
-                float64[:](float64[:], float64, float64, float64),
                 cache=True,
                 fastmath=True,
                 parallel=False,
@@ -659,28 +650,29 @@ def refresh_kernel_functions():
             )(_calculate_diffusion_coefficient_impl)
 
             calculate_shear_rate_numba = njit(
-                float64[:](float64[:], float64, float64, float64),
                 cache=True,
                 fastmath=True,
                 parallel=False,
                 nogil=True,
             )(_calculate_shear_rate_impl)
 
-            compute_g1_correlation_numba = njit(
-                float64[:, :](float64[:, :], float64),
+            # Recreate internal numba versions (used by flexible wrappers)
+            _compute_g1_correlation_numba_internal = njit(
                 cache=True,
                 fastmath=True,
                 parallel=False,
                 nogil=True,
             )(_compute_g1_correlation_impl)
 
-            compute_sinc_squared_numba = njit(
-                float64[:, :](float64[:, :], float64),
+            _compute_sinc_squared_numba_internal = njit(
                 cache=True,
                 fastmath=True,
                 parallel=False,
                 nogil=True,
             )(_compute_sinc_squared_impl)
+
+            # Note: compute_g1_correlation_numba and compute_sinc_squared_numba
+            # remain as flexible wrappers and don't need refreshing
 
             return True
 
@@ -692,15 +684,13 @@ def refresh_kernel_functions():
     create_time_integral_matrix_numba = _create_time_integral_matrix_impl
     calculate_diffusion_coefficient_numba = _calculate_diffusion_coefficient_impl
     calculate_shear_rate_numba = _calculate_shear_rate_impl
-    compute_g1_correlation_numba = _compute_g1_correlation_impl
-    compute_sinc_squared_numba = _compute_sinc_squared_impl
+    _compute_g1_correlation_numba_internal = _compute_g1_correlation_impl
+    _compute_sinc_squared_numba_internal = _compute_sinc_squared_impl
 
     # Add empty signatures attribute for fallback functions
     create_time_integral_matrix_numba.signatures = []  # type: ignore[attr-defined]
     calculate_diffusion_coefficient_numba.signatures = []  # type: ignore[attr-defined]
     calculate_shear_rate_numba.signatures = []  # type: ignore[attr-defined]
-    compute_g1_correlation_numba.signatures = []  # type: ignore[attr-defined]
-    compute_sinc_squared_numba.signatures = []  # type: ignore[attr-defined]
 
     return False
 
@@ -798,10 +788,6 @@ def compute_g1_correlation_legacy(
     return float(g1)
 
 
-# Save the matrix version of compute_sinc_squared for internal use
-_compute_sinc_squared_matrix_numba = compute_sinc_squared_numba
-
-
 # Create a flexible wrapper that handles both single values and matrices
 def compute_sinc_squared_numba_flexible(x, prefactor=None):
     """
@@ -820,10 +806,16 @@ def compute_sinc_squared_numba_flexible(x, prefactor=None):
         sinc²(x) result
     """
     if prefactor is not None or (isinstance(x, np.ndarray) and x.ndim > 0):
-        # Matrix version: compute_sinc_squared_numba(matrix, prefactor)
+        # Matrix version: use internal numba-compiled version with fallback
         if prefactor is None:
             prefactor = 1.0
-        return _compute_sinc_squared_matrix_numba(x, prefactor)
+        try:
+            return _compute_sinc_squared_numba_internal(x, prefactor)
+        except (AssertionError, TypeError) as e:
+            # Fallback to pure Python implementation for Python 3.13+ compatibility
+            # AssertionError occurs in numba IR.Del() with Python 3.13 bytecode
+            # TypeError occurs from numba registry errors after module reloading
+            return _compute_sinc_squared_impl(x, prefactor)
     # Single value version
     return _compute_sinc_squared_single(x)
 
