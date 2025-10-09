@@ -264,6 +264,9 @@ markers = [
     "ci_only: marks tests that only run in CI environment",
     "local_only: marks tests that only run locally",
     "nightly: marks tests for nightly builds",
+
+    # Parallel execution markers
+    "serial: marks tests that must run serially (not in parallel)",
 ]
 
 # Advanced filtering and warnings management

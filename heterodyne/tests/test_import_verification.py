@@ -957,6 +957,7 @@ class TestImportVerification:
                     )
 
 
+@pytest.mark.xdist_group(name="serial_performance")
 class TestImportOptimization:
     """Test suite for import optimization strategies."""
 

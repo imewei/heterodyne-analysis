@@ -96,6 +96,7 @@ def create_mock_analysis_core():
 @pytest.mark.skipif(
     not CLASSICAL_AVAILABLE, reason="Classical optimization not available"
 )
+@pytest.mark.xdist_group(name="serial_performance")
 class TestClassicalOptimizationPerformance:
     """Performance tests for classical optimization methods."""
 
@@ -178,13 +179,16 @@ class TestClassicalOptimizationPerformance:
             # Mock the actual optimization to focus on data handling performance
             with patch.object(optimizer, "_run_scipy_optimization") as mock_opt:
                 mock_result = Mock()
-                mock_result.x = [1e-3, 0.9, 1e-4, 0.01, 0.8, 0.001, 0.0]
+                # Use 14 parameters for heterodyne model
+                mock_result.x = [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                                0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0]
                 mock_result.fun = 0.5
                 mock_result.success = True
                 mock_opt.return_value = mock_result
 
-                # Measure time for data preprocessing and setup - use correct method name
-                initial_params = np.array([1e-3, 0.9, 1e-4, 0.01, 0.8, 0.001, 0.0])
+                # Measure time for data preprocessing and setup - use 14 parameters
+                initial_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
                 result, exec_time = self.benchmark.measure_time(
                     optimizer.run_optimization,
                     initial_params,

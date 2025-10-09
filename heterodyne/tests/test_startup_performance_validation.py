@@ -20,6 +20,7 @@ import pytest
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="serial_performance")
 class TestStartupTimeValidation:
     """Test startup time meets performance targets."""
 
@@ -385,6 +386,7 @@ print(f"MEMORY_CONSTRAINED_TIME:{end - start:.6f}")
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="serial_performance")
 class TestPerformanceRegression:
     """Test for performance regressions."""
 
@@ -471,6 +473,7 @@ class TestPerformanceRegression:
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="serial_performance")
 class TestEnvironmentVariations:
     """Test performance under various environment conditions."""
 
@@ -635,6 +638,7 @@ except Exception as e:
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group(name="serial_performance")
 class TestPerformanceTargetValidation:
     """Final validation that all performance targets are met."""
 

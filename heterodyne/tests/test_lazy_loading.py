@@ -259,6 +259,7 @@ class TestPerformanceMonitoring:
         assert report["summary"]["total_imports"] > 0
 
 
+@pytest.mark.xdist_group(name="serial_performance")
 class TestIntegrationWithMainPackage:
     """Test integration with main package __init__.py."""
 

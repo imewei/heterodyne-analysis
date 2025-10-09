@@ -13,6 +13,7 @@ from heterodyne.analysis.core import HeterodyneAnalysisCore
 from heterodyne.core.config import ConfigManager
 
 
+@pytest.mark.xdist_group(name="serial_integration")
 class TestHeterodyneIntegration:
     """Integration tests for complete heterodyne pipeline."""
 
@@ -108,12 +109,18 @@ class TestHeterodyneIntegration:
         c2 = core.calculate_heterodyne_correlation(valid_params, 0.0)
         assert c2 is not None
 
-        # Invalid parameters should raise error
-        invalid_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                                  0.1, 0.0, 0.01, 2.0, 0.0, 50.0, -0.5, 0.0])  # f(t) may go outside [0,1]
+        # Parameters with f(t) outside [0,1] are now clipped rather than raising an error
+        # Test that such parameters still produce valid output
+        params_with_clipping = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
+                                        0.1, 0.0, 0.01, 2.0, 0.0, 50.0, -0.5, 0.0])
+        c2_clipped = core.calculate_heterodyne_correlation(params_with_clipping, 0.0)
+        assert c2_clipped is not None
+        assert np.all(np.isfinite(c2_clipped)), "Clipped parameters should produce finite correlation"
 
-        with pytest.raises(ValueError, match="Fraction"):
-            core.calculate_heterodyne_correlation(invalid_params, 0.0)
+        # Test that truly invalid parameters raise errors (e.g., wrong parameter count)
+        invalid_param_count = np.array([100.0, -0.5, 10.0])  # Only 3 parameters
+        with pytest.raises(ValueError, match="14 parameters"):
+            core.calculate_heterodyne_correlation(invalid_param_count, 0.0)
 
     def test_multi_angle_calculation(self, heterodyne_config_file):
         """Test correlation calculation for multiple angles."""
@@ -189,6 +196,7 @@ class TestHeterodyneIntegration:
             core.calculate_heterodyne_correlation(legacy_params, 0.0)
 
 
+@pytest.mark.xdist_group(name="serial_integration")
 class TestHeterodyneOptimizationIntegration:
     """Integration tests for heterodyne optimization pipeline."""
 
