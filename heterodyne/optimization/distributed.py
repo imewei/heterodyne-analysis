@@ -777,11 +777,19 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
         """Initialize multiprocessing backend."""
         try:
             num_processes = config.get("num_processes", mp.cpu_count())
-            self.pool = Pool(processes=num_processes)
+
+            # Use explicit context to avoid pickling issues
+            # Try 'fork' first for better compatibility, fall back to 'spawn'
+            if 'fork' in mp.get_all_start_methods():
+                ctx = mp.get_context('fork')
+            else:
+                ctx = mp.get_context('spawn')
+
+            self.pool = ctx.Pool(processes=num_processes)
             self.initialized = True
 
             logger.info(
-                f"Multiprocessing backend initialized with {num_processes} processes"
+                f"Multiprocessing backend initialized with {num_processes} processes using {ctx._name} context"
             )
             return True
 
