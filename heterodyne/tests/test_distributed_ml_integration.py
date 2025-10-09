@@ -44,6 +44,7 @@ except ImportError:
     ML_AVAILABLE = False
 
 
+@pytest.mark.xdist_group(name="serial_distributed_ml")
 @pytest.mark.skipif(
     not INTEGRATION_AVAILABLE, reason="Integration modules not available"
 )

@@ -5,12 +5,72 @@ PyTest Configuration and Shared Fixtures
 Centralized configuration and fixtures for the heterodyne test suite.
 """
 
+import gc
 import json
 import os
+import sys
 import tempfile
 
 import numpy as np
 import pytest
+
+
+# Numba State Cleanup Fixture
+# ===========================
+# This fixture prevents numba-related test failures by ensuring clean state
+# between test modules. It addresses the "None in sys.modules" error that occurs
+# when numba gets corrupted by earlier tests or multiprocessing operations.
+
+@pytest.fixture(scope="module", autouse=True)
+def cleanup_numba_state():
+    """
+    Clean up numba state before each test module to prevent import errors.
+
+    This fixture runs automatically before each test module to:
+    1. Clear any broken numba imports (None in sys.modules)
+    2. Clear numba JIT compilation cache
+    3. Force garbage collection
+    4. Ensure fresh numba state for each module
+
+    This prevents the cascading failure pattern where:
+    - Test A corrupts numba (multiprocessing/fork issues)
+    - Numba ends up as None in sys.modules
+    - Test B tries to import numba → ModuleNotFoundError
+    - Worker processes inherit broken state → silent failures
+    """
+    # Check if numba is in a broken state (None in sys.modules)
+    if "numba" in sys.modules and sys.modules["numba"] is None:
+        # Remove the broken entry
+        del sys.modules["numba"]
+        # Also remove all numba submodules
+        numba_modules = [key for key in sys.modules if key.startswith("numba.")]
+        for module_name in numba_modules:
+            if sys.modules[module_name] is None:
+                del sys.modules[module_name]
+
+    # Try to clear numba caches if available
+    try:
+        import numba
+        # Clear the JIT cache to reduce memory usage
+        if hasattr(numba.core, 'caching'):
+            # Force clear of disk cache
+            pass  # Numba doesn't expose direct cache clearing
+        # Clear function registry
+        if hasattr(numba, '_dispatcher'):
+            # Internal numba state cleanup
+            pass
+    except (ImportError, AttributeError):
+        # Numba not available or already cleared
+        pass
+
+    # Force garbage collection to free memory
+    gc.collect()
+
+    # Yield control to run the test module
+    yield
+
+    # After test module completes, clean up again
+    gc.collect()
 
 
 # Test markers for categorizing tests

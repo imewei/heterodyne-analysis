@@ -239,6 +239,7 @@ class TestGlobalFunctions:
         # Should contain some performance metrics
 
 
+@pytest.mark.xdist_group(name="serial_init_opt")
 class TestIntegrationWithMainPackage:
     """Test integration with main package."""
 
@@ -322,6 +323,7 @@ class TestIntegrationWithMainPackage:
         assert "Success" in result.stdout
 
 
+@pytest.mark.xdist_group(name="serial_init_opt")
 @pytest.mark.benchmark
 class TestPerformanceBenchmarks:
     """Performance benchmarks for initialization optimization."""

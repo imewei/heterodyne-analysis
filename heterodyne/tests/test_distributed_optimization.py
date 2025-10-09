@@ -381,6 +381,7 @@ class TestDistributedOptimizationEdgeCases:
         coordinator.shutdown()  # Should not raise error
 
 
+@pytest.mark.xdist_group(name="serial_distributed_opt")
 class TestDistributedOptimizationPerformance:
     """Performance-focused tests for distributed optimization."""
 
