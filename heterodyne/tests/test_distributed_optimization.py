@@ -439,12 +439,15 @@ class TestDistributedOptimizationPerformance:
             all_results.extend(new_results)
             time.sleep(0.1)
 
+        # Check that we got some results
+        assert len(all_results) > 0, f"Expected results but got {len(all_results)}"
+
         # Check that tasks were distributed
         node_ids = [r.node_id for r in all_results if r.success]
         unique_nodes = set(node_ids)
 
-        # With multiprocessing, should have multiple unique process IDs
-        assert len(unique_nodes) >= 1  # At least one worker
+        # With multiprocessing, should have at least one successful task
+        assert len(unique_nodes) >= 1, f"Expected at least 1 unique node, got {len(unique_nodes)} from {len(node_ids)} successful results out of {len(all_results)} total"
 
         coordinator.shutdown()
 
