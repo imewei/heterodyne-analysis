@@ -51,16 +51,11 @@ def cleanup_numba_state():
     # Try to clear numba caches if available
     try:
         import numba
-        # Clear the JIT cache to reduce memory usage
-        if hasattr(numba.core, 'caching'):
-            # Force clear of disk cache
-            pass  # Numba doesn't expose direct cache clearing
-        # Clear function registry
-        if hasattr(numba, '_dispatcher'):
-            # Internal numba state cleanup
-            pass
-    except (ImportError, AttributeError):
-        # Numba not available or already cleared
+        # Note: Numba doesn't expose public cache clearing APIs
+        # The cleanup is handled by gc.collect() below
+        # Avoid accessing internal APIs like numba.core which may not exist
+    except ImportError:
+        # Numba not available
         pass
 
     # Force garbage collection to free memory

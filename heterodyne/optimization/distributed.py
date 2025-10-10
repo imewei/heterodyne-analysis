@@ -41,19 +41,9 @@ from typing import Any
 
 import numpy as np
 
-# Set multiprocessing start method for cross-platform compatibility
-# Use 'fork' on Unix (faster, but not available on Windows)
-# Use 'spawn' on Windows/macOS (slower but safer)
-if sys.platform != "win32" and "fork" in mp.get_all_start_methods():
-    try:
-        mp.set_start_method("fork", force=False)
-    except RuntimeError:
-        pass  # Already set
-else:
-    try:
-        mp.set_start_method("spawn", force=False)
-    except RuntimeError:
-        pass  # Already set
+# Note: Multiprocessing start method is now set per-Pool using explicit contexts
+# (see MultiprocessingBackend.initialize() for context-based method selection)
+# This avoids global state conflicts and allows tests to run cleanly
 
 # Backend Detection and Imports
 _BACKENDS_AVAILABLE = {}
