@@ -71,6 +71,11 @@ def cleanup_numba_state():
 # Test markers for categorizing tests
 def pytest_configure(config):
     """Configure pytest markers."""
+    # Disable initialization optimizer during tests to prevent performance measurement pollution.
+    # The optimizer analyzes 133 modules and adds 100-500ms variable overhead to import times,
+    # causing performance tests to fail randomly based on system load and caching state.
+    os.environ["HETERODYNE_OPTIMIZE_STARTUP"] = "false"
+
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )

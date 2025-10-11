@@ -96,7 +96,8 @@ __all__ = [
     "get_available_backends",
     "integrate_with_classical_optimizer",
     "integrate_with_robust_optimizer",
-    "_execute_optimization_task_standalone",  # Critical for multiprocessing pickling
+    "_worker_dispatch",  # Critical for multiprocessing spawn mode
+    "_execute_optimization_task_standalone",  # Called via _worker_dispatch
 ]
 
 
@@ -659,6 +660,39 @@ class MPIDistributedBackend(DistributedOptimizationBackend):
         return cancelled_count
 
 
+def _worker_dispatch(module_name: str, function_name: str, *args, **kwargs):
+    """
+    Worker dispatch function for multiprocessing.
+
+    This function dynamically imports a module and calls a function by name,
+    avoiding pickle issues with function identity in test environments.
+
+    Parameters
+    ----------
+    module_name : str
+        Name of the module containing the target function
+    function_name : str
+        Name of the function to call
+    *args, **kwargs
+        Arguments to pass to the target function
+
+    Returns
+    -------
+    Any
+        Return value from the target function
+    """
+    import importlib
+
+    # Import the module
+    module = importlib.import_module(module_name)
+
+    # Get the function by name
+    func = getattr(module, function_name)
+
+    # Call the function with provided arguments
+    return func(*args, **kwargs)
+
+
 def _execute_optimization_task_standalone(task: OptimizationTask) -> OptimizationResult:
     """
     Standalone function to execute optimization task in subprocess.
@@ -784,15 +818,10 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
         try:
             num_processes = config.get("num_processes", mp.cpu_count())
 
-            # Use explicit context to avoid pickling issues
-            # Prefer fork when available for better performance and compatibility
-            # Fork avoids spawn's strict function identity checks that cause pickling errors
-            if 'fork' in mp.get_all_start_methods():
-                # Use fork for better performance and no pickling identity issues
-                ctx = mp.get_context('fork')
-            else:
-                # Fallback to spawn (Windows or systems without fork)
-                ctx = mp.get_context('spawn')
+            # Use spawn mode to avoid function identity issues with pickling
+            # Spawn creates fresh Python interpreters, avoiding module reload problems
+            # that cause "not the same object" pickle errors in test environments
+            ctx = mp.get_context('spawn')
 
             self.pool = ctx.Pool(processes=num_processes)
             self.initialized = True
@@ -819,7 +848,12 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
         if not self.initialized:
             raise RuntimeError("Multiprocessing backend not initialized")
 
-        future = self.pool.apply_async(_execute_optimization_task_standalone, (task,))
+        # Use string-based dispatch to avoid function identity pickle errors
+        # Pass module and function name instead of function object
+        future = self.pool.apply_async(
+            _worker_dispatch,
+            ('heterodyne.optimization.distributed', '_execute_optimization_task_standalone', task)
+        )
         self.pending_futures[task.task_id] = future
 
         return task.task_id

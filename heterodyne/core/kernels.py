@@ -811,10 +811,11 @@ def compute_sinc_squared_numba_flexible(x, prefactor=None):
             prefactor = 1.0
         try:
             return _compute_sinc_squared_numba_internal(x, prefactor)
-        except (AssertionError, TypeError) as e:
+        except (AssertionError, TypeError, AttributeError) as e:
             # Fallback to pure Python implementation for Python 3.13+ compatibility
             # AssertionError occurs in numba IR.Del() with Python 3.13 bytecode
             # TypeError occurs from numba registry errors after module reloading
+            # AttributeError occurs in numba.core access with Python 3.13 (numba internal compilation error)
             return _compute_sinc_squared_impl(x, prefactor)
     # Single value version
     return _compute_sinc_squared_single(x)
