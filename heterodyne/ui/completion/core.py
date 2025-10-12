@@ -365,21 +365,16 @@ class CompletionEngine:
             "--data": self._complete_config_files(context),  # Same as config (paths)
             "--output": self._complete_config_files(context),  # File paths
             "--output-dir": self._complete_directories(context),
-
             # Plotting options
             "--phi-angles": ["0,45,90,135", "0,36,72,108,144", "30,60,90"],
-
             # Shell completion
             "--install-completion": ["bash", "zsh", "fish", "powershell"],
             "--uninstall-completion": ["bash", "zsh", "fish", "powershell"],
-
             # Distributed computing
             "--backend": ["auto", "ray", "mpi", "dask", "multiprocessing"],
             "--distributed-config": self._complete_config_files(context),
-
             # ML acceleration
             "--ml-data-path": self._complete_directories(context),
-
             # Advanced options
             "--parameter-ranges": ["D0:10-100,alpha:-1-1"],  # Example format
         }

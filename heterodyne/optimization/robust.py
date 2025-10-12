@@ -379,9 +379,15 @@ class RobustHeterodyneOptimizer:
             time_indices = np.arange(n_times)
             return phi_angles, c2_experimental, (angle_indices, time_indices)
 
-        max_data_points = self.settings.get("subsampling", {}).get("max_data_points", 50000)
-        time_subsample = self.settings.get("subsampling", {}).get("time_subsample_factor", 4)
-        angle_subsample = self.settings.get("subsampling", {}).get("angle_subsample_factor", 2)
+        max_data_points = self.settings.get("subsampling", {}).get(
+            "max_data_points", 50000
+        )
+        time_subsample = self.settings.get("subsampling", {}).get(
+            "time_subsample_factor", 4
+        )
+        angle_subsample = self.settings.get("subsampling", {}).get(
+            "angle_subsample_factor", 2
+        )
 
         # Calculate current data size
         n_angles, n_times, _ = c2_experimental.shape
@@ -1358,9 +1364,7 @@ class RobustHeterodyneOptimizer:
         """
         try:
             # Calculate theoretical correlation for heterodyne mode
-            c2_theory = self.core.calculate_c2_heterodyne_parallel(
-                theta, phi_angles
-            )
+            c2_theory = self.core.calculate_c2_heterodyne_parallel(theta, phi_angles)
             return c2_theory
         except Exception as e:
             logger.error(f"Error computing theoretical correlation: {e}")
@@ -2010,13 +2014,25 @@ class RobustHeterodyneOptimizer:
 
         if initial_params is None:
             # Create default initial parameters for 14-parameter heterodyne model
-            initial_params = np.array([
-                100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
-                100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
-                0.1, 0.0, 0.01,     # v0, beta, v_offset
-                0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
-                0.0                 # phi0
-            ], dtype=np.float64)
+            initial_params = np.array(
+                [
+                    100.0,
+                    -0.5,
+                    10.0,  # D0_ref, alpha_ref, D_offset_ref
+                    100.0,
+                    -0.5,
+                    10.0,  # D0_sample, alpha_sample, D_offset_sample
+                    0.1,
+                    0.0,
+                    0.01,  # v0, beta, v_offset
+                    0.5,
+                    0.0,
+                    50.0,
+                    0.3,  # f0, f1, f2, f3
+                    0.0,  # phi0
+                ],
+                dtype=np.float64,
+            )
 
         # Check if _solve_robust_optimization is mocked (for tests)
         try:
@@ -2209,7 +2225,9 @@ def create_robust_optimizer(
     RobustHeterodyneOptimizer
         Revolutionary cache-aware robust optimizer instance
     """
-    return RobustHeterodyneOptimizer(analysis_core, config, enable_caching, cache_config)
+    return RobustHeterodyneOptimizer(
+        analysis_core, config, enable_caching, cache_config
+    )
 
 
 # Module-level wrapper function for CLI and test compatibility

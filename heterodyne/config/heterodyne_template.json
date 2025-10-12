@@ -92,8 +92,25 @@
   },
   "initial_parameters": {
     "_comment": "HETERODYNE MODEL: 14 parameters optimized for typical aging colloids under shear",
-    "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 100.0, 0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.0],
-    "parameter_names": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "values": [
+      100.0, -0.5, 10.0, 100.0, -0.5, 10.0, 100.0, 0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.0
+    ],
+    "parameter_names": [
+      "D0_ref",
+      "alpha_ref",
+      "D_offset_ref",
+      "D0_sample",
+      "alpha_sample",
+      "D_offset_sample",
+      "v0",
+      "beta",
+      "v_offset",
+      "f0",
+      "f1",
+      "f2",
+      "f3",
+      "phi0"
+    ],
     "_parameter_organization": {
       "reference_transport": {
         "parameters": ["D0_ref", "alpha_ref", "D_offset_ref"],
@@ -121,7 +138,22 @@
         "description": "Flow direction angle"
       }
     },
-    "units": ["Å²/s", "dimensionless", "Å²/s", "Å²/s", "dimensionless", "Å²/s", "Å/s", "dimensionless", "Å/s", "dimensionless", "dimensionless", "dimensionless", "dimensionless", "degrees"],
+    "units": [
+      "Å²/s",
+      "dimensionless",
+      "Å²/s",
+      "Å²/s",
+      "dimensionless",
+      "Å²/s",
+      "Å/s",
+      "dimensionless",
+      "Å/s",
+      "dimensionless",
+      "dimensionless",
+      "dimensionless",
+      "dimensionless",
+      "degrees"
+    ],
     "physical_meaning": {
       "D0_ref": "Reference transport coefficient J₀ - characteristic diffusion amplitude for reference beam",
       "alpha_ref": "Reference transport time-scaling exponent - aging (α<0) or rejuvenation (α>0) of reference",
@@ -138,7 +170,22 @@
       "f3": "Fraction baseline - constant component of fraction",
       "phi0": "Flow direction angle relative to scattering vector - 0° = parallel, 90° = perpendicular"
     },
-    "active_parameters": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "active_parameters": [
+      "D0_ref",
+      "alpha_ref",
+      "D_offset_ref",
+      "D0_sample",
+      "alpha_sample",
+      "D_offset_sample",
+      "v0",
+      "beta",
+      "v_offset",
+      "f0",
+      "f1",
+      "f2",
+      "f3",
+      "phi0"
+    ],
     "parameter_units": {
       "D0_ref": "Å²/s",
       "alpha_ref": "dimensionless",
@@ -169,10 +216,10 @@
       "_comment": "Angle filtering for anisotropic heterodyne analysis",
       "enabled": true,
       "target_ranges": [
-        {"min_angle": -10.0, "max_angle": 10.0},
-        {"min_angle": 80.0, "max_angle": 100.0},
-        {"min_angle": 170.0, "max_angle": 190.0},
-        {"min_angle": 260.0, "max_angle": 280.0}
+        { "min_angle": -10.0, "max_angle": 10.0 },
+        { "min_angle": 80.0, "max_angle": 100.0 },
+        { "min_angle": 170.0, "max_angle": 190.0 },
+        { "min_angle": 260.0, "max_angle": 280.0 }
       ],
       "fallback_to_all_angles": true,
       "_heterodyne_note": "Four-quadrant coverage captures anisotropic heterodyne dynamics"
@@ -270,8 +317,8 @@
     },
     "scaling_parameters": {
       "_comment": "Physical scaling for heterodyne correlation: c2_fitted = c2_theory * contrast + offset",
-      "fitted_range": {"min": 1.0, "max": 2.0},
-      "theory_range": {"min": 0.0, "max": 1.0},
+      "fitted_range": { "min": 1.0, "max": 2.0 },
+      "theory_range": { "min": 0.0, "max": 1.0 },
       "contrast": {
         "min": 0.05,
         "max": 0.5,

@@ -6,9 +6,11 @@ from configuration to correlation calculation.
 """
 
 import json
+from pathlib import Path
+
 import numpy as np
 import pytest
-from pathlib import Path
+
 from heterodyne.analysis.core import HeterodyneAnalysisCore
 from heterodyne.core.config import ConfigManager
 
@@ -25,34 +27,55 @@ class TestHeterodyneIntegration:
             "model": "heterodyne",
             "version": "1.0",
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
+                "values": [
+                    100.0,
+                    -0.5,
+                    10.0,
+                    100.0,
+                    -0.5,
+                    10.0,
+                    0.1,
+                    0.0,
+                    0.01,
+                    0.5,
+                    0.0,
+                    50.0,
+                    0.3,
+                    0.0,
+                ],
                 "parameter_names": [
-                    "D0_ref", "alpha_ref", "D_offset_ref",
-                    "D0_sample", "alpha_sample", "D_offset_sample",
-                    "v0", "beta", "v_offset",
-                    "f0", "f1", "f2", "f3",
-                    "phi0"
-                ]
+                    "D0_ref",
+                    "alpha_ref",
+                    "D_offset_ref",
+                    "D0_sample",
+                    "alpha_sample",
+                    "D_offset_sample",
+                    "v0",
+                    "beta",
+                    "v_offset",
+                    "f0",
+                    "f1",
+                    "f2",
+                    "f3",
+                    "phi0",
+                ],
             },
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
                 "scattering": {"wavevector_q": 0.0054},
-                "geometry": {"stator_rotor_gap": 2000000}
+                "geometry": {"stator_rotor_gap": 2000000},
             },
             "optimization_config": {
                 "classical_optimization": {
                     "methods": ["Nelder-Mead"],
-                    "options": {"maxiter": 10}
+                    "options": {"maxiter": 10},
                 }
             },
-            "performance_settings": {
-                "chi_squared_logging_frequency": 10
-            }
+            "performance_settings": {"chi_squared_logging_frequency": 10},
         }
 
         config_file = tmp_path / "heterodyne_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f)
 
         return str(config_file)
@@ -63,16 +86,25 @@ class TestHeterodyneIntegration:
         core = HeterodyneAnalysisCore(heterodyne_config_file)
 
         # Verify 14-parameter configuration
-        assert hasattr(core, 'config_manager')
+        assert hasattr(core, "config_manager")
 
         # Get active parameters (this is the source of truth)
         active_params = core.config_manager.get_active_parameters()
         expected_params = [
-            "D0_ref", "alpha_ref", "D_offset_ref",
-            "D0_sample", "alpha_sample", "D_offset_sample",
-            "v0", "beta", "v_offset",
-            "f0", "f1", "f2", "f3",
-            "phi0"
+            "D0_ref",
+            "alpha_ref",
+            "D_offset_ref",
+            "D0_sample",
+            "alpha_sample",
+            "D_offset_sample",
+            "v0",
+            "beta",
+            "v_offset",
+            "f0",
+            "f1",
+            "f2",
+            "f3",
+            "phi0",
         ]
         assert active_params == expected_params
 
@@ -84,8 +116,24 @@ class TestHeterodyneIntegration:
         """Test heterodyne correlation function calculation."""
         core = HeterodyneAnalysisCore(heterodyne_config_file)
 
-        params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
+        params = np.array(
+            [
+                100.0,
+                -0.5,
+                10.0,
+                100.0,
+                -0.5,
+                10.0,
+                0.1,
+                0.0,
+                0.01,
+                0.5,
+                0.0,
+                50.0,
+                0.3,
+                0.0,
+            ]
+        )
         phi_angle = 0.0
 
         # Calculate heterodyne correlation
@@ -104,18 +152,52 @@ class TestHeterodyneIntegration:
         core = HeterodyneAnalysisCore(heterodyne_config_file)
 
         # Valid parameters should work
-        valid_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                                0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
+        valid_params = np.array(
+            [
+                100.0,
+                -0.5,
+                10.0,
+                100.0,
+                -0.5,
+                10.0,
+                0.1,
+                0.0,
+                0.01,
+                0.5,
+                0.0,
+                50.0,
+                0.3,
+                0.0,
+            ]
+        )
         c2 = core.calculate_heterodyne_correlation(valid_params, 0.0)
         assert c2 is not None
 
         # Parameters with f(t) outside [0,1] are now clipped rather than raising an error
         # Test that such parameters still produce valid output
-        params_with_clipping = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                                        0.1, 0.0, 0.01, 2.0, 0.0, 50.0, -0.5, 0.0])
+        params_with_clipping = np.array(
+            [
+                100.0,
+                -0.5,
+                10.0,
+                100.0,
+                -0.5,
+                10.0,
+                0.1,
+                0.0,
+                0.01,
+                2.0,
+                0.0,
+                50.0,
+                -0.5,
+                0.0,
+            ]
+        )
         c2_clipped = core.calculate_heterodyne_correlation(params_with_clipping, 0.0)
         assert c2_clipped is not None
-        assert np.all(np.isfinite(c2_clipped)), "Clipped parameters should produce finite correlation"
+        assert np.all(
+            np.isfinite(c2_clipped)
+        ), "Clipped parameters should produce finite correlation"
 
         # Test that truly invalid parameters raise errors (e.g., wrong parameter count)
         invalid_param_count = np.array([100.0, -0.5, 10.0])  # Only 3 parameters
@@ -128,14 +210,28 @@ class TestHeterodyneIntegration:
 
         # Use stronger velocity to ensure angular dependence
         # v0=1.0 (10x larger) and beta=0.3 (positive to avoid division by zero at t=0)
-        params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                          1.0, 0.3, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
+        params = np.array(
+            [
+                100.0,
+                -0.5,
+                10.0,
+                100.0,
+                -0.5,
+                10.0,
+                1.0,
+                0.3,
+                0.01,
+                0.5,
+                0.0,
+                50.0,
+                0.3,
+                0.0,
+            ]
+        )
         phi_angles = np.array([0, 45, 90, 135])
 
         # Calculate for all angles
-        c2_results = core.calculate_c2_heterodyne_parallel(
-            params, phi_angles
-        )
+        c2_results = core.calculate_c2_heterodyne_parallel(params, phi_angles)
 
         # Verify output
         assert c2_results.shape == (len(phi_angles), core.n_time, core.n_time)
@@ -156,10 +252,22 @@ class TestHeterodyneIntegration:
         assert len(metadata) == 14
 
         # Verify each parameter has metadata
-        for param_name in ["D0_ref", "alpha_ref", "D_offset_ref",
-                           "D0_sample", "alpha_sample", "D_offset_sample",
-                           "v0", "beta", "v_offset",
-                           "f0", "f1", "f2", "f3", "phi0"]:
+        for param_name in [
+            "D0_ref",
+            "alpha_ref",
+            "D_offset_ref",
+            "D0_sample",
+            "alpha_sample",
+            "D_offset_sample",
+            "v0",
+            "beta",
+            "v_offset",
+            "f0",
+            "f1",
+            "f2",
+            "f3",
+            "phi0",
+        ]:
             assert param_name in metadata
             assert "unit" in metadata[param_name]
             assert "description" in metadata[param_name]
@@ -179,12 +287,12 @@ class TestHeterodyneIntegration:
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
                 "scattering": {"wavevector_q": 0.0054},
-                "geometry": {"stator_rotor_gap": 2000000}
-            }
+                "geometry": {"stator_rotor_gap": 2000000},
+            },
         }
 
         config_file = tmp_path / "legacy_7param.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(legacy_config, f)
 
         core = HeterodyneAnalysisCore(str(config_file))
@@ -208,41 +316,71 @@ class TestHeterodyneOptimizationIntegration:
             "model": "heterodyne",
             "version": "1.0",
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
+                "values": [
+                    100.0,
+                    -0.5,
+                    10.0,
+                    100.0,
+                    -0.5,
+                    10.0,
+                    0.1,
+                    0.0,
+                    0.01,
+                    0.5,
+                    0.0,
+                    50.0,
+                    0.3,
+                    0.0,
+                ],
                 "parameter_names": [
-                    "D0_ref", "alpha_ref", "D_offset_ref",
-                    "D0_sample", "alpha_sample", "D_offset_sample",
-                    "v0", "beta", "v_offset",
-                    "f0", "f1", "f2", "f3",
-                    "phi0"
+                    "D0_ref",
+                    "alpha_ref",
+                    "D_offset_ref",
+                    "D0_sample",
+                    "alpha_sample",
+                    "D_offset_sample",
+                    "v0",
+                    "beta",
+                    "v_offset",
+                    "f0",
+                    "f1",
+                    "f2",
+                    "f3",
+                    "phi0",
                 ],
                 "bounds": [
-                    [0, 1000], [-2, 2], [0, 100],
-                    [0, 1000], [-2, 2], [0, 100],
-                    [-10, 10], [-2, 2], [-1, 1],
-                    [0, 1], [-1, 1], [0, 200], [0, 1],
-                    [-360, 360]
-                ]
+                    [0, 1000],
+                    [-2, 2],
+                    [0, 100],
+                    [0, 1000],
+                    [-2, 2],
+                    [0, 100],
+                    [-10, 10],
+                    [-2, 2],
+                    [-1, 1],
+                    [0, 1],
+                    [-1, 1],
+                    [0, 200],
+                    [0, 1],
+                    [-360, 360],
+                ],
             },
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 50},
                 "scattering": {"wavevector_q": 0.0054},
-                "geometry": {"stator_rotor_gap": 2000000}
+                "geometry": {"stator_rotor_gap": 2000000},
             },
             "optimization_config": {
                 "classical_optimization": {
                     "methods": ["Nelder-Mead"],
-                    "options": {"maxiter": 20}  # Enough for numerical stability
+                    "options": {"maxiter": 20},  # Enough for numerical stability
                 }
             },
-            "performance_settings": {
-                "chi_squared_logging_frequency": 10
-            }
+            "performance_settings": {"chi_squared_logging_frequency": 10},
         }
 
         config_file = tmp_path / "opt_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f)
 
         return str(config_file)
@@ -259,14 +397,30 @@ class TestHeterodyneOptimizationIntegration:
         core = HeterodyneAnalysisCore(optimization_config_file)
 
         # Create optimizer
-        with open(optimization_config_file, 'r') as f:
+        with open(optimization_config_file) as f:
             config = json.load(f)
 
         optimizer = ClassicalOptimizer(core, config)
 
         # Initial parameters
-        initial_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                                  0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
+        initial_params = np.array(
+            [
+                100.0,
+                -0.5,
+                10.0,
+                100.0,
+                -0.5,
+                10.0,
+                0.1,
+                0.0,
+                0.01,
+                0.5,
+                0.0,
+                50.0,
+                0.3,
+                0.0,
+            ]
+        )
 
         # Generate synthetic data
         phi_angles = np.array([0, 90])
@@ -276,7 +430,9 @@ class TestHeterodyneOptimizationIntegration:
             )
         except TypeError as e:
             if "cannot augment Function" in str(e):
-                pytest.skip(f"Numba compilation race condition (Python 3.13 compatibility issue): {e}")
+                pytest.skip(
+                    f"Numba compilation race condition (Python 3.13 compatibility issue): {e}"
+                )
             raise
 
         # Run optimization (should accept 14 parameters)
@@ -284,7 +440,7 @@ class TestHeterodyneOptimizationIntegration:
             result = optimizer.run_optimization(
                 initial_params=initial_params,
                 phi_angles=phi_angles,
-                c2_experimental=c2_synthetic
+                c2_experimental=c2_synthetic,
             )
         except RuntimeError as e:
             if "All classical methods failed" in str(e):
@@ -304,8 +460,22 @@ class TestHeterodyneOptimizationIntegration:
         defaults = config_manager.get_default_14_parameters()
 
         assert len(defaults) == 14
-        assert defaults == [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                           0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0]
+        assert defaults == [
+            100.0,
+            -0.5,
+            10.0,
+            100.0,
+            -0.5,
+            10.0,
+            0.1,
+            0.0,
+            0.01,
+            0.5,
+            0.0,
+            50.0,
+            0.3,
+            0.0,
+        ]
 
 
 class TestHeterodyneMigrationIntegration:
@@ -321,19 +491,24 @@ class TestHeterodyneMigrationIntegration:
             "initial_parameters": {
                 "values": [1324.1, -0.014, -0.674, 0.003, 0.0, 0.0, 0.0],
                 "parameter_names": [
-                    "D0", "alpha", "D_offset",
-                    "gamma_dot_t0", "beta", "gamma_dot_t_offset", "phi0"
-                ]
+                    "D0",
+                    "alpha",
+                    "D_offset",
+                    "gamma_dot_t0",
+                    "beta",
+                    "gamma_dot_t_offset",
+                    "phi0",
+                ],
             },
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 50},
                 "scattering": {"wavevector_q": 0.0054},
-                "geometry": {"stator_rotor_gap": 2000000}
-            }
+                "geometry": {"stator_rotor_gap": 2000000},
+            },
         }
 
         legacy_file = tmp_path / "legacy.json"
-        with open(legacy_file, 'w') as f:
+        with open(legacy_file, "w") as f:
             json.dump(legacy_config, f)
 
         # Migrate

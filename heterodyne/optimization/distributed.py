@@ -84,20 +84,20 @@ logger = logging.getLogger(__name__)
 
 # Ensure worker function is exportable for multiprocessing spawn mode
 __all__ = [
-    "DistributedBackend",
-    "OptimizationTask",
-    "OptimizationResult",
-    "DistributedOptimizationCoordinator",
-    "MultiprocessingBackend",
-    "RayDistributedBackend",
-    "MPIDistributedBackend",
     "DaskDistributedBackend",
+    "DistributedBackend",
+    "DistributedOptimizationCoordinator",
+    "MPIDistributedBackend",
+    "MultiprocessingBackend",
+    "OptimizationResult",
+    "OptimizationTask",
+    "RayDistributedBackend",
+    "_execute_optimization_task_standalone",  # Called via _worker_dispatch
+    "_worker_dispatch",  # Critical for multiprocessing spawn mode
     "create_distributed_optimizer",
     "get_available_backends",
     "integrate_with_classical_optimizer",
     "integrate_with_robust_optimizer",
-    "_worker_dispatch",  # Critical for multiprocessing spawn mode
-    "_execute_optimization_task_standalone",  # Called via _worker_dispatch
 ]
 
 
@@ -821,7 +821,7 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
             # Use spawn mode to avoid function identity issues with pickling
             # Spawn creates fresh Python interpreters, avoiding module reload problems
             # that cause "not the same object" pickle errors in test environments
-            ctx = mp.get_context('spawn')
+            ctx = mp.get_context("spawn")
 
             self.pool = ctx.Pool(processes=num_processes)
             self.initialized = True
@@ -852,7 +852,11 @@ class MultiprocessingBackend(DistributedOptimizationBackend):
         # Pass module and function name instead of function object
         future = self.pool.apply_async(
             _worker_dispatch,
-            ('heterodyne.optimization.distributed', '_execute_optimization_task_standalone', task)
+            (
+                "heterodyne.optimization.distributed",
+                "_execute_optimization_task_standalone",
+                task,
+            ),
         )
         self.pending_futures[task.task_id] = future
 
@@ -1238,7 +1242,9 @@ class DaskDistributedBackend(DistributedOptimizationBackend):
                         analyzer = HeterodyneAnalysisCore(analysis_config)
                         return analyzer.compute_chi_squared(params)
                     except Exception as e:
-                        logger.warning(f"Heterodyne analysis failed, using fallback: {e}")
+                        logger.warning(
+                            f"Heterodyne analysis failed, using fallback: {e}"
+                        )
                         return np.sum(params**2) + 10.0
 
             else:

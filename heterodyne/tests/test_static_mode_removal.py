@@ -8,10 +8,12 @@ This module ensures that:
 """
 
 import json
-import pytest
-import numpy as np
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+from unittest.mock import patch
+
+import numpy as np
+import pytest
 
 from heterodyne.core.config import ConfigManager
 from heterodyne.core.migration import HeterodyneMigration
@@ -23,17 +25,12 @@ class TestStaticModeRemoval:
     def test_static_isotropic_config_detected(self, tmp_path):
         """Test that static isotropic configuration is detected by migration utility."""
         config_data = {
-            "analysis_settings": {
-                "static_mode": True,
-                "static_submode": "isotropic"
-            },
-            "initial_parameters": {
-                "values": [100.0, 0.0, 10.0]
-            }
+            "analysis_settings": {"static_mode": True, "static_submode": "isotropic"},
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
 
         config_file = tmp_path / "static_isotropic.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         # Migration utility should detect this as 3-param-static
@@ -47,17 +44,12 @@ class TestStaticModeRemoval:
     def test_static_anisotropic_config_detected(self, tmp_path):
         """Test that static anisotropic configuration is detected by migration utility."""
         config_data = {
-            "analysis_settings": {
-                "static_mode": True,
-                "static_submode": "anisotropic"
-            },
-            "initial_parameters": {
-                "values": [100.0, 0.0, 10.0]
-            }
+            "analysis_settings": {"static_mode": True, "static_submode": "anisotropic"},
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
 
         config_file = tmp_path / "static_anisotropic.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         # Migration utility should detect this as 3-param-static
@@ -75,15 +67,15 @@ class TestStaticModeRemoval:
             "parameters": [100.0, -0.5, 10.0],  # D0, alpha, D_offset
             "parameter_names": ["D0", "alpha", "D_offset"],
             "chi_squared": 5.2,
-            "analysis_mode": "static_isotropic"
+            "analysis_mode": "static_isotropic",
         }
 
         results_file = tmp_path / "legacy_results.json"
-        with open(results_file, 'w') as f:
+        with open(results_file, "w") as f:
             json.dump(legacy_data, f)
 
         # Legacy data should be readable but recognized as outdated
-        with open(results_file, 'r') as f:
+        with open(results_file) as f:
             loaded_data = json.load(f)
 
         assert loaded_data["analysis_mode"] == "static_isotropic"
@@ -111,26 +103,26 @@ class TestStaticModeFunctionRemoval:
         from heterodyne.analysis.core import HeterodyneAnalysisCore
 
         # Method should not exist
-        assert not hasattr(HeterodyneAnalysisCore, 'is_static_mode')
+        assert not hasattr(HeterodyneAnalysisCore, "is_static_mode")
 
     def test_is_static_parameters_removed_from_analyzer(self):
         """Test that is_static_parameters() is removed from HeterodyneAnalysisCore."""
         from heterodyne.analysis.core import HeterodyneAnalysisCore
 
         # Method should not exist
-        assert not hasattr(HeterodyneAnalysisCore, 'is_static_parameters')
+        assert not hasattr(HeterodyneAnalysisCore, "is_static_parameters")
 
     def test_calculate_c2_vectorized_static_removed(self):
         """Test that _calculate_c2_vectorized_static() is removed."""
         from heterodyne.analysis.core import HeterodyneAnalysisCore
 
         # Method should not exist
-        assert not hasattr(HeterodyneAnalysisCore, '_calculate_c2_vectorized_static')
+        assert not hasattr(HeterodyneAnalysisCore, "_calculate_c2_vectorized_static")
 
     def test_validate_method_removed_from_config_manager(self):
         """Test that validate() method is removed from ConfigManager (part of static mode)."""
         # validate() was part of static mode infrastructure and should be removed
-        assert not hasattr(ConfigManager, 'validate')
+        assert not hasattr(ConfigManager, "validate")
 
 
 class TestMigrationGuidance:
@@ -139,16 +131,12 @@ class TestMigrationGuidance:
     def test_migration_guide_provides_clear_path(self, tmp_path):
         """Test that migration guide provides clear guidance for static configs."""
         config_data = {
-            "analysis_settings": {
-                "static_mode": True
-            },
-            "initial_parameters": {
-                "values": [100.0, 0.0, 10.0]
-            }
+            "analysis_settings": {"static_mode": True},
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
 
         config_file = tmp_path / "old_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         # Generate migration guide
@@ -157,22 +145,21 @@ class TestMigrationGuidance:
         # Guide should mention key concepts
         guide_lower = guide.lower()
         assert "3-parameter static" in guide_lower or "static mode" in guide_lower
-        assert "automatic migration not supported" in guide_lower or "manually" in guide_lower
+        assert (
+            "automatic migration not supported" in guide_lower
+            or "manually" in guide_lower
+        )
         assert "heterodyne" in guide_lower
 
     def test_error_message_provides_migration_path(self, tmp_path):
         """Test that error messages guide users to heterodyne model."""
         config_data = {
-            "analysis_settings": {
-                "static_mode": True
-            },
-            "initial_parameters": {
-                "values": [100.0, 0.0, 10.0]
-            }
+            "analysis_settings": {"static_mode": True},
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
 
         config_file = tmp_path / "old_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         # Migration should raise error with guidance
@@ -181,8 +168,10 @@ class TestMigrationGuidance:
 
         error_msg = str(exc_info.value).lower()
         # Error should mention heterodyne model or migration
-        assert any(keyword in error_msg for keyword in
-                   ["heterodyne", "manually", "static mode", "11 parameter"])
+        assert any(
+            keyword in error_msg
+            for keyword in ["heterodyne", "manually", "static mode", "11 parameter"]
+        )
 
 
 class TestConfigValidation:
@@ -191,18 +180,16 @@ class TestConfigValidation:
     def test_3_parameter_config_detected_as_static(self, tmp_path):
         """Test that 3-parameter configurations are detected as static mode."""
         config_data = {
-            "initial_parameters": {
-                "values": [100.0, -0.5, 10.0]  # Only 3 params
-            },
+            "initial_parameters": {"values": [100.0, -0.5, 10.0]},  # Only 3 params
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
                 "scattering": {"wavevector_q": 0.0054},
-                "geometry": {"stator_rotor_gap": 2000000}
-            }
+                "geometry": {"stator_rotor_gap": 2000000},
+            },
         }
 
         config_file = tmp_path / "three_param.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         # Migration utility should detect this as 3-param (likely static)
@@ -213,18 +200,29 @@ class TestConfigValidation:
         """Test that proper 11-parameter heterodyne config is accepted."""
         config_data = {
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0]  # 11 params
+                "values": [
+                    100.0,
+                    -0.5,
+                    10.0,
+                    0.1,
+                    0.0,
+                    0.01,
+                    0.5,
+                    0.0,
+                    50.0,
+                    0.3,
+                    0.0,
+                ]  # 11 params
             },
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1, "start_frame": 0, "end_frame": 100},
                 "scattering": {"wavevector_q": 0.0054},
-                "geometry": {"stator_rotor_gap": 2000000}
-            }
+                "geometry": {"stator_rotor_gap": 2000000},
+            },
         }
 
         config_file = tmp_path / "heterodyne.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config_data, f)
 
         # Should be detected as 11-param heterodyne

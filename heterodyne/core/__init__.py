@@ -42,7 +42,9 @@ memory_efficient_cache = lambda *args, **kwargs: _kernels_loader.memory_efficien
 )
 
 # Lazy-loaded config manager
-ConfigManager = HeavyDependencyLoader("heterodyne.core.config", "ConfigManager", required=True)
+ConfigManager = HeavyDependencyLoader(
+    "heterodyne.core.config", "ConfigManager", required=True
+)
 
 __all__ = [
     "ConfigManager",

@@ -195,11 +195,20 @@ class ClassicalOptimizer:
             else:
                 # Use 14-parameter heterodyne defaults
                 result_dict["initial_parameters"] = [
-                    100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
-                    100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
-                    0.1, 0.0, 0.01,     # v0, beta, v_offset
-                    0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
-                    0.0                 # phi0
+                    100.0,
+                    -0.5,
+                    10.0,  # D0_ref, alpha_ref, D_offset_ref
+                    100.0,
+                    -0.5,
+                    10.0,  # D0_sample, alpha_sample, D_offset_sample
+                    0.1,
+                    0.0,
+                    0.01,  # v0, beta, v_offset
+                    0.5,
+                    0.0,
+                    50.0,
+                    0.3,  # f0, f1, f2, f3
+                    0.0,  # phi0
                 ]
 
         return result_dict
@@ -335,14 +344,28 @@ class ClassicalOptimizer:
                 )
             else:
                 # Create default initial parameters for 14-parameter heterodyne model
-                logger.warning("No initial parameters in config, using 14-parameter heterodyne defaults")
-                initial_parameters = np.array([
-                    100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
-                    100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
-                    0.1, 0.0, 0.01,     # v0, beta, v_offset
-                    0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
-                    0.0                 # phi0
-                ], dtype=np.float64)
+                logger.warning(
+                    "No initial parameters in config, using 14-parameter heterodyne defaults"
+                )
+                initial_parameters = np.array(
+                    [
+                        100.0,
+                        -0.5,
+                        10.0,  # D0_ref, alpha_ref, D_offset_ref
+                        100.0,
+                        -0.5,
+                        10.0,  # D0_sample, alpha_sample, D_offset_sample
+                        0.1,
+                        0.0,
+                        0.01,  # v0, beta, v_offset
+                        0.5,
+                        0.0,
+                        50.0,
+                        0.3,  # f0, f1, f2, f3
+                        0.0,  # phi0
+                    ],
+                    dtype=np.float64,
+                )
 
         # Validate parameter count - only 14-parameter heterodyne mode supported
         if len(initial_parameters) != 14:
@@ -1058,7 +1081,7 @@ class ClassicalOptimizer:
             f_minus = objective_func(x_minus)
             grad[i] = (f_plus - f_minus) / (2 * epsilon)
             function_evaluations += 2
-            
+
             # Sanitize NaN/Inf values that can cause Gurobi to fail
             if not np.isfinite(grad[i]):
                 # Try one-sided difference as fallback
@@ -1116,14 +1139,14 @@ class ClassicalOptimizer:
             f_plus = objective_func(x_plus)
             f_minus = objective_func(x_minus)
             second_deriv = (f_plus - 2 * f_current + f_minus) / (epsilon**2)
-            
+
             # Sanitize NaN/Inf values and ensure positive diagonal
             if np.isfinite(second_deriv):
                 hessian_diag[i] = max(1e-6, second_deriv)
             else:
                 # Use default value if second derivative is invalid
                 hessian_diag[i] = 1.0
-            
+
             function_evaluations += 2
 
         return hessian_diag, function_evaluations

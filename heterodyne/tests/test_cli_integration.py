@@ -254,7 +254,9 @@ class TestCLIBasicFunctionality:
     def test_cli_error_handling(self):
         """Test CLI error handling."""
         # Test with non-existent config file
-        with patch("sys.argv", ["run_heterodyne", "--config", "/non/existent/path.json"]):
+        with patch(
+            "sys.argv", ["run_heterodyne", "--config", "/non/existent/path.json"]
+        ):
             with pytest.raises(SystemExit) as exc_info:
                 run_heterodyne_main()
             # Should exit with error code
@@ -268,7 +270,13 @@ class TestCLIBasicFunctionality:
             with (
                 patch(
                     "sys.argv",
-                    ["run_heterodyne", "--method", method, "--config", self.config_path],
+                    [
+                        "run_heterodyne",
+                        "--method",
+                        method,
+                        "--config",
+                        self.config_path,
+                    ],
                 ),
                 patch("heterodyne.analysis.core.HeterodyneAnalysisCore"),
             ):
@@ -530,7 +538,12 @@ class TestCLISubprocess:
         # Test run_heterodyne help
         try:
             result = subprocess.run(
-                [self.python_executable, "-m", "heterodyne.cli.run_heterodyne", "--help"],
+                [
+                    self.python_executable,
+                    "-m",
+                    "heterodyne.cli.run_heterodyne",
+                    "--help",
+                ],
                 check=False,
                 capture_output=True,
                 text=True,

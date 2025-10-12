@@ -36,6 +36,8 @@ except ImportError:
     warnings.warn("Numba not available - CPU optimizations will be limited")
 
 try:
+    import scipy.fft
+
     SCIPY_FFT_AVAILABLE = True
 except ImportError:
     SCIPY_FFT_AVAILABLE = False

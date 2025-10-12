@@ -973,7 +973,7 @@ class ConfigManager:
     def is_static_mode_enabled(self) -> bool:
         """
         Check if static mode is enabled in configuration.
-        
+
         DEPRECATED: Static mode has been removed in favor of the heterodyne model.
         This method now raises an error if static mode is detected.
 
@@ -981,7 +981,7 @@ class ConfigManager:
         -------
         bool
             Always returns False (static mode no longer supported)
-            
+
         Raises
         ------
         ValueError
@@ -1012,23 +1012,21 @@ class ConfigManager:
     def get_static_submode(self) -> str | None:
         """
         Get the static sub-mode for analysis.
-        
+
         DEPRECATED: Static submodes have been removed.
 
         Returns
         -------
         str | None
             Always returns None (static modes no longer supported)
-            
+
         Raises
         ------
         ValueError
             If static submode configuration is detected
         """
         # Check for deprecated static_submode parameter
-        raw_submode = self.get(
-            "analysis_settings", "static_submode", default=None
-        )
+        raw_submode = self.get("analysis_settings", "static_submode", default=None)
         if raw_submode is not None:
             raise ValueError(
                 f"Static submode '{raw_submode}' is no longer supported. "
@@ -1040,7 +1038,7 @@ class ConfigManager:
                 "- Reference and sample scattering contributions\n"
                 "See migration guide for details."
             )
-        
+
         return None
 
     def get_analysis_mode(self) -> str:
@@ -1080,11 +1078,20 @@ class ConfigManager:
             else:
                 # Default to heterodyne 14-parameter names
                 active_params = [
-                    "D0_ref", "alpha_ref", "D_offset_ref",        # Reference transport (3)
-                    "D0_sample", "alpha_sample", "D_offset_sample",  # Sample transport (3)
-                    "v0", "beta", "v_offset",                     # Velocity (3)
-                    "f0", "f1", "f2", "f3",                       # Fraction (4)
-                    "phi0"                                        # Flow angle (1)
+                    "D0_ref",
+                    "alpha_ref",
+                    "D_offset_ref",  # Reference transport (3)
+                    "D0_sample",
+                    "alpha_sample",
+                    "D_offset_sample",  # Sample transport (3)
+                    "v0",
+                    "beta",
+                    "v_offset",  # Velocity (3)
+                    "f0",
+                    "f1",
+                    "f2",
+                    "f3",  # Fraction (4)
+                    "phi0",  # Flow angle (1)
                 ]
 
         return active_params
@@ -1119,73 +1126,65 @@ class ConfigManager:
             "D0_ref": {
                 "unit": "nm²/s",
                 "description": "Reference transport coefficient J₀_ref",
-                "index": 0
+                "index": 0,
             },
             "alpha_ref": {
                 "unit": "dimensionless",
                 "description": "Reference transport coefficient time-scaling exponent",
-                "index": 1
+                "index": 1,
             },
             "D_offset_ref": {
                 "unit": "nm²/s",
                 "description": "Reference baseline transport coefficient J_offset_ref",
-                "index": 2
+                "index": 2,
             },
             "D0_sample": {
                 "unit": "nm²/s",
                 "description": "Sample transport coefficient J₀_sample",
-                "index": 3
+                "index": 3,
             },
             "alpha_sample": {
                 "unit": "dimensionless",
                 "description": "Sample transport coefficient time-scaling exponent",
-                "index": 4
+                "index": 4,
             },
             "D_offset_sample": {
                 "unit": "nm²/s",
                 "description": "Sample baseline transport coefficient J_offset_sample",
-                "index": 5
+                "index": 5,
             },
-            "v0": {
-                "unit": "nm/s",
-                "description": "Reference velocity",
-                "index": 6
-            },
+            "v0": {"unit": "nm/s", "description": "Reference velocity", "index": 6},
             "beta": {
                 "unit": "dimensionless",
                 "description": "Velocity power-law exponent",
-                "index": 7
+                "index": 7,
             },
             "v_offset": {
                 "unit": "nm/s",
                 "description": "Baseline velocity offset",
-                "index": 8
+                "index": 8,
             },
             "f0": {
                 "unit": "dimensionless",
                 "description": "Fraction amplitude",
-                "index": 9
+                "index": 9,
             },
             "f1": {
                 "unit": "1/s",
                 "description": "Fraction exponential rate",
-                "index": 10
+                "index": 10,
             },
-            "f2": {
-                "unit": "s",
-                "description": "Fraction time offset",
-                "index": 11
-            },
+            "f2": {"unit": "s", "description": "Fraction time offset", "index": 11},
             "f3": {
                 "unit": "dimensionless",
                 "description": "Fraction baseline",
-                "index": 12
+                "index": 12,
             },
             "phi0": {
                 "unit": "degrees",
                 "description": "Flow direction angle",
-                "index": 13
-            }
+                "index": 13,
+            },
         }
 
     def get_parameter_bounds(self) -> list[tuple[float, float]]:
@@ -1199,24 +1198,24 @@ class ConfigManager:
         """
         return [
             # Reference transport coefficients
-            (0, 1000),      # D0_ref: positive diffusion
-            (-2, 2),        # alpha_ref: power-law range
-            (0, 100),       # D_offset_ref: positive offset
+            (0, 1000),  # D0_ref: positive diffusion
+            (-2, 2),  # alpha_ref: power-law range
+            (0, 100),  # D_offset_ref: positive offset
             # Sample transport coefficients
-            (0, 1000),      # D0_sample: positive diffusion
-            (-2, 2),        # alpha_sample: power-law range
-            (0, 100),       # D_offset_sample: positive offset
+            (0, 1000),  # D0_sample: positive diffusion
+            (-2, 2),  # alpha_sample: power-law range
+            (0, 100),  # D_offset_sample: positive offset
             # Velocity parameters
-            (-10, 10),      # v0: velocity (can be negative)
-            (-2, 2),        # beta: power-law range
-            (-1, 1),        # v_offset: small offset
+            (-10, 10),  # v0: velocity (can be negative)
+            (-2, 2),  # beta: power-law range
+            (-1, 1),  # v_offset: small offset
             # Fraction parameters
-            (0, 1),         # f0: fraction amplitude
-            (-1, 1),        # f1: exponential rate
-            (0, 200),       # f2: time offset
-            (0, 1),         # f3: baseline fraction
+            (0, 1),  # f0: fraction amplitude
+            (-1, 1),  # f1: exponential rate
+            (0, 200),  # f2: time offset
+            (0, 1),  # f3: baseline fraction
             # Flow angle
-            (-360, 360)     # phi0: angle in degrees
+            (-360, 360),  # phi0: angle in degrees
         ]
 
     def get_default_14_parameters(self) -> list[float]:
@@ -1233,24 +1232,24 @@ class ConfigManager:
         """
         return [
             # Reference transport coefficients
-            100.0,   # D0_ref
-            -0.5,    # alpha_ref
-            10.0,    # D_offset_ref
+            100.0,  # D0_ref
+            -0.5,  # alpha_ref
+            10.0,  # D_offset_ref
             # Sample transport coefficients (initially same as reference)
-            100.0,   # D0_sample
-            -0.5,    # alpha_sample
-            10.0,    # D_offset_sample
+            100.0,  # D0_sample
+            -0.5,  # alpha_sample
+            10.0,  # D_offset_sample
             # Velocity parameters
-            0.1,     # v0
-            0.0,     # beta
-            0.01,    # v_offset
+            0.1,  # v0
+            0.0,  # beta
+            0.01,  # v_offset
             # Fraction parameters
-            0.5,     # f0
-            0.0,     # f1
-            50.0,    # f2
-            0.3,     # f3
+            0.5,  # f0
+            0.0,  # f1
+            50.0,  # f2
+            0.3,  # f3
             # Flow angle
-            0.0      # phi0
+            0.0,  # phi0
         ]
 
     def list_available_templates(self) -> list[str]:

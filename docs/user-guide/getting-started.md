@@ -2,7 +2,8 @@
 
 ## Complete Working Example: From Installation to Results
 
-This guide provides a complete, executable workflow for analyzing heterodyne XPCS data using the heterodyne-analysis package.
+This guide provides a complete, executable workflow for analyzing heterodyne XPCS data
+using the heterodyne-analysis package.
 
 ## Prerequisites
 
@@ -51,10 +52,12 @@ pip install heterodyne-analysis[dev]
 ### Required Data Files
 
 1. **Correlation data file**: Two-time correlation function `c2(q, φ, t1, t2)`
+
    - Format: HDF5 (`.h5`, `.hdf`) or NumPy (`.npz`)
    - Shape: `(n_angles, time_length, time_length)`
 
 2. **Angle file**: Scattering angles φ
+
    - Format: Plain text file
    - Content: One angle per line in degrees
 
@@ -70,6 +73,7 @@ my_experiment/
 ```
 
 **Example `phi_angles.txt`:**
+
 ```
 0.0
 45.0
@@ -162,6 +166,7 @@ ls -lh heterodyne_results/exp_data/
 ```
 
 **Expected outputs:**
+
 - `c2_heatmap_experimental_phi_*.png`: Correlation function heatmaps
 - Data validation messages in console
 
@@ -398,11 +403,13 @@ print(f"χ²: {robust_chi2:.6e}")
 ### Issue: "File not found" Error
 
 **Problem:**
+
 ```
 FileNotFoundError: [Errno 2] No such file or directory: './data/correlation_data.h5'
 ```
 
 **Solution:**
+
 ```bash
 # Verify file paths
 ls -lh data/my_experiment/
@@ -413,6 +420,7 @@ ls -lh data/my_experiment/
 ### Issue: Optimization Fails to Converge
 
 **Problem:**
+
 ```
 Warning: Optimization did not converge (maxiter exceeded)
 ```
@@ -420,6 +428,7 @@ Warning: Optimization did not converge (maxiter exceeded)
 **Solutions:**
 
 1. **Better initial values:**
+
    ```json
    {
      "initial_parameters": {
@@ -429,6 +438,7 @@ Warning: Optimization did not converge (maxiter exceeded)
    ```
 
 2. **Reduce active parameters:**
+
    ```json
    {
      "initial_parameters": {
@@ -438,6 +448,7 @@ Warning: Optimization did not converge (maxiter exceeded)
    ```
 
 3. **Increase iteration limit:**
+
    ```json
    {
      "optimization_config": {
@@ -455,12 +466,12 @@ Warning: Optimization did not converge (maxiter exceeded)
 ### Issue: Out of Memory Error
 
 **Problem:**
+
 ```
 MemoryError: Unable to allocate array
 ```
 
-**Solution:**
-Enable subsampling for large datasets:
+**Solution:** Enable subsampling for large datasets:
 
 ```json
 {
@@ -480,11 +491,13 @@ Enable subsampling for large datasets:
 ### Issue: Import Errors
 
 **Problem:**
+
 ```
 ModuleNotFoundError: No module named 'heterodyne'
 ```
 
 **Solution:**
+
 ```bash
 # Verify installation
 pip list | grep heterodyne
@@ -501,7 +514,8 @@ python --version  # Should be 3.12+
 ### Learn More
 
 - **Configuration Guide**: See [configuration.rst](configuration.rst) for all parameters
-- **API Reference**: Explore [analysis-core.md](../api-reference/analysis-core.md) for details
+- **API Reference**: Explore [analysis-core.md](../api-reference/analysis-core.md) for
+  details
 - **Examples**: Review [examples.rst](examples.rst) for advanced workflows
 - **Performance**: Read [ml-acceleration.md](ml-acceleration.md) for optimization tips
 

@@ -17,6 +17,21 @@ import sys
 # Add the heterodyne-analysis root directory to Python path for imports
 sys.path.insert(0, "/home/wei/Documents/GitHub/heterodyne-analysis")
 
+# Check availability of optional dependencies
+try:
+    import cvxpy
+
+    CVXPY_AVAILABLE = True
+except ImportError:
+    CVXPY_AVAILABLE = False
+
+try:
+    import gurobipy
+
+    GUROBI_AVAILABLE = True
+except ImportError:
+    GUROBI_AVAILABLE = False
+
 
 def test_classical_optimization_imports():
     """Test that classical optimization methods can be imported successfully."""

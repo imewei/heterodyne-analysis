@@ -632,7 +632,6 @@ def refresh_kernel_functions():
 
             # Extract specific components
             njit = numba_module.njit
-            float64 = numba_module.float64
 
             # Recreate JIT-compiled functions
             create_time_integral_matrix_numba = njit(
@@ -811,7 +810,7 @@ def compute_sinc_squared_numba_flexible(x, prefactor=None):
             prefactor = 1.0
         try:
             return _compute_sinc_squared_numba_internal(x, prefactor)
-        except (AssertionError, TypeError, AttributeError) as e:
+        except (AssertionError, TypeError, AttributeError):
             # Fallback to pure Python implementation for Python 3.13+ compatibility
             # AssertionError occurs in numba IR.Del() with Python 3.13 bytecode
             # TypeError occurs from numba registry errors after module reloading

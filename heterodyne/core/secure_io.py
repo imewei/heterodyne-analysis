@@ -411,7 +411,9 @@ def save_analysis_results_secure(
         output_dir = Path("./heterodyne_results")
         if config and "output_settings" in config:
             output_dir = Path(
-                config["output_settings"].get("results_directory", "./heterodyne_results")
+                config["output_settings"].get(
+                    "results_directory", "./heterodyne_results"
+                )
             )
 
         ensure_dir_secure(output_dir)

@@ -5,8 +5,8 @@
 | Feature | Legacy System | Current System |
 |---------|---------------|----------------| | **Architecture** | Multiple fragmented
 scripts | Unified plugin-based engine | | **Files** | `cli_completion.py`,
-`completion_fast.py`, standalone scripts | Modular system in `heterodyne/ui/completion/` |
-| **Caching** | Basic file-based cache | Environment-aware intelligent caching | |
+`completion_fast.py`, standalone scripts | Modular system in `heterodyne/ui/completion/`
+| | **Caching** | Basic file-based cache | Environment-aware intelligent caching | |
 **Method Names** | `classical`, `robust`, `all` | `classical`, `robust`, `all` | |
 **Installation** | Simple shell script injection | Atomic installation with rollback | |
 **Environment Support** | System-wide only | Per-environment isolation | | **Project

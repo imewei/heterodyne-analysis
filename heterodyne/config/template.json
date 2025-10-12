@@ -91,8 +91,25 @@
   },
   "initial_parameters": {
     "_comment": "CUSTOMIZE: Starting values for 14-parameter heterodyne model - CRITICAL for convergence",
-    "values": [100.0, 0.0, 10.0, 100.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.0],
-    "parameter_names": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "values": [
+      100.0, 0.0, 10.0, 100.0, 0.0, 10.0, 1.0, 0.0, 0.0, 0.25, 0.25, 0.25, 0.25, 0.0
+    ],
+    "parameter_names": [
+      "D0_ref",
+      "alpha_ref",
+      "D_offset_ref",
+      "D0_sample",
+      "alpha_sample",
+      "D_offset_sample",
+      "v0",
+      "beta",
+      "v_offset",
+      "f0",
+      "f1",
+      "f2",
+      "f3",
+      "phi0"
+    ],
     "_parameter_definitions": {
       "reference_transport": ["D0_ref", "alpha_ref", "D_offset_ref"],
       "sample_transport": ["D0_sample", "alpha_sample", "D_offset_sample"],
@@ -100,7 +117,22 @@
       "fractions": ["f0", "f1", "f2", "f3"],
       "flow_angle": ["phi0"]
     },
-    "units": ["Å²/s", "dimensionless", "Å²/s", "Å²/s", "dimensionless", "Å²/s", "Å/s", "dimensionless", "Å/s", "dimensionless", "dimensionless", "dimensionless", "dimensionless", "degrees"],
+    "units": [
+      "Å²/s",
+      "dimensionless",
+      "Å²/s",
+      "Å²/s",
+      "dimensionless",
+      "Å²/s",
+      "Å/s",
+      "dimensionless",
+      "Å/s",
+      "dimensionless",
+      "dimensionless",
+      "dimensionless",
+      "dimensionless",
+      "degrees"
+    ],
     "physical_meaning": {
       "D0_ref": "Reference transport coefficient J₀ for reference beam",
       "alpha_ref": "Transport coefficient time-scaling exponent for reference",
@@ -117,7 +149,22 @@
       "f3": "Fraction parameter 3",
       "phi0": "Angular offset between flow and scattering"
     },
-    "active_parameters": ["D0_ref", "alpha_ref", "D_offset_ref", "D0_sample", "alpha_sample", "D_offset_sample", "v0", "beta", "v_offset", "f0", "f1", "f2", "f3", "phi0"],
+    "active_parameters": [
+      "D0_ref",
+      "alpha_ref",
+      "D_offset_ref",
+      "D0_sample",
+      "alpha_sample",
+      "D_offset_sample",
+      "v0",
+      "beta",
+      "v_offset",
+      "f0",
+      "f1",
+      "f2",
+      "f3",
+      "phi0"
+    ],
     "parameter_units": {
       "D0_ref": "Å²/s",
       "alpha_ref": "dimensionless",

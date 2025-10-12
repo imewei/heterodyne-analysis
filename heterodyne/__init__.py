@@ -131,7 +131,9 @@ memory_efficient_cache = lambda *args, **kwargs: _kernels_module.memory_efficien
 
 # Optimization modules - expensive imports, lazy loaded
 ClassicalOptimizer = _LazyLoader(".optimization.classical", "ClassicalOptimizer")
-RobustHeterodyneOptimizer = _LazyLoader(".optimization.robust", "RobustHeterodyneOptimizer")
+RobustHeterodyneOptimizer = _LazyLoader(
+    ".optimization.robust", "RobustHeterodyneOptimizer"
+)
 create_robust_optimizer = _LazyLoader(".optimization.robust", "create_robust_optimizer")
 
 # CLI functions - lazy loaded

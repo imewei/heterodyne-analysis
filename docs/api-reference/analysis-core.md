@@ -7,8 +7,8 @@ scattering in X-ray Photon Correlation Spectroscopy (XPCS). It implements the
 theoretical framework from He et al. (2024) for analyzing nonequilibrium dynamics in
 flowing soft matter systems.
 
-**Module**: `heterodyne.analysis.core` **Main Class**: `HeterodyneAnalysisCore` **Authors**:
-Wei Chen, Hongrui He (Argonne National Laboratory)
+**Module**: `heterodyne.analysis.core` **Main Class**: `HeterodyneAnalysisCore`
+**Authors**: Wei Chen, Hongrui He (Argonne National Laboratory)
 
 ## Key Features
 
@@ -375,8 +375,8 @@ For production analysis, regenerate cache files to match configuration exactly.
 
 ### Heterodyne Mode (14 Parameters)
 
-**Parameters**: 14 total, organized in 5 groups
-**Use Case**: Two-component heterodyne scattering with time-dependent fraction mixing
+**Parameters**: 14 total, organized in 5 groups **Use Case**: Two-component heterodyne
+scattering with time-dependent fraction mixing
 
 ```python
 # Initialize heterodyne analysis

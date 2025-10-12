@@ -691,7 +691,9 @@ def create_all_plots(
                     # Create time arrays in seconds (same as validation plot)
                     t2 = np.arange(n_t2) * dt
                     t1 = np.arange(n_t1) * dt
-                    logger.debug(f"Created time arrays: t1={t1.shape}, t2={t2.shape}, dt={dt}")
+                    logger.debug(
+                        f"Created time arrays: t1={t1.shape}, t2={t2.shape}, dt={dt}"
+                    )
         except Exception as e:
             logger.warning(f"Failed to extract temporal parameters from config: {e}")
             logger.warning("Plots will use frame indices instead of time in seconds")

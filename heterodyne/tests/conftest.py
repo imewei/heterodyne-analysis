@@ -14,12 +14,12 @@ import tempfile
 import numpy as np
 import pytest
 
-
 # Numba State Cleanup Fixture
 # ===========================
 # This fixture prevents numba-related test failures by ensuring clean state
 # between test modules. It addresses the "None in sys.modules" error that occurs
 # when numba gets corrupted by earlier tests or multiprocessing operations.
+
 
 @pytest.fixture(scope="module", autouse=True)
 def cleanup_numba_state():
@@ -51,6 +51,7 @@ def cleanup_numba_state():
     # Try to clear numba caches if available
     try:
         import numba
+
         # Note: Numba doesn't expose public cache clearing APIs
         # The cleanup is handled by gc.collect() below
         # Avoid accessing internal APIs like numba.core which may not exist

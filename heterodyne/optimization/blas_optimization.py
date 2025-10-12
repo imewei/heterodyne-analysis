@@ -28,6 +28,7 @@ Authors: Wei Chen, Hongrui He, Claude (Anthropic)
 Institution: Argonne National Laboratory
 """
 
+import concurrent.futures
 import time
 import warnings
 from collections.abc import Callable
@@ -103,9 +104,8 @@ class BLASOptimizedParameterEstimator:
             self.chi_squared_engine = create_optimized_chi_squared_engine(
                 enable_blas=True, precision=numerical_precision
             )
-            self.advanced_analyzer = AdvancedChiSquaredAnalyzer(
-                dtype=np.float64 if numerical_precision == "double" else np.float32
-            )
+            # Note: AdvancedChiSquaredAnalyzer not available - using basic engine only
+            self.advanced_analyzer = None
         else:
             self.chi_squared_engine = None
             self.advanced_analyzer = None

@@ -2,7 +2,10 @@
 
 ## Overview
 
-The heterodyne-analysis package provides machine learning acceleration for parameter optimization through intelligent initial value prediction. This guide covers ML acceleration features, Numba JIT compilation, and performance optimization strategies for analyzing XPCS data efficiently.
+The heterodyne-analysis package provides machine learning acceleration for parameter
+optimization through intelligent initial value prediction. This guide covers ML
+acceleration features, Numba JIT compilation, and performance optimization strategies
+for analyzing XPCS data efficiently.
 
 ## ML Acceleration
 
@@ -10,8 +13,10 @@ The heterodyne-analysis package provides machine learning acceleration for param
 
 ML acceleration improves optimization convergence by:
 
-- **Smart parameter initialization**: Predicting good starting values based on experimental conditions
-- **Faster convergence**: 2-5x reduction in optimization time through better initial guesses
+- **Smart parameter initialization**: Predicting good starting values based on
+  experimental conditions
+- **Faster convergence**: 2-5x reduction in optimization time through better initial
+  guesses
 - **Continuous learning**: Models improve as you analyze more datasets
 
 ### How It Works
@@ -49,14 +54,13 @@ pip install heterodyne-analysis[all]
 
 ### Performance Benefits
 
-Numba provides 3-5x speedup for core computational kernels through just-in-time (JIT) compilation:
+Numba provides 3-5x speedup for core computational kernels through just-in-time (JIT)
+compilation:
 
 | Operation | Pure Python | With Numba JIT | Speedup |
-|-----------|-------------|----------------|---------|
-| 100 points | 2.3 s | 0.7 s | 3.3× |
-| 500 points | 12.1 s | 3.2 s | 3.8× |
-| 1000 points | 45.2 s | 8.9 s | 5.1× |
-| 5000 points | 892 s | 178 s | 5.0× |
+|-----------|-------------|----------------|---------| | 100 points | 2.3 s | 0.7 s |
+3.3× | | 500 points | 12.1 s | 3.2 s | 3.8× | | 1000 points | 45.2 s | 8.9 s | 5.1× | |
+5000 points | 892 s | 178 s | 5.0× |
 
 ### Automatic JIT Compilation
 
@@ -127,7 +131,7 @@ For datasets exceeding 4 million data points, careful memory management is essen
 
 **Dataset Size Guidelines:**
 
-- **<100k points**: No special configuration needed
+- **\<100k points**: No special configuration needed
 - **100k-1M points**: Enable time subsampling (4x-8x reduction)
 - **1M-4M points**: Enable aggressive subsampling (16x-32x reduction)
 - **>4M points**: Not recommended - over-subsampling effects reduce accuracy
@@ -152,9 +156,10 @@ For datasets exceeding 4 million data points, careful memory management is essen
 ```
 
 **Impact:**
+
 - 2000×2000 dataset with 2 angles = 8M points
 - With factors (4, 2): 8M → ~250k points (32x reduction)
-- Speedup: 20-50x faster with <10% chi-squared degradation
+- Speedup: 20-50x faster with \<10% chi-squared degradation
 
 **2. Ellipsoidal Optimization Memory Limit:**
 
@@ -196,9 +201,9 @@ For memory-constrained environments:
 ### Memory Benchmarks
 
 | Dataset Size | Memory Usage (Default) | Memory Usage (Optimized) | Improvement |
-|--------------|------------------------|--------------------------|-------------|
-| 4M points | 85% RAM | 75% RAM | 12% reduction |
-| 8M points | Memory error | 90% limit success | Enabled large datasets |
+|--------------|------------------------|--------------------------|-------------| | 4M
+points | 85% RAM | 75% RAM | 12% reduction | | 8M points | Memory error | 90% limit
+success | Enabled large datasets |
 
 ## Performance Monitoring
 
@@ -298,6 +303,7 @@ heterodyne --config my_config.json --method all
 **Solutions:**
 
 1. **Enable subsampling:**
+
    ```json
    {
      "optimization_config": {
@@ -312,8 +318,8 @@ heterodyne --config my_config.json --method all
    }
    ```
 
-2. **Reduce active parameters:**
-   Start with 4-6 essential parameters instead of all 14:
+2. **Reduce active parameters:** Start with 4-6 essential parameters instead of all 14:
+
    ```json
    {
      "initial_parameters": {
@@ -323,6 +329,7 @@ heterodyne --config my_config.json --method all
    ```
 
 3. **Use angle filtering:**
+
    ```json
    {
      "optimization_config": {
@@ -344,15 +351,14 @@ heterodyne --config my_config.json --method all
 **Solutions:**
 
 1. **Enable aggressive subsampling:**
+
    - Increase `time_subsample_factor` to 8 or 16
    - Increase `angle_subsample_factor` to 4
    - Lower `max_data_points` threshold
 
-2. **Use low memory mode:**
-   Set `low_memory_mode: true` in performance settings
+2. **Use low memory mode:** Set `low_memory_mode: true` in performance settings
 
-3. **Reduce cache size:**
-   Lower `cache_size_limit_mb` to 500 or less
+3. **Reduce cache size:** Lower `cache_size_limit_mb` to 500 or less
 
 ### Numba Compilation Errors
 
@@ -361,16 +367,19 @@ heterodyne --config my_config.json --method all
 **Solutions:**
 
 1. **Verify Python version:**
+
    ```bash
    python --version  # Should be 3.12+
    ```
 
 2. **Update Numba:**
+
    ```bash
    pip install --upgrade numba
    ```
 
 3. **Disable Numba temporarily:**
+
    ```json
    {
      "performance_settings": {
@@ -394,7 +403,7 @@ heterodyne --config my_config.json --method all
 
 ### For Maximum Accuracy
 
-1. **Disable subsampling**: For small datasets (<100k points)
+1. **Disable subsampling**: For small datasets (\<100k points)
 2. **Use all parameters**: Optimize all 14 parameters when data quality permits
 3. **Multiple optimization methods**: Run both classical and robust
 4. **Increase iteration limits**: For complex parameter spaces
@@ -413,22 +422,19 @@ heterodyne --config my_config.json --method all
 ### Typical Analysis Times
 
 | Dataset Size | Configuration | Time (Classical) | Time (Robust) |
-|--------------|---------------|------------------|---------------|
-| 100k points | Default | 2-5 min | 5-10 min |
-| 500k points | With subsampling | 5-10 min | 10-20 min |
-| 1M points | Aggressive subsampling | 10-15 min | 20-30 min |
-| 4M points | Maximum optimization | 20-30 min | 40-60 min |
+|--------------|---------------|------------------|---------------| | 100k points |
+Default | 2-5 min | 5-10 min | | 500k points | With subsampling | 5-10 min | 10-20 min |
+| 1M points | Aggressive subsampling | 10-15 min | 20-30 min | | 4M points | Maximum
+optimization | 20-30 min | 40-60 min |
 
 **Hardware:** Intel Xeon 8-core, 32GB RAM
 
 ### Expected Speedups
 
-| Optimization | Speedup Factor | Notes |
-|--------------|----------------|-------|
-| Numba JIT | 3-5× | Automatic for core kernels |
-| Subsampling (4×) | 16-20× | <10% chi-squared degradation |
-| Angle filtering | 3-5× | For anisotropic analysis |
-| Combined | 50-100× | All optimizations enabled |
+| Optimization | Speedup Factor | Notes | |--------------|----------------|-------| |
+Numba JIT | 3-5× | Automatic for core kernels | | Subsampling (4×) | 16-20× | \<10%
+chi-squared degradation | | Angle filtering | 3-5× | For anisotropic analysis | |
+Combined | 50-100× | All optimizations enabled |
 
 ## Next Steps
 

@@ -10,9 +10,12 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Major Release - 14-Parameter Heterodyne Model
 
-This release implements the mathematically correct 14-parameter heterodyne model with separate reference and sample transport coefficients, as specified in He et al. PNAS 2024 Equation S-95.
+This release implements the mathematically correct 14-parameter heterodyne model with
+separate reference and sample transport coefficients, as specified in He et al. PNAS
+2024 Equation S-95.
 
-**Migration Required**: All 11-parameter and 7-parameter configurations must be migrated.
+**Migration Required**: All 11-parameter and 7-parameter configurations must be
+migrated.
 
 ```bash
 # Automatic migration
@@ -21,7 +24,9 @@ python -m heterodyne.core.migration input_config.json output_config.json
 
 ### Added
 
-- **14-Parameter Heterodyne Model**: Correctly implements independent g₁_ref and g₁_sample field correlations
+- **14-Parameter Heterodyne Model**: Correctly implements independent g₁_ref and
+  g₁_sample field correlations
+
   - Reference transport (3): `D0_ref`, `alpha_ref`, `D_offset_ref`
   - Sample transport (3): `D0_sample`, `alpha_sample`, `D_offset_sample`
   - Velocity (3): `v0`, `beta`, `v_offset`
@@ -29,28 +34,35 @@ python -m heterodyne.core.migration input_config.json output_config.json
   - Flow angle (1): `phi0`
 
 - **Migration Utilities** (`heterodyne/core/migration.py`):
+
   - Automated 7→14 and 11→14 parameter migration
   - `migrate_config_file()` - Automated config migration with validation
   - `generate_migration_guide()` - Human-readable migration instructions
   - Backward compatibility: initializes sample = reference parameters
 
 - **Example Scripts**:
+
   - `examples/heterodyne_14_param_example.py` - Comprehensive usage examples
   - Demonstrates backward-compatible mode and independent configurations
   - Parameter validation examples and migration workflows
 
 - **Regression Tests** (`heterodyne/tests/test_14_param_regression.py`):
+
   - 7 new tests verifying backward compatibility and numerical stability
   - Test suite: 43/44 tests passing (98% success rate)
 
 ### Fixed
 
 - **Critical Mathematical Bug**: Lines 1143-1144 in `core.py`
+
   - **Before**: `g1_ref = g1_sample = g1` (mathematically incorrect)
-  - **After**: g₁_ref and g₁_sample computed independently (correct per He et al. equation)
+  - **After**: g₁_ref and g₁_sample computed independently (correct per He et al.
+    equation)
 
 - **Parameter Index Bugs** (discovered during validation):
-  - Line 978 (`core.py`): Fixed velocity extraction `parameters[3:6]` → `parameters[6:9]`
+
+  - Line 978 (`core.py`): Fixed velocity extraction `parameters[3:6]` →
+    `parameters[6:9]`
   - Lines 1352-1355 (`core.py`): Fixed parallel function pre-computation
   - Lines 1388, 1407 (`core.py`): Removed invalid `precomputed_D_t` parameter
   - Multiple locations (`classical.py`): Updated hardcoded counts `7/11` → `14`
@@ -70,12 +82,14 @@ python -m heterodyne.core.migration input_config.json output_config.json
 ### Technical Details
 
 **Mathematical Model** (He et al. PNAS 2024, Eq. S-95):
+
 ```
 C₂(t₁, t₂, φ) = f(t₁)f(t₂)|g₁_s|² + [1-f(t₁)][1-f(t₂)]|g₁_r|²
                 + f(t₁)[1-f(t₂)]g₁_r*g₁_s + [1-f(t₁)]f(t₂)g₁_rg₁_s*
 ```
 
 Where:
+
 - g₁_r = exp(-q²/2 ∫Jᵣ(t)dt) from reference transport coefficients
 - g₁_s = exp(-q²/2 ∫Jₛ(t)dt) from sample transport coefficients
 
@@ -428,8 +442,8 @@ heterodyne --method all        # Both classical and robust methods
 ### Added
 
 - **Shell Completion Uninstall Feature**: New
-  `heterodyne --uninstall-completion {bash,zsh,fish,powershell}` command to cleanly remove
-  shell completion
+  `heterodyne --uninstall-completion {bash,zsh,fish,powershell}` command to cleanly
+  remove shell completion
 - **Enhanced Shell Completion System**: Improved reliability and error handling for
   shell completion installation
 - **Cross-Platform Uninstall Support**: Uninstall functionality works across all
@@ -439,8 +453,8 @@ heterodyne --method all        # Both classical and robust methods
 
 ### Fixed
 
-- **heterodyne-config Completion**: Fixed shell completion for `heterodyne-config` command
-  that was not showing correct options
+- **heterodyne-config Completion**: Fixed shell completion for `heterodyne-config`
+  command that was not showing correct options
 - **Import Path Issues**: Resolved relative import issues in completion system that
   caused failures when run as script
 - **Shell Parsing Logic**: Fixed completion parsing logic for proper handling of
@@ -460,8 +474,8 @@ heterodyne --method all        # Both classical and robust methods
 
 ### Developer Experience
 
-- **Bypass Completion File**: Enhanced `heterodyne_completion_bypass.zsh` with support for
-  both commands and all options
+- **Bypass Completion File**: Enhanced `heterodyne_completion_bypass.zsh` with support
+  for both commands and all options
 - **Manual Completion**: Added manual completion triggers (Ctrl-X + c) for when
   automatic completion fails
 - **Convenience Aliases**: Added shortcuts like `hc-iso`, `hc-aniso`, `hc-flow` for
@@ -764,7 +778,8 @@ heterodyne --method all        # Both classical and robust methods
 - **Test Performance**: Fixed config caching test parameter bounds validation
 - **Performance Test Ratio**: Improved chi2_correlation_ratio_regression test with
   workload scaling
-- **Test Cleanup**: Fixed automatic cleanup of heterodyne/heterodyne_results test artifacts
+- **Test Cleanup**: Fixed automatic cleanup of heterodyne/heterodyne_results test
+  artifacts
 - **Performance Baselines Path**: Corrected baseline file path resolution in performance
   tests
 

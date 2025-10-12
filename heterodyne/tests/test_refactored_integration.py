@@ -231,9 +231,7 @@ class TestRefactoredRunAnalysis:
             from heterodyne.cli.run_heterodyne import _create_config_override
 
             # Test override creation
-            override = _create_config_override(
-                mode="heterodyne", method="classical"
-            )
+            override = _create_config_override(mode="heterodyne", method="classical")
 
             # Should create proper override structure
             assert isinstance(override, dict)

@@ -73,10 +73,14 @@ class TestHighComplexityFunctions:
             }
 
             # Test dry run execution (no actual computation)
-            with patch("heterodyne.cli.run_heterodyne.load_experimental_data") as mock_load:
+            with patch(
+                "heterodyne.cli.run_heterodyne.load_experimental_data"
+            ) as mock_load:
                 mock_load.return_value = None
 
-                with patch("heterodyne.cli.run_heterodyne.os.path.exists") as mock_exists:
+                with patch(
+                    "heterodyne.cli.run_heterodyne.os.path.exists"
+                ) as mock_exists:
                     mock_exists.return_value = False
 
                     # Should handle missing data gracefully
@@ -327,7 +331,10 @@ class TestHighComplexityFunctions:
     def test_optimization_functions_parameter_validation(self):
         """Test optimization functions - parameter validation."""
         optimization_functions = [
-            ("heterodyne.optimization.classical", "run_classical_optimization_optimized"),
+            (
+                "heterodyne.optimization.classical",
+                "run_classical_optimization_optimized",
+            ),
             ("heterodyne.optimization.robust", "run_robust_optimization"),
         ]
 
@@ -411,7 +418,9 @@ class TestHighComplexityFunctions:
     def test_mathematical_optimization_functions_convergence(self):
         """Test mathematical optimization functions - convergence properties."""
         try:
-            from heterodyne.core.mathematical_optimization import detect_temporal_symmetry
+            from heterodyne.core.mathematical_optimization import (
+                detect_temporal_symmetry,
+            )
 
             if not self.numpy_available:
                 pytest.skip("NumPy not available for mathematical tests")

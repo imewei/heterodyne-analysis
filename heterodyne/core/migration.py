@@ -93,10 +93,10 @@ class HeterodyneMigration:
 
         # Fraction parameters: initialize with reasonable defaults
         # f(t) = f0 * exp(f1 * (t - f2)) + f3
-        f0 = 0.5    # 50% amplitude
-        f1 = 0.0    # No exponential decay initially
-        f2 = 50.0   # Mid-point time offset
-        f3 = 0.3    # 30% baseline fraction
+        f0 = 0.5  # 50% amplitude
+        f1 = 0.0  # No exponential decay initially
+        f2 = 50.0  # Mid-point time offset
+        f3 = 0.3  # 30% baseline fraction
 
         return [D0, alpha, D_offset, v0, beta, v_offset, f0, f1, f2, f3, phi0]
 
@@ -142,11 +142,20 @@ class HeterodyneMigration:
         D_offset_sample = D_offset
 
         return [
-            D0_ref, alpha_ref, D_offset_ref,
-            D0_sample, alpha_sample, D_offset_sample,
-            v0, beta, v_offset,
-            f0, f1, f2, f3,
-            phi0
+            D0_ref,
+            alpha_ref,
+            D_offset_ref,
+            D0_sample,
+            alpha_sample,
+            D_offset_sample,
+            v0,
+            beta,
+            v_offset,
+            f0,
+            f1,
+            f2,
+            f3,
+            phi0,
         ]
 
     @staticmethod
@@ -171,7 +180,7 @@ class HeterodyneMigration:
         input_path = Path(input_path)
 
         # Load legacy config
-        with open(input_path, 'r') as f:
+        with open(input_path) as f:
             legacy_config = json.load(f)
 
         # Detect version
@@ -201,14 +210,25 @@ class HeterodyneMigration:
 
             migrated_config["initial_parameters"]["values"] = new_params
             migrated_config["initial_parameters"]["parameter_names"] = [
-                "D0_ref", "alpha_ref", "D_offset_ref",
-                "D0_sample", "alpha_sample", "D_offset_sample",
-                "v0", "beta", "v_offset",
-                "f0", "f1", "f2", "f3",
-                "phi0"
+                "D0_ref",
+                "alpha_ref",
+                "D_offset_ref",
+                "D0_sample",
+                "alpha_sample",
+                "D_offset_sample",
+                "v0",
+                "beta",
+                "v_offset",
+                "f0",
+                "f1",
+                "f2",
+                "f3",
+                "phi0",
             ]
 
-            logger.info(f"Migrated parameters from 7 to 14: {old_params} -> {new_params}")
+            logger.info(
+                f"Migrated parameters from 7 to 14: {old_params} -> {new_params}"
+            )
 
         elif version == "11-param-heterodyne":
             old_params = legacy_config["initial_parameters"]["values"]
@@ -216,17 +236,30 @@ class HeterodyneMigration:
 
             migrated_config["initial_parameters"]["values"] = new_params
             migrated_config["initial_parameters"]["parameter_names"] = [
-                "D0_ref", "alpha_ref", "D_offset_ref",
-                "D0_sample", "alpha_sample", "D_offset_sample",
-                "v0", "beta", "v_offset",
-                "f0", "f1", "f2", "f3",
-                "phi0"
+                "D0_ref",
+                "alpha_ref",
+                "D_offset_ref",
+                "D0_sample",
+                "alpha_sample",
+                "D_offset_sample",
+                "v0",
+                "beta",
+                "v_offset",
+                "f0",
+                "f1",
+                "f2",
+                "f3",
+                "phi0",
             ]
 
-            logger.info(f"Migrated parameters from 11 to 14: {old_params} -> {new_params}")
+            logger.info(
+                f"Migrated parameters from 11 to 14: {old_params} -> {new_params}"
+            )
 
         elif version == "14-param-heterodyne":
-            logger.info("Config is already 14-parameter heterodyne, no migration needed")
+            logger.info(
+                "Config is already 14-parameter heterodyne, no migration needed"
+            )
 
         elif version == "3-param-static":
             raise ValueError(
@@ -243,13 +276,13 @@ class HeterodyneMigration:
             "migration_note": (
                 "Migrated from legacy model to heterodyne. "
                 "Fraction parameters (f0-f3) use default values and may need tuning."
-            )
+            ),
         }
 
         # Save if output path provided
         if output_path:
             output_path = Path(output_path)
-            with open(output_path, 'w') as f:
+            with open(output_path, "w") as f:
                 json.dump(migrated_config, f, indent=2)
             logger.info(f"Saved migrated config to {output_path}")
 
@@ -272,7 +305,7 @@ class HeterodyneMigration:
         """
         config_path = Path(config_path)
 
-        with open(config_path, 'r') as f:
+        with open(config_path) as f:
             config = json.load(f)
 
         version = HeterodyneMigration.detect_config_version(config)
@@ -398,7 +431,7 @@ See example configs in heterodyne/config/templates/
 """
 
         else:
-            guide += f"""
+            guide += """
 Unknown configuration format.
 
 Cannot determine migration path. Please create a new 11-parameter
@@ -433,9 +466,7 @@ def main():
             return 1
 
         try:
-            migrated = HeterodyneMigration.migrate_config_file(
-                args.input, args.output
-            )
+            migrated = HeterodyneMigration.migrate_config_file(args.input, args.output)
             print(f"✅ Successfully migrated {args.input} -> {args.output}")
             print("\nMigration summary:")
             print(json.dumps(migrated.get("migration_info", {}), indent=2))

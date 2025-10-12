@@ -130,7 +130,9 @@ class HeterodyneCommandPlugin(CompletionPlugin):
             return self._complete_heterodyne_gpu(context)
         return []
 
-    def _complete_heterodyne(self, context: CompletionContext) -> list[CompletionResult]:
+    def _complete_heterodyne(
+        self, context: CompletionContext
+    ) -> list[CompletionResult]:
         """Complete main heterodyne command."""
         if not context.words or len(context.words) == 1:
             # Main options

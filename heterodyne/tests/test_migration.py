@@ -6,8 +6,10 @@ Tests migration from legacy 7-parameter laminar flow model to
 """
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
+
 from heterodyne.core.migration import HeterodyneMigration
 
 
@@ -18,8 +20,7 @@ class TestConfigVersionDetection:
         """Test detection of 11-parameter heterodyne config."""
         config = {
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0]
+                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0]
             }
         }
         version = HeterodyneMigration.detect_config_version(config)
@@ -39,7 +40,7 @@ class TestConfigVersionDetection:
         """Test detection of 3-parameter static config."""
         config = {
             "analysis_settings": {"static_mode": True},
-            "initial_parameters": {"values": [100.0, 0.0, 10.0]}
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
         version = HeterodyneMigration.detect_config_version(config)
         assert version == "3-param-static"
@@ -69,14 +70,16 @@ class TestParameterMigration:
 
         # Velocity parameters derived
         assert new_params[3] == legacy_params[3] * 10  # v0 from gamma_dot_t0
-        assert new_params[4] == legacy_params[4]        # beta unchanged
-        assert new_params[5] == legacy_params[5] * 10  # v_offset from gamma_dot_t_offset
+        assert new_params[4] == legacy_params[4]  # beta unchanged
+        assert (
+            new_params[5] == legacy_params[5] * 10
+        )  # v_offset from gamma_dot_t_offset
 
         # Fraction parameters use defaults
-        assert new_params[6] == 0.5   # f0
-        assert new_params[7] == 0.0   # f1
+        assert new_params[6] == 0.5  # f0
+        assert new_params[7] == 0.0  # f1
         assert new_params[8] == 50.0  # f2
-        assert new_params[9] == 0.3   # f3
+        assert new_params[9] == 0.3  # f3
 
         # Flow angle unchanged
         assert new_params[10] == legacy_params[6]  # phi0
@@ -97,18 +100,23 @@ class TestConfigFileMigration:
             "initial_parameters": {
                 "values": [1324.1, -0.014, -0.674, 0.003, -0.909, 0.0, 0.0],
                 "parameter_names": [
-                    "D0", "alpha", "D_offset",
-                    "gamma_dot_t0", "beta", "gamma_dot_t_offset", "phi0"
-                ]
+                    "D0",
+                    "alpha",
+                    "D_offset",
+                    "gamma_dot_t0",
+                    "beta",
+                    "gamma_dot_t_offset",
+                    "phi0",
+                ],
             },
             "analyzer_parameters": {
                 "temporal": {"dt": 0.1},
-                "scattering": {"wavevector_q": 0.0054}
-            }
+                "scattering": {"wavevector_q": 0.0054},
+            },
         }
 
         input_file = tmp_path / "legacy_config.json"
-        with open(input_file, 'w') as f:
+        with open(input_file, "w") as f:
             json.dump(legacy_config, f)
 
         # Migrate
@@ -117,19 +125,37 @@ class TestConfigFileMigration:
 
         # Verify migration to 14 parameters
         assert migrated["initial_parameters"]["values"] == [
-            1324.1, -0.014, -0.674,  # D_ref params
-            1324.1, -0.014, -0.674,  # D_sample params (initially equal to ref)
-            0.03, -0.909, 0.0,       # v params (0.003*10, beta, 0.0*10)
-            0.5, 0.0, 50.0, 0.3,     # f params (defaults)
-            0.0                       # phi0
+            1324.1,
+            -0.014,
+            -0.674,  # D_ref params
+            1324.1,
+            -0.014,
+            -0.674,  # D_sample params (initially equal to ref)
+            0.03,
+            -0.909,
+            0.0,  # v params (0.003*10, beta, 0.0*10)
+            0.5,
+            0.0,
+            50.0,
+            0.3,  # f params (defaults)
+            0.0,  # phi0
         ]
 
         assert migrated["initial_parameters"]["parameter_names"] == [
-            "D0_ref", "alpha_ref", "D_offset_ref",
-            "D0_sample", "alpha_sample", "D_offset_sample",
-            "v0", "beta", "v_offset",
-            "f0", "f1", "f2", "f3",
-            "phi0"
+            "D0_ref",
+            "alpha_ref",
+            "D_offset_ref",
+            "D0_sample",
+            "alpha_sample",
+            "D_offset_sample",
+            "v0",
+            "beta",
+            "v_offset",
+            "f0",
+            "f1",
+            "f2",
+            "f3",
+            "phi0",
         ]
 
         # Migration metadata should be added
@@ -141,7 +167,7 @@ class TestConfigFileMigration:
         assert output_file.exists()
 
         # Verify saved file matches
-        with open(output_file, 'r') as f:
+        with open(output_file) as f:
             saved = json.load(f)
         assert saved == migrated
 
@@ -151,15 +177,13 @@ class TestConfigFileMigration:
             "analysis_settings": {
                 "static_mode": True,
                 "static_submode": "isotropic",
-                "other_setting": "value"
+                "other_setting": "value",
             },
-            "initial_parameters": {
-                "values": [100.0, 0.0, 10.0]
-            }
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
 
         input_file = tmp_path / "static_config.json"
-        with open(input_file, 'w') as f:
+        with open(input_file, "w") as f:
             json.dump(legacy_config, f)
 
         # Should raise error for 3-param static
@@ -170,19 +194,25 @@ class TestConfigFileMigration:
         """Test that 11-param configs are migrated to 14-parameter."""
         heterodyne_config = {
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0],
+                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0],
                 "parameter_names": [
-                    "D0", "alpha", "D_offset",
-                    "v0", "beta", "v_offset",
-                    "f0", "f1", "f2", "f3",
-                    "phi0"
-                ]
+                    "D0",
+                    "alpha",
+                    "D_offset",
+                    "v0",
+                    "beta",
+                    "v_offset",
+                    "f0",
+                    "f1",
+                    "f2",
+                    "f3",
+                    "phi0",
+                ],
             }
         }
 
         input_file = tmp_path / "heterodyne_config.json"
-        with open(input_file, 'w') as f:
+        with open(input_file, "w") as f:
             json.dump(heterodyne_config, f)
 
         # Migrate to 14 parameters
@@ -190,19 +220,37 @@ class TestConfigFileMigration:
 
         # Should expand to 14 parameters with sample=reference
         assert migrated["initial_parameters"]["values"] == [
-            100.0, -0.5, 10.0,  # D_ref
-            100.0, -0.5, 10.0,  # D_sample (initially = ref)
-            0.1, 0.0, 0.01,     # velocity
-            0.5, 0.0, 50.0, 0.3,  # fraction
-            0.0                  # phi0
+            100.0,
+            -0.5,
+            10.0,  # D_ref
+            100.0,
+            -0.5,
+            10.0,  # D_sample (initially = ref)
+            0.1,
+            0.0,
+            0.01,  # velocity
+            0.5,
+            0.0,
+            50.0,
+            0.3,  # fraction
+            0.0,  # phi0
         ]
 
         assert migrated["initial_parameters"]["parameter_names"] == [
-            "D0_ref", "alpha_ref", "D_offset_ref",
-            "D0_sample", "alpha_sample", "D_offset_sample",
-            "v0", "beta", "v_offset",
-            "f0", "f1", "f2", "f3",
-            "phi0"
+            "D0_ref",
+            "alpha_ref",
+            "D_offset_ref",
+            "D0_sample",
+            "alpha_sample",
+            "D_offset_sample",
+            "v0",
+            "beta",
+            "v_offset",
+            "f0",
+            "f1",
+            "f2",
+            "f3",
+            "phi0",
         ]
 
 
@@ -218,7 +266,7 @@ class TestMigrationGuide:
         }
 
         config_file = tmp_path / "test_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f)
 
         guide = HeterodyneMigration.generate_migration_guide(config_file)
@@ -239,13 +287,12 @@ class TestMigrationGuide:
         """Test migration guide for 11-param config (needs migration to 14)."""
         config = {
             "initial_parameters": {
-                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01,
-                          0.5, 0.0, 50.0, 0.3, 0.0]
+                "values": [100.0, -0.5, 10.0, 0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0]
             }
         }
 
         config_file = tmp_path / "heterodyne_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f)
 
         guide = HeterodyneMigration.generate_migration_guide(config_file)
@@ -257,15 +304,18 @@ class TestMigrationGuide:
         """Test migration guide for static config."""
         config = {
             "analysis_settings": {"static_mode": True},
-            "initial_parameters": {"values": [100.0, 0.0, 10.0]}
+            "initial_parameters": {"values": [100.0, 0.0, 10.0]},
         }
 
         config_file = tmp_path / "static_config.json"
-        with open(config_file, 'w') as f:
+        with open(config_file, "w") as f:
             json.dump(config, f)
 
         guide = HeterodyneMigration.generate_migration_guide(config_file)
 
         # Should indicate manual migration needed
         assert "3-parameter static" in guide
-        assert "Automatic migration not supported" in guide or "Static mode has been removed" in guide
+        assert (
+            "Automatic migration not supported" in guide
+            or "Static mode has been removed" in guide
+        )

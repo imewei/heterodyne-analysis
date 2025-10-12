@@ -447,7 +447,9 @@ class TestDistributedOptimizationPerformance:
         unique_nodes = set(node_ids)
 
         # With multiprocessing, should have at least one successful task
-        assert len(unique_nodes) >= 1, f"Expected at least 1 unique node, got {len(unique_nodes)} from {len(node_ids)} successful results out of {len(all_results)} total"
+        assert (
+            len(unique_nodes) >= 1
+        ), f"Expected at least 1 unique node, got {len(unique_nodes)} from {len(node_ids)} successful results out of {len(all_results)} total"
 
         coordinator.shutdown()
 

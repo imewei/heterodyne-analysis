@@ -343,7 +343,6 @@ class XPCSDataLoader:
         # Perform basic data quality checks
         self._validate_loaded_data(c2_experimental, data["phi_angles_list"])
 
-
         # Get shape info for logging
         phi_shape = getattr(
             data["phi_angles_list"], "shape", f"list[{len(data['phi_angles_list'])}]"
@@ -831,7 +830,6 @@ class XPCSDataLoader:
             )
 
         logger.info("Basic data quality validation completed")
-
 
     def _load_from_npz(self, npz_path: str) -> dict[str, Any]:
         """Load data from NPZ file (for testing purposes)."""

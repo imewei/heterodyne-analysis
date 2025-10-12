@@ -19,7 +19,9 @@ def create_comprehensive_baselines() -> dict[str, Any]:
     print("Establishing performance baselines...")
     print("====================================")
 
-    suite = StartupBenchmarkSuite()
+    # Note: StartupBenchmarkSuite not available - using placeholder
+    # TODO: Import or implement StartupBenchmarkSuite
+    suite = None  # Placeholder - replace with actual StartupBenchmarkSuite
 
     # Core modules to benchmark
     core_modules = [

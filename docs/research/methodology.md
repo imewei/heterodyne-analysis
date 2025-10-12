@@ -3,8 +3,8 @@
 ## Overview
 
 This document provides comprehensive documentation of the theoretical framework,
-computational methods, and validation procedures for the heterodyne-analysis package. The
-methodology is based on the transport coefficient approach for characterizing
+computational methods, and validation procedures for the heterodyne-analysis package.
+The methodology is based on the transport coefficient approach for characterizing
 nonequilibrium dynamics in soft matter systems via X-ray Photon Correlation Spectroscopy
 (XPCS).
 
@@ -15,15 +15,21 @@ nonequilibrium dynamics in soft matter systems via X-ray Photon Correlation Spec
 
 ### Physical Model
 
-The heterodyne-analysis package implements the **14-parameter two-component heterodyne scattering model** from He et al. PNAS 2024 (Equation S-95) for analyzing time-dependent intensity correlation functions in X-ray Photon Correlation Spectroscopy (XPCS) measurements of soft matter systems under nonequilibrium conditions.
+The heterodyne-analysis package implements the **14-parameter two-component heterodyne
+scattering model** from He et al. PNAS 2024 (Equation S-95) for analyzing time-dependent
+intensity correlation functions in X-ray Photon Correlation Spectroscopy (XPCS)
+measurements of soft matter systems under nonequilibrium conditions.
 
 #### Two-Component Heterodyne Scattering
 
 The heterodyne model describes scattering from a system with two distinct components:
-- **Reference component**: Typically a tracer or reference material with known properties
+
+- **Reference component**: Typically a tracer or reference material with known
+  properties
 - **Sample component**: The material of interest undergoing nonequilibrium dynamics
 
 Each component has:
+
 - Independent transport coefficients (Jᵣ and Jₛ)
 - Time-dependent field correlation functions (g₁_ref and g₁_sample)
 - Distinct fractions (xᵣ and xₛ) that may vary with time
@@ -33,10 +39,11 @@ Each component has:
 The complete two-time correlation function for heterodyne scattering:
 
 $$c_2(\\vec{q}, t_1, t_2, \\phi) = 1 + \\frac{\\beta}{f^2} \\left\[
-    \\left[x_r(t_1)x_r(t_2)\\right]^2 \\exp(-q^2\\int_{t_1}^{t_2} J_r(t)dt) +
-    \\left[x_s(t_1)x_s(t_2)\\right]^2 \\exp(-q^2\\int_{t_1}^{t_2} J_s(t)dt) +
-    2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2) \\exp\\left(-\\frac{1}{2}q^2\\int_{t_1}^{t_2}\[J_s(t)+J_r(t)\]dt\\right) \\cos\\left[q \\cos(\\phi)\\int_{t_1}^{t_2} v(t)dt\\right]
-\\right]$$
+\\left[x_r(t_1)x_r(t_2)\\right]^2 \\exp(-q^2\\int\_{t_1}^{t_2} J_r(t)dt) +
+\\left[x_s(t_1)x_s(t_2)\\right]^2 \\exp(-q^2\\int\_{t_1}^{t_2} J_s(t)dt) +
+2x_r(t_1)x_r(t_2)x_s(t_1)x_s(t_2)
+\\exp\\left(-\\frac{1}{2}q^2\\int\_{t_1}^{t_2}[J_s(t)+J_r(t)]dt\\right) \\cos\\left\[q
+\\cos(\\phi)\\int\_{t_1}^{t_2} v(t)dt\\right\] \\right\]$$
 
 where the normalization factor is:
 
@@ -45,33 +52,44 @@ $$f^2 = \\left[x_s(t_1)^2 + x_r(t_1)^2\\right]\\left[x_s(t_2)^2 + x_r(t_2)^2\\ri
 **Key Features of Equation S-95:**
 
 1. **Two-time correlation structure**: c₂(t₁,t₂) is a full matrix, not just τ = t₂ - t₁
+
    - Each element represents correlation between times t₁ and t₂
    - Captures memory effects and non-stationary dynamics
    - Essential for nonequilibrium systems
 
 2. **Three correlation terms**:
+
    - **Reference autocorrelation**: Pure reference component dynamics
    - **Sample autocorrelation**: Pure sample component dynamics
-   - **Cross-correlation**: Interference between reference and sample, modulated by velocity
+   - **Cross-correlation**: Interference between reference and sample, modulated by
+     velocity
 
-3. **Separate transport coefficients**: Jᵣ(t) and Jₛ(t) allow different diffusive behaviors
+3. **Separate transport coefficients**: Jᵣ(t) and Jₛ(t) allow different diffusive
+   behaviors
+
    - Reference may exhibit normal diffusion while sample shows anomalous transport
    - Captures distinct physical processes in each component
 
 4. **Time-dependent fractions**: xₛ(t) and xᵣ(t) = 1 - xₛ(t)
+
    - Compositional changes during measurement
    - Mixing, phase separation, or aggregation dynamics
 
 5. **Velocity cross-term**: cos[q cos(φ)∫v(t)dt]
+
    - Flow-induced decorrelation between components
    - Angular dependence through φ (flow direction relative to scattering vector)
    - Captures shear-induced effects
 
 **Physical Interpretation:**
 
-The heterodyne correlation arises from coherent scattering between reference and sample fields. Unlike homodyne scattering (intensity-intensity correlation), heterodyne scattering provides direct access to field correlations through the cross-term, enabling measurement of both amplitude and phase information.
+The heterodyne correlation arises from coherent scattering between reference and sample
+fields. Unlike homodyne scattering (intensity-intensity correlation), heterodyne
+scattering provides direct access to field correlations through the cross-term, enabling
+measurement of both amplitude and phase information.
 
-For equilibrium systems with no flow (v=0) and static fractions, Equation S-95 reduces to simpler forms, but retains separate transport dynamics for each component.
+For equilibrium systems with no flow (v=0) and static fractions, Equation S-95 reduces
+to simpler forms, but retains separate transport dynamics for each component.
 
 ### 14-Parameter Heterodyne Model
 
@@ -79,91 +97,98 @@ The complete heterodyne model uses 14 parameters organized into 5 groups:
 
 #### 1. Reference Transport (3 parameters)
 
-**Power-law transport coefficient:**
-$$J_r(t) = J_{0,\\text{ref}} \\cdot t^{\\alpha_{\\text{ref}}} + J_{\\text{offset},\\text{ref}}$$
+**Power-law transport coefficient:** $$J_r(t) = J\_{0,\\text{ref}} \\cdot
+t^{\\alpha\_{\\text{ref}}} + J\_{\\text{offset},\\text{ref}}$$
 
 | Parameter | Symbol | Units | Physical Meaning |
-|-----------|--------|-------|------------------|
-| D₀_ref | J₀_ref | Å²/s | Reference transport coefficient at t=1s |
-| α_ref | α_ref | - | Reference transport exponent (anomalous diffusion) |
-| D_offset_ref | J_offset_ref | Å²/s | Reference baseline transport |
+|-----------|--------|-------|------------------| | D₀_ref | J₀_ref | Å²/s | Reference
+transport coefficient at t=1s | | α_ref | α_ref | - | Reference transport exponent
+(anomalous diffusion) | | D_offset_ref | J_offset_ref | Å²/s | Reference baseline
+transport |
 
 **Physical interpretation:**
+
 - α_ref = 0: Normal diffusion (Brownian motion)
 - α_ref > 0: Superdiffusion (active transport, convection)
 - α_ref < 0: Subdiffusion (caging, crowding)
 
-**Relationship to diffusion:** For equilibrium systems, J = 6D where D is the diffusion coefficient. Parameters labeled "D" in the code represent transport coefficients J.
+**Relationship to diffusion:** For equilibrium systems, J = 6D where D is the diffusion
+coefficient. Parameters labeled "D" in the code represent transport coefficients J.
 
 #### 2. Sample Transport (3 parameters)
 
-**Power-law transport coefficient:**
-$$J_s(t) = J_{0,\\text{sample}} \\cdot t^{\\alpha_{\\text{sample}}} + J_{\\text{offset},\\text{sample}}$$
+**Power-law transport coefficient:** $$J_s(t) = J\_{0,\\text{sample}} \\cdot
+t^{\\alpha\_{\\text{sample}}} + J\_{\\text{offset},\\text{sample}}$$
 
 | Parameter | Symbol | Units | Physical Meaning |
-|-----------|--------|-------|------------------|
-| D₀_sample | J₀_sample | Å²/s | Sample transport coefficient at t=1s |
-| α_sample | α_sample | - | Sample transport exponent (anomalous diffusion) |
-| D_offset_sample | J_offset_sample | Å²/s | Sample baseline transport |
+|-----------|--------|-------|------------------| | D₀_sample | J₀_sample | Å²/s |
+Sample transport coefficient at t=1s | | α_sample | α_sample | - | Sample transport
+exponent (anomalous diffusion) | | D_offset_sample | J_offset_sample | Å²/s | Sample
+baseline transport |
 
-**Key insight:** Independent transport allows reference and sample to exhibit different dynamics:
+**Key insight:** Independent transport allows reference and sample to exhibit different
+dynamics:
+
 - Reference: Normal diffusion (α_ref = 0)
 - Sample: Subdiffusion (α_sample < 0) due to crowding
 - Captures heterogeneous dynamics in complex fluids
 
 #### 3. Velocity (3 parameters)
 
-**Time-dependent velocity coefficient:**
-$$v(t) = v_0 \\cdot t^\\beta + v_{\\text{offset}}$$
+**Time-dependent velocity coefficient:** $$v(t) = v_0 \\cdot t^\\beta +
+v\_{\\text{offset}}$$
 
 | Parameter | Symbol | Units | Physical Meaning |
-|-----------|--------|-------|------------------|
-| v₀ | v₀ | nm/s | Velocity coefficient at t=1s |
-| β | β | - | Velocity time-dependence exponent |
-| v_offset | v_offset | nm/s | Baseline velocity |
+|-----------|--------|-------|------------------| | v₀ | v₀ | nm/s | Velocity
+coefficient at t=1s | | β | β | - | Velocity time-dependence exponent | | v_offset |
+v_offset | nm/s | Baseline velocity |
 
 **Physical significance:**
+
 - β = 0: Constant flow velocity
 - β > 0: Accelerating flow
 - β < 0: Decelerating flow
 
-**Role in cross-correlation:** Velocity appears only in the cross-term as cos[q cos(φ)∫v(t)dt], modulating interference between reference and sample components.
+**Role in cross-correlation:** Velocity appears only in the cross-term as cos\[q
+cos(φ)∫v(t)dt\], modulating interference between reference and sample components.
 
 #### 4. Fraction (4 parameters)
 
-**Time-dependent sample fraction:**
-$$x_s(t) = f_0 \\cdot \\exp\\left[f_1 \\cdot (t - f_2)\\right] + f_3$$
+**Time-dependent sample fraction:** $$x_s(t) = f_0 \\cdot \\exp\\left\[f_1 \\cdot (t -
+f_2)\\right\] + f_3$$
 
 with constraint: 0 ≤ xₛ(t) ≤ 1, and xᵣ(t) = 1 - xₛ(t)
 
 | Parameter | Symbol | Units | Physical Meaning |
-|-----------|--------|-------|------------------|
-| f₀ | f₀ | - | Fraction amplitude (exponential term) |
-| f₁ | f₁ | s⁻¹ | Fraction rate (exponential growth/decay) |
-| f₂ | f₂ | s | Fraction time offset (delay/shift) |
-| f₃ | f₃ | - | Fraction baseline (steady-state value) |
+|-----------|--------|-------|------------------| | f₀ | f₀ | - | Fraction amplitude
+(exponential term) | | f₁ | f₁ | s⁻¹ | Fraction rate (exponential growth/decay) | | f₂ |
+f₂ | s | Fraction time offset (delay/shift) | | f₃ | f₃ | - | Fraction baseline
+(steady-state value) |
 
 **Physical interpretation:**
+
 - f₁ > 0: Sample fraction increases (aggregation, phase separation)
 - f₁ < 0: Sample fraction decreases (dissolution, dispersal)
 - f₁ = 0: Static fractions (no compositional change)
 - f₃: Asymptotic fraction as t → ∞
 
 **Two-time structure:** Critical for Equation S-95:
+
 - Fractions evaluated at both t₁ and t₂ independently
 - Normalization f² depends on fractions at both times
 - Captures non-stationary compositional dynamics
 
 #### 5. Flow Angle (1 parameter)
 
-**Flow direction relative to scattering:**
-$$\\phi = \\phi_0 - \\phi_{\\text{scattering}}$$
+**Flow direction relative to scattering:** $$\\phi = \\phi_0 -
+\\phi\_{\\text{scattering}}$$
 
 | Parameter | Symbol | Units | Physical Meaning |
-|-----------|--------|-------|------------------|
-| φ₀ | φ₀ | degrees | Flow direction angle |
+|-----------|--------|-------|------------------| | φ₀ | φ₀ | degrees | Flow direction
+angle |
 
 **Physical significance:**
+
 - Appears in cross-term: cos[q cos(φ)∫v(t)dt]
 - φ = 0°: Flow parallel to scattering vector (maximum effect)
 - φ = 90°: Flow perpendicular to scattering vector (no effect)
@@ -173,30 +198,38 @@ $$\\phi = \\phi_0 - \\phi_{\\text{scattering}}$$
 
 **Field correlation functions for each component:**
 
-$$g_{1,r}(t_1, t_2) = \\exp\\left(-\\frac{q^2}{2} \\int_{t_1}^{t_2} J_r(t) dt\\right)$$
+$$g\_{1,r}(t_1, t_2) = \\exp\\left(-\\frac{q^2}{2} \\int\_{t_1}^{t_2} J_r(t)
+dt\\right)$$
 
-$$g_{1,s}(t_1, t_2) = \\exp\\left(-\\frac{q^2}{2} \\int_{t_1}^{t_2} J_s(t) dt\\right)$$
+$$g\_{1,s}(t_1, t_2) = \\exp\\left(-\\frac{q^2}{2} \\int\_{t_1}^{t_2} J_s(t)
+dt\\right)$$
 
 **Key relationships:**
+
 - Reference autocorrelation: g₁_r² = exp(-q²∫Jᵣdt)
 - Sample autocorrelation: g₁_s² = exp(-q²∫Jₛdt)
 - Cross-correlation: g₁_r·g₁_s = exp(-½q²∫[Jₛ+Jᵣ]dt)
 
-**Implementation note:** The code computes g₁ functions (with factor of 1/2 in exponent) and then squares them for autocorrelation terms, naturally producing the correct factors in Equation S-95.
+**Implementation note:** The code computes g₁ functions (with factor of 1/2 in exponent)
+and then squares them for autocorrelation terms, naturally producing the correct factors
+in Equation S-95.
 
 ### Physical Constraints
 
 **Parameter bounds ensure physical validity:**
 
 1. **Transport positivity**: J(t) > 0 for all t
+
    - Implemented via optimization bounds
    - Ensures positive diffusion coefficients
 
 2. **Fraction constraints**: 0 ≤ xₛ(t) ≤ 1
+
    - Enforced by np.clip() in implementation
    - Physical requirement for mixing fractions
 
 3. **Numerical stability**:
+
    - Exponential arguments clipped to prevent overflow
    - Time zero handling for negative exponents (β < 0, α < 0)
    - Threshold values for numerical stability
@@ -206,15 +239,14 @@ $$g_{1,s}(t_1, t_2) = \\exp\\left(-\\frac{q^2}{2} \\int_{t_1}^{t_2} J_s(t) dt\\r
 **14-parameter heterodyne vs. simpler models:**
 
 | Feature | 14-param Heterodyne | 7-param Laminar Flow | 3-param Static |
-|---------|---------------------|----------------------|----------------|
-| Components | 2 (ref + sample) | 1 | 1 |
-| Transport | Independent Jᵣ, Jₛ | Single J | Single J |
-| Fractions | Time-dependent xₛ(t) | Static | N/A |
-| Cross-correlation | Yes (with velocity) | N/A | N/A |
-| Velocity | Time-dependent v(t) | Time-dependent | Zero |
-| Parameters | 14 | 7 | 3 |
+|---------|---------------------|----------------------|----------------| | Components |
+2 (ref + sample) | 1 | 1 | | Transport | Independent Jᵣ, Jₛ | Single J | Single J | |
+Fractions | Time-dependent xₛ(t) | Static | N/A | | Cross-correlation | Yes (with
+velocity) | N/A | N/A | | Velocity | Time-dependent v(t) | Time-dependent | Zero | |
+Parameters | 14 | 7 | 3 |
 
 **When to use 14-parameter model:**
+
 - Two-component systems (tracer + sample)
 - Nonequilibrium dynamics
 - Time-varying composition

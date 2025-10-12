@@ -53,7 +53,9 @@ class TestCoreAPIAvailability:
         ]
 
         for func_name in kernel_functions:
-            assert hasattr(heterodyne, func_name), f"Missing kernel function: {func_name}"
+            assert hasattr(
+                heterodyne, func_name
+            ), f"Missing kernel function: {func_name}"
             func = getattr(heterodyne, func_name)
             assert callable(func), f"Kernel function {func_name} is not callable"
 
@@ -77,7 +79,9 @@ class TestCoreAPIAvailability:
         ]
 
         for func_name in config_functions:
-            assert hasattr(heterodyne, func_name), f"Missing config function: {func_name}"
+            assert hasattr(
+                heterodyne, func_name
+            ), f"Missing config function: {func_name}"
 
     def test_performance_monitoring_available(self):
         """Test that performance monitoring functions are available."""

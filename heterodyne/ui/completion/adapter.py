@@ -218,7 +218,11 @@ class LegacyCompletionAdapter:
                     return [e for e in examples if e.startswith(prefix)]
 
                 def parameter_ranges_completer(prefix, parsed_args, **kwargs):
-                    examples = ["D0:10-100,alpha:-1-1", "D0_ref:1-100", "alpha_ref:-2-2"]
+                    examples = [
+                        "D0:10-100,alpha:-1-1",
+                        "D0_ref:1-100",
+                        "alpha_ref:-2-2",
+                    ]
                     return [e for e in examples if e.startswith(prefix)]
 
                 # Attach completers to actions
@@ -226,11 +230,7 @@ class LegacyCompletionAdapter:
                     # Core options
                     if action.dest == "method":
                         action.completer = method_completer
-                    elif action.dest == "config":
-                        action.completer = config_completer
-                    elif action.dest == "data":
-                        action.completer = config_completer
-                    elif action.dest == "output":
+                    elif action.dest in {"config", "data", "output"}:
                         action.completer = config_completer
                     elif action.dest == "output_dir":
                         action.completer = dir_completer
@@ -240,9 +240,7 @@ class LegacyCompletionAdapter:
                         action.completer = phi_angles_completer
 
                     # Shell completion
-                    elif action.dest == "install_completion":
-                        action.completer = shell_completer
-                    elif action.dest == "uninstall_completion":
+                    elif action.dest in {"install_completion", "uninstall_completion"}:
                         action.completer = shell_completer
 
                     # Distributed computing

@@ -2,13 +2,15 @@
 
 ## Common Issues and Solutions
 
-This guide provides solutions to frequently encountered problems when using the heterodyne-analysis package.
+This guide provides solutions to frequently encountered problems when using the
+heterodyne-analysis package.
 
 ## Import and Module Errors
 
 ### ModuleNotFoundError: No module named 'heterodyne'
 
 **Problem:**
+
 ```python
 >>> from heterodyne.analysis.core import HeterodyneAnalysisCore
 ModuleNotFoundError: No module named 'heterodyne'
@@ -17,17 +19,20 @@ ModuleNotFoundError: No module named 'heterodyne'
 **Solutions:**
 
 1. **Verify installation:**
+
    ```bash
    pip list | grep heterodyne
    # Should show: heterodyne-analysis  x.x.x
    ```
 
 2. **Reinstall package:**
+
    ```bash
    pip install --upgrade heterodyne-analysis[all]
    ```
 
 3. **Check Python environment:**
+
    ```bash
    which python
    which pip
@@ -35,6 +40,7 @@ ModuleNotFoundError: No module named 'heterodyne'
    ```
 
 4. **Activate correct environment:**
+
    ```bash
    conda activate heterodyne
    # or
@@ -44,6 +50,7 @@ ModuleNotFoundError: No module named 'heterodyne'
 ### ImportError: cannot import name 'load_xpcs_data'
 
 **Problem:**
+
 ```python
 from heterodyne.data.xpcs_loader import load_xpcs_data
 ImportError: cannot import name 'load_xpcs_data' from 'heterodyne.data.xpcs_loader'
@@ -52,6 +59,7 @@ ImportError: cannot import name 'load_xpcs_data' from 'heterodyne.data.xpcs_load
 **Solutions:**
 
 1. **Verify correct import path:**
+
    ```python
    # Correct import
    from heterodyne.data.xpcs_loader import load_xpcs_data
@@ -61,12 +69,14 @@ ImportError: cannot import name 'load_xpcs_data' from 'heterodyne.data.xpcs_load
    ```
 
 2. **Check package version:**
+
    ```bash
    python -c "import heterodyne; print(heterodyne.__version__)"
    # Should be 1.0.0 or later
    ```
 
 3. **Update to latest version:**
+
    ```bash
    pip install --upgrade heterodyne-analysis
    ```
@@ -74,6 +84,7 @@ ImportError: cannot import name 'load_xpcs_data' from 'heterodyne.data.xpcs_load
 ### Module has no attribute Error
 
 **Problem:**
+
 ```python
 AttributeError: module 'heterodyne.analysis.core' has no attribute 'HeterodyneAnalysisCore'
 ```
@@ -81,6 +92,7 @@ AttributeError: module 'heterodyne.analysis.core' has no attribute 'HeterodyneAn
 **Solutions:**
 
 1. **Verify class name:**
+
    ```python
    # Correct usage
    from heterodyne.analysis.core import HeterodyneAnalysisCore
@@ -88,12 +100,14 @@ AttributeError: module 'heterodyne.analysis.core' has no attribute 'HeterodyneAn
    ```
 
 2. **Check for circular imports:**
+
    ```python
    # Don't name your file 'heterodyne.py' - conflicts with package
    # Rename: mv heterodyne.py my_analysis.py
    ```
 
 3. **Clear Python cache:**
+
    ```bash
    find . -type d -name "__pycache__" -exec rm -rf {} +
    python -c "import heterodyne"  # Re-import
@@ -103,8 +117,8 @@ AttributeError: module 'heterodyne.analysis.core' has no attribute 'HeterodyneAn
 
 ### Incorrect time_length Calculation
 
-**Problem:**
-Frame counting produces unexpected results:
+**Problem:** Frame counting produces unexpected results:
+
 ```python
 start_frame = 401
 end_frame = 1000
@@ -142,6 +156,7 @@ python_start, python_end = config_frames_to_python_slice(401, 1000)
 ### Cache File Dimension Mismatch
 
 **Problem:**
+
 ```
 WARNING: Cached data dimension (599) doesn't match config time_length (600)
 ```
@@ -158,6 +173,7 @@ if c2_experimental.shape[1] != self.time_length:
 ```
 
 **Manual fix:**
+
 ```bash
 # Delete old cache files
 rm data/cached_c2_isotropic_frames_*.npz
@@ -171,6 +187,7 @@ heterodyne --config my_config.json --method classical
 ### File Not Found Errors
 
 **Problem:**
+
 ```
 FileNotFoundError: [Errno 2] No such file or directory: './data/correlation_data.h5'
 ```
@@ -178,12 +195,14 @@ FileNotFoundError: [Errno 2] No such file or directory: './data/correlation_data
 **Solutions:**
 
 1. **Verify file paths:**
+
    ```bash
    ls -lh data/correlation_data.h5
    ls -lh data/phi_angles.txt
    ```
 
 2. **Use absolute paths in config:**
+
    ```json
    {
      "experimental_data": {
@@ -194,6 +213,7 @@ FileNotFoundError: [Errno 2] No such file or directory: './data/correlation_data
    ```
 
 3. **Check working directory:**
+
    ```bash
    pwd
    # Ensure you're in the correct directory
@@ -203,6 +223,7 @@ FileNotFoundError: [Errno 2] No such file or directory: './data/correlation_data
 ### HDF5 Format Incompatibility
 
 **Problem:**
+
 ```
 OSError: Unable to open file (file signature not found)
 ```
@@ -210,12 +231,14 @@ OSError: Unable to open file (file signature not found)
 **Solutions:**
 
 1. **Verify HDF5 file integrity:**
+
    ```bash
    h5dump -H data/correlation_data.h5
    # Should show file structure
    ```
 
 2. **Check file format:**
+
    ```python
    import h5py
    with h5py.File("data/correlation_data.h5", 'r') as f:
@@ -224,6 +247,7 @@ OSError: Unable to open file (file signature not found)
    ```
 
 3. **Convert to NumPy format:**
+
    ```python
    import numpy as np
    import h5py
@@ -241,6 +265,7 @@ OSError: Unable to open file (file signature not found)
 ### Invalid Angle File Format
 
 **Problem:**
+
 ```
 ValueError: could not convert string to float
 ```
@@ -258,6 +283,7 @@ Ensure `phi_angles.txt` contains one angle per line:
 ```
 
 **Verify format:**
+
 ```bash
 cat data/phi_angles.txt
 # Should show clean numeric values
@@ -271,6 +297,7 @@ sed 's/[^0-9.\-]//g' data/phi_angles.txt > data/phi_angles_clean.txt
 ### Optimization Fails to Converge
 
 **Problem:**
+
 ```
 Warning: Optimization did not converge (maxiter exceeded)
 Chi-squared: 1.234e+05 (very high)
@@ -279,6 +306,7 @@ Chi-squared: 1.234e+05 (very high)
 **Solutions:**
 
 1. **Improve initial parameter values:**
+
    ```json
    {
      "initial_parameters": {
@@ -294,6 +322,7 @@ Chi-squared: 1.234e+05 (very high)
    ```
 
 2. **Reduce number of active parameters:**
+
    ```json
    {
      "initial_parameters": {
@@ -303,6 +332,7 @@ Chi-squared: 1.234e+05 (very high)
    ```
 
 3. **Increase iteration limit:**
+
    ```json
    {
      "optimization_config": {
@@ -320,6 +350,7 @@ Chi-squared: 1.234e+05 (very high)
    ```
 
 4. **Try robust optimization:**
+
    ```bash
    heterodyne --config my_config.json --method robust
    ```
@@ -327,6 +358,7 @@ Chi-squared: 1.234e+05 (very high)
 ### High Chi-Squared Values
 
 **Problem:**
+
 ```
 Chi-squared: 5.234e+02 (poor fit)
 ```
@@ -334,12 +366,14 @@ Chi-squared: 5.234e+02 (poor fit)
 **Solutions:**
 
 1. **Check data quality:**
+
    ```bash
    heterodyne --config my_config.json --plot-experimental-data
    # Inspect plots for anomalies
    ```
 
 2. **Adjust parameter bounds:**
+
    ```json
    {
      "parameter_space": {
@@ -352,6 +386,7 @@ Chi-squared: 5.234e+02 (poor fit)
    ```
 
 3. **Add more active parameters:**
+
    ```json
    {
      "initial_parameters": {
@@ -365,6 +400,7 @@ Chi-squared: 5.234e+02 (poor fit)
    ```
 
 4. **Use all optimization methods:**
+
    ```bash
    heterodyne --config my_config.json --method all --verbose
    ```
@@ -372,6 +408,7 @@ Chi-squared: 5.234e+02 (poor fit)
 ### Parameter Values at Bounds
 
 **Problem:**
+
 ```
 Warning: Parameters D0_ref, v0 at bounds
 ```
@@ -404,6 +441,7 @@ Widen parameter bounds:
 ### Out of Memory Error
 
 **Problem:**
+
 ```
 MemoryError: Unable to allocate 8.00 GiB for an array
 ```
@@ -411,6 +449,7 @@ MemoryError: Unable to allocate 8.00 GiB for an array
 **Solutions:**
 
 1. **Enable subsampling:**
+
    ```json
    {
      "optimization_config": {
@@ -427,6 +466,7 @@ MemoryError: Unable to allocate 8.00 GiB for an array
    ```
 
 2. **Use low memory mode:**
+
    ```json
    {
      "performance_settings": {
@@ -442,6 +482,7 @@ MemoryError: Unable to allocate 8.00 GiB for an array
    ```
 
 3. **Reduce frame range:**
+
    ```json
    {
      "analyzer_parameters": {
@@ -455,12 +496,12 @@ MemoryError: Unable to allocate 8.00 GiB for an array
 
 ### Slow Optimization Performance
 
-**Problem:**
-Optimization takes >1 hour for moderate dataset
+**Problem:** Optimization takes >1 hour for moderate dataset
 
 **Solutions:**
 
 1. **Enable aggressive subsampling:**
+
    ```json
    {
      "optimization_config": {
@@ -476,6 +517,7 @@ Optimization takes >1 hour for moderate dataset
    ```
 
 2. **Use angle filtering:**
+
    ```json
    {
      "optimization_config": {
@@ -491,18 +533,19 @@ Optimization takes >1 hour for moderate dataset
    ```
 
 3. **Optimize threading:**
+
    ```bash
    export OMP_NUM_THREADS=4
    export NUMBA_NUM_THREADS=4
    heterodyne --config my_config.json --method classical
    ```
 
-4. **Reduce active parameters:**
-   Start with essential parameters only
+4. **Reduce active parameters:** Start with essential parameters only
 
 ### Numba Compilation Warnings
 
 **Problem:**
+
 ```
 NumbaWarning: Cannot cache compiled function as it uses lifted loops
 ```
@@ -519,6 +562,7 @@ warnings.simplefilter('ignore', category=NumbaWarning)
 ```
 
 Or disable Numba caching:
+
 ```json
 {
   "performance_settings": {
@@ -534,6 +578,7 @@ Or disable Numba caching:
 ### JSON Syntax Errors
 
 **Problem:**
+
 ```
 json.decoder.JSONDecodeError: Expecting ',' delimiter: line 15 column 5
 ```
@@ -541,12 +586,14 @@ json.decoder.JSONDecodeError: Expecting ',' delimiter: line 15 column 5
 **Solutions:**
 
 1. **Validate JSON syntax:**
+
    ```bash
    python -m json.tool my_config.json
    # Reports syntax errors
    ```
 
 2. **Common JSON mistakes:**
+
    ```json
    // WRONG: Trailing comma
    {
@@ -562,6 +609,7 @@ json.decoder.JSONDecodeError: Expecting ',' delimiter: line 15 column 5
    ```
 
 3. **Use JSON linter:**
+
    ```bash
    # Online: jsonlint.com
    # Or install jq
@@ -571,6 +619,7 @@ json.decoder.JSONDecodeError: Expecting ',' delimiter: line 15 column 5
 ### Missing Required Configuration Fields
 
 **Problem:**
+
 ```
 KeyError: 'experimental_data'
 ```
@@ -590,6 +639,7 @@ Ensure all required fields are present:
 ```
 
 **Or regenerate from template:**
+
 ```bash
 heterodyne-config --sample my_sample --output new_config.json
 # Copy your custom values to new_config.json
@@ -600,6 +650,7 @@ heterodyne-config --sample my_sample --output new_config.json
 ### Singular Matrix Warning
 
 **Problem:**
+
 ```
 LinAlgWarning: Ill-conditioned matrix (singular matrix detected)
 ```
@@ -607,6 +658,7 @@ LinAlgWarning: Ill-conditioned matrix (singular matrix detected)
 **Solutions:**
 
 1. **Improve parameter scaling:**
+
    ```json
    {
      "advanced_settings": {
@@ -618,6 +670,7 @@ LinAlgWarning: Ill-conditioned matrix (singular matrix detected)
    ```
 
 2. **Add regularization:**
+
    ```json
    {
      "optimization_config": {
@@ -630,6 +683,7 @@ LinAlgWarning: Ill-conditioned matrix (singular matrix detected)
    ```
 
 3. **Use robust optimization:**
+
    ```bash
    heterodyne --config my_config.json --method robust
    ```
@@ -637,6 +691,7 @@ LinAlgWarning: Ill-conditioned matrix (singular matrix detected)
 ### Division by Zero Warning
 
 **Problem:**
+
 ```
 RuntimeWarning: divide by zero encountered in true_divide
 ```
@@ -644,6 +699,7 @@ RuntimeWarning: divide by zero encountered in true_divide
 **Solutions:**
 
 1. **Check for zero values in data:**
+
    ```python
    import numpy as np
    c2_data = np.load("data/correlation_data.npz")['c2_data']
@@ -652,6 +708,7 @@ RuntimeWarning: divide by zero encountered in true_divide
    ```
 
 2. **Enable data validation:**
+
    ```json
    {
      "validation_rules": {
@@ -665,6 +722,7 @@ RuntimeWarning: divide by zero encountered in true_divide
    ```
 
 3. **Set minimum thresholds:**
+
    ```json
    {
      "advanced_settings": {
@@ -680,21 +738,25 @@ RuntimeWarning: divide by zero encountered in true_divide
 ### Systematic Debugging
 
 1. **Enable verbose logging:**
+
    ```bash
    heterodyne --config my_config.json --method classical --verbose
    ```
 
 2. **Check log file:**
+
    ```bash
    tail -f heterodyne_results/run.log
    ```
 
 3. **Validate data loading:**
+
    ```bash
    heterodyne --config my_config.json --plot-experimental-data
    ```
 
 4. **Test with minimal configuration:**
+
    ```json
    {
      "initial_parameters": {
@@ -704,6 +766,7 @@ RuntimeWarning: divide by zero encountered in true_divide
    ```
 
 5. **Compare methods:**
+
    ```bash
    heterodyne --config my_config.json --method all
    ```
@@ -713,27 +776,32 @@ RuntimeWarning: divide by zero encountered in true_divide
 When reporting problems, include:
 
 1. **Package version:**
+
    ```bash
    python -c "import heterodyne; print(heterodyne.__version__)"
    ```
 
 2. **Python version:**
+
    ```bash
    python --version
    ```
 
 3. **Error traceback:**
+
    ```bash
    heterodyne --config my_config.json --method classical --verbose 2>&1 | tee error.log
    ```
 
 4. **Configuration file:**
+
    ```bash
    # Sanitize sensitive paths, then share
    cat my_config.json
    ```
 
 5. **System information:**
+
    ```bash
    uname -a  # Linux/macOS
    # or
@@ -760,6 +828,7 @@ When reporting problems, include:
 ### When Opening an Issue
 
 Provide:
+
 - Clear problem description
 - Minimal reproducible example
 - Full error traceback

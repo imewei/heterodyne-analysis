@@ -317,9 +317,7 @@ class PerformanceProfiler:
             # Test correlation function calculation
             with self.monitor_performance("correlation_calculation"):
                 for _i in range(5):  # Multiple iterations
-                    core.calculate_c2_heterodyne_parallel(
-                        test_params, test_angles
-                    )
+                    core.calculate_c2_heterodyne_parallel(test_params, test_angles)
 
             logger.info(f"Chi-squared value: {chi2:.6f}")
 
@@ -832,9 +830,7 @@ class PerformanceProfiler:
         """Generate synthetic test data."""
         try:
             # Use the core to generate theoretical data
-            theoretical = core.calculate_c2_heterodyne_parallel(
-                params, angles
-            )
+            theoretical = core.calculate_c2_heterodyne_parallel(params, angles)
             # Add some noise
             noise = np.random.normal(0, 0.01, theoretical.shape)
             return theoretical + noise

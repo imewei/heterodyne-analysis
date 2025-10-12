@@ -252,7 +252,11 @@ class TestConfigManager:
             "analyzer_parameters",
         ]
         # At least one of these should be present
-        optional_sections = ["initial_parameters", "experimental_data", "optimization_config"]
+        optional_sections = [
+            "initial_parameters",
+            "experimental_data",
+            "optimization_config",
+        ]
 
         for section in required_sections:
             assert section in manager.config

@@ -22,8 +22,8 @@ notes.
 
 - **[optimization/classical.md](optimization/classical.md)**: `ClassicalOptimizer` -
   Nelder-Mead and Gurobi methods
-- **[optimization/robust.md](optimization/robust.md)**: `RobustHeterodyneOptimizer` - DRO,
-  scenario-based, ellipsoidal
+- **[optimization/robust.md](optimization/robust.md)**: `RobustHeterodyneOptimizer` -
+  DRO, scenario-based, ellipsoidal
 - **[optimization/utils.md](optimization/utils.md)**: Optimization utility functions
 
 ### Data Loading

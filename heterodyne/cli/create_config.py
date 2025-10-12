@@ -206,7 +206,9 @@ def create_config_from_template(
             config["metadata"]["description"] = experiment_name
         elif "description" in config["metadata"]:
             # Set heterodyne description
-            config["metadata"]["description"] = "2-Component Heterodyne Scattering Analysis - 14-parameter model with two shear bands"
+            config["metadata"][
+                "description"
+            ] = "2-Component Heterodyne Scattering Analysis - 14-parameter model with two shear bands"
 
         if author:
             config["metadata"]["authors"] = [author]
@@ -218,7 +220,9 @@ def create_config_from_template(
             config["experimental_data"]["cache_file_path"] = f"./data/{sample_name}/"
 
         # Update cache filename template for heterodyne
-        config["experimental_data"]["cache_filename_template"] = f"cached_c2_heterodyne_{sample_name}_{{start_frame}}_{{end_frame}}.npz"
+        config["experimental_data"][
+            "cache_filename_template"
+        ] = f"cached_c2_heterodyne_{sample_name}_{{start_frame}}_{{end_frame}}.npz"
 
     # Save configuration
     output_path = Path(output_file)
@@ -230,18 +234,22 @@ def create_config_from_template(
         json.dump(config, f, indent=2, ensure_ascii=False)
 
     print(f"✓ Configuration created: {output_path.absolute()}")
-    print(f"✓ Analysis mode: 2-component heterodyne (14 parameters)")
+    print("✓ Analysis mode: 2-component heterodyne (14 parameters)")
 
     # Print heterodyne model information
     print("  • 14-parameter 2-component heterodyne scattering model")
-    print("  • Parameters: Reference transport (3), Sample transport (3), Velocity (3), Fraction (4), Flow angle (1)")
+    print(
+        "  • Parameters: Reference transport (3), Sample transport (3), Velocity (3), Fraction (4), Flow angle (1)"
+    )
     print("  • Supports two-shear-band systems with separate g₁_ref and g₁_sample")
 
     # Provide next steps
     print("\nNext steps:")
     print(f"1. Edit {output_path} and customize the parameters for your experiment")
     print("2. Replace placeholder values (YOUR_*) with actual values")
-    print("3. Adjust initial_parameters.values for all 14 parameters based on your system")
+    print(
+        "3. Adjust initial_parameters.values for all 14 parameters based on your system"
+    )
     print("4. Ensure phi_angles_file exists and contains your scattering angles")
     print(f"5. Run analysis with: heterodyne --config {output_path}")
 

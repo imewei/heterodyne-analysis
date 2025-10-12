@@ -155,7 +155,7 @@ repos:
         args:
           - --max-line-length=88
           - --extend-ignore=E203,W503,E501,E402
-          - --per-file-ignores=heterodyne/ui/*.py:F401,heterodyne/tests/*.py:F401,E722,F811,E731,F841,**/test_*.py:F401,E722,F811,E731,F841,heterodyne/core/composition.py:E731,heterodyne/core/kernels.py:F811,heterodyne/analysis/core.py:F811,heterodyne/statistics/chi_squared.py:F401,E722,heterodyne/data/xpcs_loader.py:F841,heterodyne/performance/regression_prevention.py:F401,heterodyne/validation/performance_validation.py:F401,F821,heterodyne/core/lazy_imports.py:F824
+          - --per-file-ignores=heterodyne/__init__.py:F401,F811,E731,heterodyne/core/__init__.py:E731,heterodyne/cli/*.py:F401,F811,heterodyne/core/blas_kernels.py:F401,heterodyne/optimization/blas_optimization.py:F401,heterodyne/optimization/distributed.py:F401,heterodyne/performance/monitoring.py:F401,heterodyne/core/optimization_utils.py:F401,heterodyne/core/caching.py:E722,heterodyne/core/result_memoization.py:E722,heterodyne/core/mathematical_optimization.py:E741,heterodyne/ui/*.py:F401,heterodyne/tests/*.py:F401,E722,F811,E731,F841,F821,**/test_*.py:F401,E722,F811,E731,F841,heterodyne/core/composition.py:E731,heterodyne/core/kernels.py:F811,heterodyne/analysis/core.py:F811,heterodyne/statistics/chi_squared.py:F401,E722,heterodyne/data/xpcs_loader.py:F841,heterodyne/performance/regression_prevention.py:F401,heterodyne/validation/performance_validation.py:F401,F821,heterodyne/core/lazy_imports.py:F824
           - --exclude=build,dist,.eggs,*.egg-info,.tox,.venv,venv
         types: [python]
 

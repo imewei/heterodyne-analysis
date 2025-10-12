@@ -465,7 +465,8 @@ For production clusters, see:
 
 For issues, feature requests, or contributions:
 
-- GitHub Issues: [heterodyne-analysis issues](https://github.com/imewei/heterodyne/issues)
+- GitHub Issues:
+  [heterodyne-analysis issues](https://github.com/imewei/heterodyne/issues)
 - Documentation: [Full API Documentation](https://heterodyne-analysis.readthedocs.io)
 - Contact: Wei Chen (wchen@anl.gov), Hongrui He (hhe@anl.gov)
 

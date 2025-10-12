@@ -299,7 +299,9 @@ for i in range(3):
         # Re-imports should be very fast (allow more time in parallel mode)
         reimport_limit = 0.01 * PARALLEL_TIME_MULTIPLIER
         avg_reimport = statistics.mean(reimport_times)
-        assert avg_reimport < reimport_limit, f"Re-imports too slow: {avg_reimport:.6f}s"
+        assert (
+            avg_reimport < reimport_limit
+        ), f"Re-imports too slow: {avg_reimport:.6f}s"
 
     @pytest.mark.performance
     def test_concurrent_import_performance(self):
@@ -351,7 +353,9 @@ for i, t in enumerate(times):
         # All concurrent imports should meet target (adjusted for parallel execution)
         time_limit = 2.0 * PARALLEL_TIME_MULTIPLIER
         for i, time_val in enumerate(concurrent_times):
-            assert time_val < time_limit, f"Concurrent import {i + 1} took {time_val:.3f}s"
+            assert (
+                time_val < time_limit
+            ), f"Concurrent import {i + 1} took {time_val:.3f}s"
 
     @pytest.mark.performance
     def test_memory_constrained_performance(self):
@@ -460,7 +464,9 @@ class TestPerformanceRegression:
         time_diff = abs(monitored_time - health["import_time"])
         # Allow up to 1.5s difference since these are separate subprocess measurements (more in parallel)
         diff_limit = 1.5 * PARALLEL_TIME_MULTIPLIER
-        assert time_diff < diff_limit, f"Monitoring inconsistency: {time_diff:.3f}s difference"
+        assert (
+            time_diff < diff_limit
+        ), f"Monitoring inconsistency: {time_diff:.3f}s difference"
 
     @pytest.mark.performance
     def test_performance_trend_validation(self):
@@ -660,7 +666,9 @@ except Exception as e:
                 )
 
             time_limit = 2.0 * PARALLEL_TIME_MULTIPLIER
-            assert import_time < time_limit, f"Different directory took {import_time:.3f}s"
+            assert (
+                import_time < time_limit
+            ), f"Different directory took {import_time:.3f}s"
 
 
 @pytest.mark.slow
@@ -721,7 +729,9 @@ class TestPerformanceTargetValidation:
         # Adjust the baseline check for parallel execution
         if not baseline_met and baseline_time < adjusted_target:
             baseline_met = True  # Allow passing in parallel mode with relaxed threshold
-        assert baseline_met, f"Baseline failed: {baseline_time:.3f}s > {adjusted_target:.1f}s"
+        assert (
+            baseline_met
+        ), f"Baseline failed: {baseline_time:.3f}s > {adjusted_target:.1f}s"
 
         # Test 4: Multiple subprocess measurements
         print("\n4️⃣ Subprocess Validation:")

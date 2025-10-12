@@ -421,9 +421,7 @@ class HeterodyneAnalysisCore:
 
             try:
                 # Warm up the main correlation calculation
-                _ = self.calculate_c2_heterodyne_parallel(
-                    test_params, test_phi_angles
-                )
+                _ = self.calculate_c2_heterodyne_parallel(test_params, test_phi_angles)
                 logger.debug("High-level correlation function warmed up")
             except Exception as warmup_error:
                 logger.debug(
@@ -730,7 +728,9 @@ class HeterodyneAnalysisCore:
         if cache_needs_save and self.config["advanced_settings"]["data_loading"].get(
             "use_diagonal_correction", True
         ):
-            logger.debug("Applying diagonal correction to filtered correlation matrices")
+            logger.debug(
+                "Applying diagonal correction to filtered correlation matrices"
+            )
             c2_experimental = self._fix_diagonal_correction_vectorized(c2_experimental)
 
             # Also apply to unfiltered data for cache saving
@@ -754,13 +754,24 @@ class HeterodyneAnalysisCore:
                 np.savez_compressed(cache_file, c2_exp=c2_unfiltered)
             else:
                 np.savez(cache_file, c2_exp=c2_unfiltered)
-            logger.debug(f"Unfiltered corrected data cached successfully to: {cache_file}")
+            logger.debug(
+                f"Unfiltered corrected data cached successfully to: {cache_file}"
+            )
 
             # Save unfiltered phi angles to match cached data
-            phi_angles_path = self.config["experimental_data"].get("phi_angles_path", ".")
+            phi_angles_path = self.config["experimental_data"].get(
+                "phi_angles_path", "."
+            )
             phi_file = os.path.join(phi_angles_path, "phi_angles_list.txt")
-            np.savetxt(phi_file, phi_angles_unfiltered, fmt="%.6f", header="Phi angles (degrees)")
-            logger.info(f"Saved {len(phi_angles_unfiltered)} unfiltered phi angles to {phi_file}")
+            np.savetxt(
+                phi_file,
+                phi_angles_unfiltered,
+                fmt="%.6f",
+                header="Phi angles (degrees)",
+            )
+            logger.info(
+                f"Saved {len(phi_angles_unfiltered)} unfiltered phi angles to {phi_file}"
+            )
 
         # Cache in memory
         self.cached_experimental_data = c2_experimental
@@ -830,18 +841,22 @@ class HeterodyneAnalysisCore:
             # to ensure it matches the cached data
 
             # Save wavevector q to wavevector_q_list.txt for compatibility
-            if hasattr(self, 'wavevector_q') and self.wavevector_q is not None:
+            if hasattr(self, "wavevector_q") and self.wavevector_q is not None:
                 data_folder = self.config["experimental_data"].get(
                     "data_folder_path", "."
                 )
                 q_file = os.path.join(data_folder, "wavevector_q_list.txt")
                 np.savetxt(
-                    q_file, [self.wavevector_q], fmt="%.8e",
-                    header="Wavevector q (1/Angstrom)"
+                    q_file,
+                    [self.wavevector_q],
+                    fmt="%.8e",
+                    header="Wavevector q (1/Angstrom)",
                 )
                 logger.info(f"Saved wavevector q={self.wavevector_q:.8e} to {q_file}")
             else:
-                logger.debug("Wavevector q not set, skipping wavevector_q_list.txt generation")
+                logger.debug(
+                    "Wavevector q not set, skipping wavevector_q_list.txt generation"
+                )
 
             # Validate loaded data dimensions and auto-adjust if needed
             if (
@@ -1057,13 +1072,13 @@ class HeterodyneAnalysisCore:
                 f"Expected: [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample, "
                 f"v0, beta, v_offset, f0, f1, f2, f3, phi0]"
             )
-        
+
         # Pre-compute velocity if not provided
         precomputed_v_t = None
         if precomputed_D_t is None:
             velocity_params = parameters[6:9]
             precomputed_v_t = self.calculate_velocity_coefficient(velocity_params)
-        
+
         return self.calculate_heterodyne_correlation(
             parameters,
             phi_angle,
@@ -1111,7 +1126,9 @@ class HeterodyneAnalysisCore:
                 f"Power-law exponent alpha_ref must be in [-2, 2], got {alpha_ref}"
             )
         if not (-100000 <= D_offset_ref <= 100000):
-            raise ValueError(f"D_offset_ref must be in [-100000, 100000], got {D_offset_ref}")
+            raise ValueError(
+                f"D_offset_ref must be in [-100000, 100000], got {D_offset_ref}"
+            )
 
         # Sample diffusion constraints
         if D0_sample < 0:
@@ -1121,17 +1138,17 @@ class HeterodyneAnalysisCore:
                 f"Power-law exponent alpha_sample must be in [-2, 2], got {alpha_sample}"
             )
         if not (-100000 <= D_offset_sample <= 100000):
-            raise ValueError(f"D_offset_sample must be in [-100000, 100000], got {D_offset_sample}")
+            raise ValueError(
+                f"D_offset_sample must be in [-100000, 100000], got {D_offset_sample}"
+            )
 
         # Velocity constraints (less strict - can be negative for flow direction)
         if not (-2.0 <= beta <= 2.0):
-            raise ValueError(
-                f"Velocity exponent beta must be in [-2, 2], got {beta}"
-            )
+            raise ValueError(f"Velocity exponent beta must be in [-2, 2], got {beta}")
 
         # Fraction constraints - ensure f(t) stays in [0, 1] for all times
         # Check at several time points (use representative range if time_array not available)
-        if hasattr(self, 'time_array') and self.time_array is not None:
+        if hasattr(self, "time_array") and self.time_array is not None:
             t_check = np.linspace(self.time_array[0], self.time_array[-1], 100)
         else:
             # Use default time range for validation
@@ -1276,11 +1293,13 @@ class HeterodyneAnalysisCore:
         self.validate_heterodyne_parameters(parameters)
 
         # Extract 14 parameters
-        diffusion_params_ref = parameters[0:3]      # D0_ref, alpha_ref, D_offset_ref
-        diffusion_params_sample = parameters[3:6]   # D0_sample, alpha_sample, D_offset_sample
-        velocity_params = parameters[6:9]           # v0, beta, v_offset
-        fraction_params = parameters[9:13]          # f0, f1, f2, f3
-        phi0 = parameters[13]                        # flow angle
+        diffusion_params_ref = parameters[0:3]  # D0_ref, alpha_ref, D_offset_ref
+        diffusion_params_sample = parameters[
+            3:6
+        ]  # D0_sample, alpha_sample, D_offset_sample
+        velocity_params = parameters[6:9]  # v0, beta, v_offset
+        fraction_params = parameters[9:13]  # f0, f1, f2, f3
+        phi0 = parameters[13]  # flow angle
 
         # Calculate time-dependent velocity
         if precomputed_v_t is not None:
@@ -1301,7 +1320,9 @@ class HeterodyneAnalysisCore:
 
         # Compute separate g1 correlations for reference and sample components
         g1_ref = self._compute_g1_from_diffusion_params(diffusion_params_ref, "ref")
-        g1_sample = self._compute_g1_from_diffusion_params(diffusion_params_sample, "sample")
+        g1_sample = self._compute_g1_from_diffusion_params(
+            diffusion_params_sample, "sample"
+        )
 
         # Create velocity integral matrix
         param_hash = hash(tuple(parameters))
@@ -1324,8 +1345,14 @@ class HeterodyneAnalysisCore:
 
         # Cross-correlation term: 2 × f_r(t1) × f_s(t1) × f_r(t2) × f_s(t2) × g1_r × g1_s × cos(v_term)
         cross_term = (
-            2 * f1_sample * f2_sample * f1_ref * f2_ref
-            * cos_velocity_term * g1_sample * g1_ref
+            2
+            * f1_sample
+            * f2_sample
+            * f1_ref
+            * f2_ref
+            * cos_velocity_term
+            * g1_sample
+            * g1_ref
         )
 
         # Total heterodyne correlation with normalization
@@ -1367,7 +1394,7 @@ class HeterodyneAnalysisCore:
                 v_t[mask] = v0 * (self.time_array[mask] ** beta) + v_offset
             return v_t
         else:
-            return v0 * (self.time_array ** beta) + v_offset
+            return v0 * (self.time_array**beta) + v_offset
 
     def calculate_fraction_coefficient(self, fraction_params: np.ndarray) -> np.ndarray:
         """
@@ -1523,7 +1550,7 @@ class HeterodyneAnalysisCore:
                     (num_angles, self.time_length, self.time_length),
                     dtype=np.float64,
                 )
-            
+
             assert self._c2_results_pool is not None
             c2_results = self._c2_results_pool
 
@@ -1664,9 +1691,7 @@ class HeterodyneAnalysisCore:
                 return validation_result
 
             # Step 2: Calculate theoretical correlation
-            c2_theory = self.calculate_c2_heterodyne_parallel(
-                parameters, phi_angles
-            )
+            c2_theory = self.calculate_c2_heterodyne_parallel(parameters, phi_angles)
 
             # Step 3: Get optimization indices based on angle filtering
             optimization_indices = self._get_optimization_indices(
@@ -4103,11 +4128,20 @@ Validation:
         # Add parameter names for 14-parameter heterodyne model
         if len(processed["parameters"]) == 14:
             processed["parameter_names"] = [
-                "D0_ref", "alpha_ref", "D_offset_ref",
-                "D0_sample", "alpha_sample", "D_offset_sample",
-                "v0", "beta", "v_offset",
-                "f0", "f1", "f2", "f3",
-                "phi0"
+                "D0_ref",
+                "alpha_ref",
+                "D_offset_ref",
+                "D0_sample",
+                "alpha_sample",
+                "D_offset_sample",
+                "v0",
+                "beta",
+                "v_offset",
+                "f0",
+                "f1",
+                "f2",
+                "f3",
+                "phi0",
             ]
 
         return processed
@@ -4124,9 +4158,7 @@ Validation:
         # Check both analysis_parameters and analyzer_parameters for backward compatibility
         analysis_params = self.config.get("analysis_parameters", {})
         analyzer_params = self.config.get("analyzer_parameters", {})
-        mode = analysis_params.get("mode") or analyzer_params.get(
-            "mode", "heterodyne"
-        )
+        mode = analysis_params.get("mode") or analyzer_params.get("mode", "heterodyne")
 
         # Check initial_guesses in config
         initial_guesses = self.config.get("initial_guesses", {})
@@ -4302,9 +4334,7 @@ Validation:
         analyzer_params = self.config.get("analyzer_parameters", {})
 
         # Prefer analysis_parameters if available, fallback to analyzer_parameters
-        mode = analysis_params.get("mode") or analyzer_params.get(
-            "mode", "heterodyne"
-        )
+        mode = analysis_params.get("mode") or analyzer_params.get("mode", "heterodyne")
         return mode
 
 

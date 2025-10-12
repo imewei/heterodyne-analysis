@@ -10,19 +10,31 @@
 [![DOI](https://img.shields.io/badge/DOI-10.1073/pnas.2401162121-blue.svg)](https://doi.org/10.1073/pnas.2401162121)
 [![Research](https://img.shields.io/badge/Research-XPCS%20Nonequilibrium-purple.svg)](https://github.com/imewei/heterodyne_analysis)
 
-> **⚠️ Dataset Size Limitation:** This heterodyne analysis package is not recommended for large datasets exceeding 4M data points due to over-subsampling effects and reduced performance without adequate subsampling. For optimal results, use datasets with fewer than 4M data points or enable aggressive subsampling configurations.
+> **⚠️ Dataset Size Limitation:** This heterodyne analysis package is not recommended
+> for large datasets exceeding 4M data points due to over-subsampling effects and
+> reduced performance without adequate subsampling. For optimal results, use datasets
+> with fewer than 4M data points or enable aggressive subsampling configurations.
 
 ## Overview
 
-**heterodyne-analysis** is a research-grade Python package for analyzing two-component heterodyne X-ray Photon Correlation Spectroscopy (XPCS) under nonequilibrium conditions. This package implements the 14-parameter heterodyne scattering model from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) (Equation S-95), which characterizes transport properties through separate reference and sample field correlations.
+**heterodyne-analysis** is a research-grade Python package for analyzing two-component
+heterodyne X-ray Photon Correlation Spectroscopy (XPCS) under nonequilibrium conditions.
+This package implements the 14-parameter heterodyne scattering model from
+[He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) (Equation S-95), which
+characterizes transport properties through separate reference and sample field
+correlations.
 
-The package provides comprehensive analysis of nonequilibrium dynamics by modeling distinct transport behaviors in reference and sample components, with time-dependent fraction mixing that captures complex phenomena in soft matter systems, biological fluids, colloids, and active matter.
+The package provides comprehensive analysis of nonequilibrium dynamics by modeling
+distinct transport behaviors in reference and sample components, with time-dependent
+fraction mixing that captures complex phenomena in soft matter systems, biological
+fluids, colloids, and active matter.
 
 ## Key Features
 
 ### Analysis Capabilities
 
-- **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne with separate reference and sample correlations
+- **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne with
+  separate reference and sample correlations
   - **Reference transport** (3 params): D₀_ref, α_ref, D_offset_ref
   - **Sample transport** (3 params): D₀_sample, α_sample, D_offset_sample
   - **Velocity** (3 params): v₀, β, v_offset
@@ -160,7 +172,6 @@ pytest -v -m "not slow"
 pytest heterodyne/tests/test_time_length_calculation.py -v
 ```
 
-
 ## Installation
 
 ### Standard Installation
@@ -191,8 +202,8 @@ pip install -e .[dev]
   performance monitoring)
 - **Robust optimization**: `pip install heterodyne-analysis[robust]` (cvxpy, gurobipy,
   mosek)
-- **Development**: `pip install heterodyne-analysis[dev]` (testing, linting, documentation
-  tools)
+- **Development**: `pip install heterodyne-analysis[dev]` (testing, linting,
+  documentation tools)
 
 ### High-Performance Configuration
 
@@ -284,7 +295,10 @@ dependencies.
 
 ### Heterodyne Scattering Model
 
-The package implements the **14-parameter heterodyne scattering model** from [He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**. This model analyzes two-component heterodyne X-ray photon correlation spectroscopy (XPCS) with separate reference and sample field correlations under nonequilibrium conditions.
+The package implements the **14-parameter heterodyne scattering model** from
+[He et al. PNAS 2024](https://doi.org/10.1073/pnas.2401162121) **Equation S-95**. This
+model analyzes two-component heterodyne X-ray photon correlation spectroscopy (XPCS)
+with separate reference and sample field correlations under nonequilibrium conditions.
 
 #### Mathematical Foundation
 
@@ -304,6 +318,7 @@ where:
 ```
 
 **Key Notation:**
+
 - **Two-time structure**: Fractions evaluated at BOTH t₁ and t₂
   - `xₛ(t₁)`, `xₛ(t₂)`: Sample fraction at time 1 and time 2
   - `xᵣ(t₁) = 1 - xₛ(t₁)`: Reference fraction at time 1
@@ -322,48 +337,51 @@ where:
 **Physical Components:**
 
 1. **Transport Coefficients** (separate for reference and sample):
+
    ```
    Jᵣ(t) = J₀_ref × t^(α_ref) + J_offset_ref
    Jₛ(t) = J₀_sample × t^(α_sample) + J_offset_sample
    ```
-   Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: J = 6D.
+
+   Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: J
+   = 6D.
 
 2. **Velocity Coefficient** (shared between components):
+
    ```
    v(t) = v₀ × t^β + v_offset
    ```
 
 3. **Sample Fraction Function**:
+
    ```
    xₛ(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
    ```
+
    where 0 ≤ xₛ(t) ≤ 1, and xᵣ(t) = 1 - xₛ(t)
 
 #### 14-Parameter Complete Reference
 
 | # | Parameter | Symbol | Units | Physical Meaning | Typical Range |
-|---|-----------|--------|-------|------------------|---------------|
-| **Reference Transport** (3 parameters) |||||
-| 1 | D₀_ref | J₀_ref | Å²/s | Reference transport coefficient at t=1s | 1 - 10⁶ |
-| 2 | α_ref | α_ref | - | Reference transport exponent (power-law) | -2.0 - 2.0 |
-| 3 | D_offset_ref | J_offset_ref | Å²/s | Reference baseline transport | -100 - 100 |
-| **Sample Transport** (3 parameters) |||||
-| 4 | D₀_sample | J₀_sample | Å²/s | Sample transport coefficient at t=1s | 1 - 10⁶ |
-| 5 | α_sample | α_sample | - | Sample transport exponent (power-law) | -2.0 - 2.0 |
-| 6 | D_offset_sample | J_offset_sample | Å²/s | Sample baseline transport | -100 - 100 |
-| **Velocity** (3 parameters) |||||
-| 7 | v₀ | v₀ | nm/s | Velocity coefficient at t=1s | -10 - 10 |
-| 8 | β | β | - | Velocity time-dependence exponent | -2.0 - 2.0 |
-| 9 | v_offset | v_offset | nm/s | Baseline velocity | -1.0 - 1.0 |
-| **Fraction** (4 parameters) |||||
-| 10 | f₀ | f₀ | - | Fraction amplitude (exponential) | 0 - 1.0 |
-| 11 | f₁ | f₁ | s⁻¹ | Fraction rate (exponential) | -1.0 - 1.0 |
-| 12 | f₂ | f₂ | s | Fraction time offset | 0 - 200 |
-| 13 | f₃ | f₃ | - | Fraction baseline | 0 - 1.0 |
-| **Flow Angle** (1 parameter) |||||
-| 14 | φ₀ | φ₀ | degrees | Flow direction angle | -360 - 360 |
+|---|-----------|--------|-------|------------------|---------------| | **Reference
+Transport** (3 parameters) ||||| | 1 | D₀_ref | J₀_ref | Å²/s | Reference transport
+coefficient at t=1s | 1 - 10⁶ | | 2 | α_ref | α_ref | - | Reference transport exponent
+(power-law) | -2.0 - 2.0 | | 3 | D_offset_ref | J_offset_ref | Å²/s | Reference baseline
+transport | -100 - 100 | | **Sample Transport** (3 parameters) ||||| | 4 | D₀_sample |
+J₀_sample | Å²/s | Sample transport coefficient at t=1s | 1 - 10⁶ | | 5 | α_sample |
+α_sample | - | Sample transport exponent (power-law) | -2.0 - 2.0 | | 6 |
+D_offset_sample | J_offset_sample | Å²/s | Sample baseline transport | -100 - 100 | |
+**Velocity** (3 parameters) ||||| | 7 | v₀ | v₀ | nm/s | Velocity coefficient at t=1s |
+-10 - 10 | | 8 | β | β | - | Velocity time-dependence exponent | -2.0 - 2.0 | | 9 |
+v_offset | v_offset | nm/s | Baseline velocity | -1.0 - 1.0 | | **Fraction** (4
+parameters) ||||| | 10 | f₀ | f₀ | - | Fraction amplitude (exponential) | 0 - 1.0 | | 11
+| f₁ | f₁ | s⁻¹ | Fraction rate (exponential) | -1.0 - 1.0 | | 12 | f₂ | f₂ | s |
+Fraction time offset | 0 - 200 | | 13 | f₃ | f₃ | - | Fraction baseline | 0 - 1.0 | |
+**Flow Angle** (1 parameter) ||||| | 14 | φ₀ | φ₀ | degrees | Flow direction angle |
+-360 - 360 |
 
 **Parameter Implementation:**
+
 ```python
 # Extract 14 parameters
 D0_ref, alpha_ref, D_offset_ref = parameters[0:3]           # Reference transport
@@ -375,15 +393,20 @@ phi0 = parameters[13]                                        # Flow angle
 
 #### Key Physical Features
 
-- **Independent transport dynamics**: Reference and sample components exhibit different diffusive behaviors (separate Jᵣ and Jₛ)
+- **Independent transport dynamics**: Reference and sample components exhibit different
+  diffusive behaviors (separate Jᵣ and Jₛ)
 - **Three correlation terms**:
   - Reference autocorrelation: [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫Jᵣdt)
   - Sample autocorrelation: [xₛ(t₁)xₛ(t₂)]² exp(-q²∫Jₛdt)
   - Cross-correlation: 2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫[Jₛ+Jᵣ]dt) cos[q cos(φ)∫vdt]
-- **Cross-term velocity modulation**: Cosine factor captures flow-induced decorrelation between components
-- **Time-dependent mixing**: Exponential fraction evolution xₛ(t) captures compositional changes
-- **Power-law transport**: Generalizes equilibrium diffusion to nonequilibrium regimes (α ≠ 0, superdiffusion/subdiffusion)
-- **Two-time correlation**: Full c₂(t₁,t₂) matrix structure preserves nonequilibrium dynamics
+- **Cross-term velocity modulation**: Cosine factor captures flow-induced decorrelation
+  between components
+- **Time-dependent mixing**: Exponential fraction evolution xₛ(t) captures compositional
+  changes
+- **Power-law transport**: Generalizes equilibrium diffusion to nonequilibrium regimes
+  (α ≠ 0, superdiffusion/subdiffusion)
+- **Two-time correlation**: Full c₂(t₁,t₂) matrix structure preserves nonequilibrium
+  dynamics
 
 ## Frame Counting Convention
 

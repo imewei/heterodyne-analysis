@@ -387,9 +387,7 @@ class PerformanceMonitor:
 
         # Benchmark correlation calculation
         def correlation_benchmark():
-            return core.calculate_c2_heterodyne_parallel(
-                test_params, test_angles
-            )
+            return core.calculate_c2_heterodyne_parallel(test_params, test_angles)
 
         results.append(
             self.run_benchmark("correlation_calculation", correlation_benchmark)
@@ -412,7 +410,9 @@ class PerformanceMonitor:
     def benchmark_optimization_methods(self) -> list[BenchmarkResult]:
         """Benchmark optimization methods."""
         if not HETERODYNE_AVAILABLE:
-            logger.warning("Heterodyne not available - skipping optimization benchmarks")
+            logger.warning(
+                "Heterodyne not available - skipping optimization benchmarks"
+            )
             return []
 
         results = []
@@ -446,7 +446,9 @@ class PerformanceMonitor:
         # Benchmark robust optimization if available
         if CVXPY_AVAILABLE:
             try:
-                robust_optimizer = RobustHeterodyneOptimizer(core, config_manager.config)
+                robust_optimizer = RobustHeterodyneOptimizer(
+                    core, config_manager.config
+                )
 
                 def robust_optimization_benchmark():
                     return robust_optimizer.run_robust_optimization(
@@ -817,9 +819,7 @@ class PerformanceMonitor:
     ) -> np.ndarray:
         """Generate synthetic test data for benchmarking."""
         try:
-            theoretical = core.calculate_c2_heterodyne_parallel(
-                params, angles
-            )
+            theoretical = core.calculate_c2_heterodyne_parallel(params, angles)
             noise = np.random.normal(0, 0.01, theoretical.shape)
             return theoretical + noise
         except Exception:

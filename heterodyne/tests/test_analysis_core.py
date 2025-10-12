@@ -359,13 +359,24 @@ class TestHeterodyneAnalysisCore:
         analyzer = HeterodyneAnalysisCore(config_override=self.config_data)
 
         # Full 14-parameter heterodyne model
-        params = np.array([
-            100.0, -0.5, 10.0,  # D0_ref, alpha_ref, D_offset_ref
-            100.0, -0.5, 10.0,  # D0_sample, alpha_sample, D_offset_sample
-            0.1, 0.0, 0.01,     # v0, beta, v_offset
-            0.5, 0.0, 50.0, 0.3,  # f0, f1, f2, f3
-            0.0                 # phi0
-        ])
+        params = np.array(
+            [
+                100.0,
+                -0.5,
+                10.0,  # D0_ref, alpha_ref, D_offset_ref
+                100.0,
+                -0.5,
+                10.0,  # D0_sample, alpha_sample, D_offset_sample
+                0.1,
+                0.0,
+                0.01,  # v0, beta, v_offset
+                0.5,
+                0.0,
+                50.0,
+                0.3,  # f0, f1, f2, f3
+                0.0,  # phi0
+            ]
+        )
 
         # Record original configuration
         original_time_length = analyzer.time_length
@@ -381,12 +392,15 @@ class TestHeterodyneAnalysisCore:
         f_full = analyzer.calculate_fraction_coefficient(fraction_params)
 
         # Verify full resolution shapes
-        assert D_full.shape == (original_time_length,), \
-            f"Expected diffusion shape ({original_time_length},), got {D_full.shape}"
-        assert v_full.shape == (original_time_length,), \
-            f"Expected velocity shape ({original_time_length},), got {v_full.shape}"
-        assert f_full.shape == (original_time_length,), \
-            f"Expected fraction shape ({original_time_length},), got {f_full.shape}"
+        assert D_full.shape == (
+            original_time_length,
+        ), f"Expected diffusion shape ({original_time_length},), got {D_full.shape}"
+        assert v_full.shape == (
+            original_time_length,
+        ), f"Expected velocity shape ({original_time_length},), got {v_full.shape}"
+        assert f_full.shape == (
+            original_time_length,
+        ), f"Expected fraction shape ({original_time_length},), got {f_full.shape}"
 
         # Simulate subsampling (like classical.py does during optimization)
         subsampled_length = original_time_length // 4  # 4x subsampling
@@ -400,12 +414,15 @@ class TestHeterodyneAnalysisCore:
         f_sub = analyzer.calculate_fraction_coefficient(fraction_params)
 
         # Verify subsampled shapes match new time_length
-        assert D_sub.shape == (subsampled_length,), \
-            f"Expected diffusion shape ({subsampled_length},), got {D_sub.shape}"
-        assert v_sub.shape == (subsampled_length,), \
-            f"Expected velocity shape ({subsampled_length},), got {v_sub.shape}"
-        assert f_sub.shape == (subsampled_length,), \
-            f"Expected fraction shape ({subsampled_length},), got {f_sub.shape}"
+        assert D_sub.shape == (
+            subsampled_length,
+        ), f"Expected diffusion shape ({subsampled_length},), got {D_sub.shape}"
+        assert v_sub.shape == (
+            subsampled_length,
+        ), f"Expected velocity shape ({subsampled_length},), got {v_sub.shape}"
+        assert f_sub.shape == (
+            subsampled_length,
+        ), f"Expected fraction shape ({subsampled_length},), got {f_sub.shape}"
 
         # Verify no NaN or Inf values
         assert np.all(np.isfinite(D_sub)), "Diffusion coefficients contain NaN/Inf"

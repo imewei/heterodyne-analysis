@@ -180,15 +180,45 @@ class TestClassicalOptimizationPerformance:
             with patch.object(optimizer, "_run_scipy_optimization") as mock_opt:
                 mock_result = Mock()
                 # Use 14 parameters for heterodyne model
-                mock_result.x = [100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                                0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0]
+                mock_result.x = [
+                    100.0,
+                    -0.5,
+                    10.0,
+                    100.0,
+                    -0.5,
+                    10.0,
+                    0.1,
+                    0.0,
+                    0.01,
+                    0.5,
+                    0.0,
+                    50.0,
+                    0.3,
+                    0.0,
+                ]
                 mock_result.fun = 0.5
                 mock_result.success = True
                 mock_opt.return_value = mock_result
 
                 # Measure time for data preprocessing and setup - use 14 parameters
-                initial_params = np.array([100.0, -0.5, 10.0, 100.0, -0.5, 10.0,
-                                          0.1, 0.0, 0.01, 0.5, 0.0, 50.0, 0.3, 0.0])
+                initial_params = np.array(
+                    [
+                        100.0,
+                        -0.5,
+                        10.0,
+                        100.0,
+                        -0.5,
+                        10.0,
+                        0.1,
+                        0.0,
+                        0.01,
+                        0.5,
+                        0.0,
+                        50.0,
+                        0.3,
+                        0.0,
+                    ]
+                )
                 result, exec_time = self.benchmark.measure_time(
                     optimizer.run_optimization,
                     initial_params,
@@ -290,7 +320,9 @@ class TestClassicalOptimizationPerformance:
         # Threshold set to 3.2x to account for system load variability while still
         # ensuring meaningful acceleration (empirical testing shows 3.4-5.5x typical range)
         speedup = compile_time / optimized_time if optimized_time > 0 else float("inf")
-        assert speedup > 3.2, f"Numba speedup insufficient: {speedup:.1f}x (expected >3.2x)"
+        assert (
+            speedup > 3.2
+        ), f"Numba speedup insufficient: {speedup:.1f}x (expected >3.2x)"
 
         # Individual optimized calls should be very fast
         assert (
