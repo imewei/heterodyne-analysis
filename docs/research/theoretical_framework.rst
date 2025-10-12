@@ -482,8 +482,4 @@ Sensitivity Analysis
 References
 ----------
 
-.. [1] He, H., Liang, H., Chu, M., et al. (2024). Transport coefficient approach for characterizing
-   nonequilibrium dynamics in soft matter. *Proceedings of the National Academy of Sciences*,
-   121(31), e2401162121. https://doi.org/10.1073/pnas.2401162121
-
 See :doc:`publications` for additional references and applications.

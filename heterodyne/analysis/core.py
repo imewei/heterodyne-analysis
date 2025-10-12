@@ -1,6 +1,6 @@
 """
 Core Analysis Engine for Heterodyne Scattering Analysis
-=====================================================
+=======================================================
 
 High-performance heterodyne scattering analysis with configuration management.
 

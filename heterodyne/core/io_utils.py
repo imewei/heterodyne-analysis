@@ -1,6 +1,6 @@
 """
 IO Utilities for Heterodyne Scattering Analysis
-==============================================
+===============================================
 
 Comprehensive I/O utilities for safe data handling in XPCS analysis workflows.
 Provides robust file operations, intelligent data serialization, and structured
@@ -772,7 +772,7 @@ def calculate_time_length(start_frame: int, end_frame: int) -> int:
     dimensional consistency between configuration, cached data, and runtime arrays.
 
     Frame Counting Convention:
-    -------------------------
+    --------------------------
     - Config frames are 1-based and inclusive: [start_frame, end_frame]
     - time_length includes both start and end frames
     - Formula: time_length = end_frame - start_frame + 1

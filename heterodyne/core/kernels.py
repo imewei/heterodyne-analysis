@@ -90,7 +90,7 @@ def _create_time_integral_matrix_impl(time_dependent_array):
     OPTIMIZED VERSION: Revolutionary vectorization using NumPy broadcasting
     Expected speedup: 5-10x through elimination of nested loops
 
-    Mathematical operation: matrix[i, j] = |cumsum[i] - cumsum[j]|
+    Mathematical operation: ``matrix[i, j] = |cumsum[i] - cumsum[j]|``
 
     Vectorization strategy:
     1. Compute cumulative sum once
@@ -852,14 +852,16 @@ def compute_g1_correlation_numba_flexible(*args, **kwargs):
     """
     Flexible g1 correlation function supporting both legacy and vectorized signatures.
 
-    Signatures:
-    -----------
-    1. Legacy (11 parameters):
-       compute_g1_correlation_numba(t1, t2, phi, q, D0, alpha, D_offset,
-                                     gamma0, beta, gamma_offset, phi0)
+    Signatures
+    ----------
+    1. Legacy (11 parameters)::
 
-    2. Vectorized (2 parameters):
-       compute_g1_correlation_numba(D_integral, wavevector_q_squared_half_dt)
+        compute_g1_correlation_numba(t1, t2, phi, q, D0, alpha, D_offset,
+                                      gamma0, beta, gamma_offset, phi0)
+
+    2. Vectorized (2 parameters)::
+
+        compute_g1_correlation_numba(D_integral, wavevector_q_squared_half_dt)
     """
     if len(args) == 2 and not kwargs:
         # Vectorized signature: (D_integral, wavevector_q_squared_half_dt)

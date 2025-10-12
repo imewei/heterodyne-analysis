@@ -3,4 +3,5 @@ heterodyne.core
 
 .. currentmodule:: heterodyne
 
-.. automodule:: core
+.. automodule:: heterodyne.core
+   :no-index:

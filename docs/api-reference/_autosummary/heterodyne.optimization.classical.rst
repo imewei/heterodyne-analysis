@@ -3,4 +3,4 @@ heterodyne.optimization.classical
 
 .. currentmodule:: heterodyne.optimization
 
-.. automodule:: classical
+.. automodule:: heterodyne.optimization.classical

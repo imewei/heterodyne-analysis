@@ -1,6 +1,6 @@
 """
 Classical Optimization Methods for Heterodyne Scattering Analysis
-===============================================================
+==================================================================
 
 This module contains multiple classical optimization algorithms for
 parameter estimation in heterodyne scattering analysis:

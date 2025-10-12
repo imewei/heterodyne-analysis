@@ -93,7 +93,7 @@ autodoc_default_options = {
 
 # autosummary configuration
 autosummary_generate = True
-autosummary_generate_overwrite = True
+autosummary_generate_overwrite = False  # Disabled to preserve manual fixes
 autosummary_imported_members = True
 autosummary_ignore_module_all = False
 
