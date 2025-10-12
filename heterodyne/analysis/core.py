@@ -21,7 +21,7 @@ The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):
         2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
     ]
 
-where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+    where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
 Two-time correlation structure:
 - xₛ(t₁), xₛ(t₂): Sample fraction at time t₁ and t₂ (each in [0,1])
@@ -1237,7 +1237,7 @@ class HeterodyneAnalysisCore:
                     2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
                 ]
 
-        where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+                    where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
                 **Two-Time Correlation Structure:**
 
@@ -1264,23 +1264,23 @@ class HeterodyneAnalysisCore:
                 - Equilibrium limit: J = 6D (Wiener process)
                 - Legacy naming: Parameters labeled "D" are transport coefficients J
 
-                Parameters
-                ----------
-                parameters : np.ndarray
-                    14-parameter array with structure: reference transport (3), sample
-                    transport (3), velocity (3), fraction (4), flow angle (1).
-                    Note: Transport coefficients labeled "D0", "D_offset" in code
-                phi_angle : float
-                    Scattering angle in degrees
-                precomputed_D_t : np.ndarray, optional
-                    Pre-computed transport coefficient array (labeled "D" for legacy compatibility)
-                precomputed_v_t : np.ndarray, optional
-                    Pre-computed velocity array
+        Parameters
+        ----------
+        parameters : np.ndarray
+            14-parameter array with structure: reference transport (3), sample
+            transport (3), velocity (3), fraction (4), flow angle (1).
+            Note: Transport coefficients labeled "D0", "D_offset" in code
+        phi_angle : float
+            Scattering angle in degrees
+        precomputed_D_t : np.ndarray, optional
+            Pre-computed transport coefficient array (labeled "D" for legacy compatibility)
+        precomputed_v_t : np.ndarray, optional
+            Pre-computed velocity array
 
-                Returns
-                -------
-                np.ndarray
-                    Heterodyne correlation matrix c2(t1, t2)
+        Returns
+        -------
+        np.ndarray
+            Heterodyne correlation matrix c2(t1, t2)
         """
         # Validate parameters
         self.validate_heterodyne_parameters(parameters)
