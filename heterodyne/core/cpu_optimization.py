@@ -36,11 +36,12 @@ except ImportError:
     warnings.warn("Numba not available - CPU optimizations will be limited")
 
 try:
-    import scipy.fft
+    from scipy.fft import fft2
 
     SCIPY_FFT_AVAILABLE = True
 except ImportError:
     SCIPY_FFT_AVAILABLE = False
+    fft2 = None  # Placeholder for when scipy.fft is not available
     warnings.warn("SciPy FFT not available - some optimizations disabled")
 
 
@@ -197,7 +198,7 @@ class CPUOptimizer:
 
                 # Process cache-sized blocks with SciPy FFT
                 block = matrix[i:i_end, j:j_end]
-                result[i:i_end, j:j_end] = scipy.fft.fft2(block)
+                result[i:i_end, j:j_end] = fft2(block)
 
         return result
 

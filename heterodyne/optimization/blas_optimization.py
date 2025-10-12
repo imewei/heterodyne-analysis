@@ -28,10 +28,12 @@ Authors: Wei Chen, Hongrui He, Claude (Anthropic)
 Institution: Argonne National Laboratory
 """
 
-import concurrent.futures
 import time
 import warnings
 from collections.abc import Callable
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
 from functools import wraps
 from typing import Any
 
@@ -436,9 +438,7 @@ class BLASOptimizedParameterEstimator:
                     weights=weights_i,
                 )
 
-            with concurrent.futures.ThreadPoolExecutor(
-                max_workers=min(4, n_datasets)
-            ) as executor:
+            with ThreadPoolExecutor(max_workers=min(4, n_datasets)) as executor:
                 # Submit all optimization tasks
                 future_to_index = {
                     executor.submit(optimize_single_dataset, i): i
@@ -447,7 +447,7 @@ class BLASOptimizedParameterEstimator:
 
                 # Collect results
                 results = [None] * n_datasets
-                for future in concurrent.futures.as_completed(future_to_index):
+                for future in as_completed(future_to_index):
                     index = future_to_index[future]
                     try:
                         results[index] = future.result()

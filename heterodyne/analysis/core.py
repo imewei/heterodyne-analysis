@@ -496,9 +496,9 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            Full 14-parameter array for heterodyne model:
-            [D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample,
-             v0, beta, v_offset, f0, f1, f2, f3, phi0]
+            Full 14-parameter array for heterodyne model: [D0_ref, alpha_ref,
+            D_offset_ref, D0_sample, alpha_sample, D_offset_sample, v0, beta,
+            v_offset, f0, f1, f2, f3, phi0]
 
         Returns
         -------
@@ -1093,13 +1093,10 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            14-parameter array for heterodyne model:
-            [J0_ref, alpha_ref, J_offset_ref,           # reference transport (3)
-             J0_sample, alpha_sample, J_offset_sample,  # sample transport (3)
-             v0, beta, v_offset,                        # velocity (3)
-             f0, f1, f2, f3,                            # fraction (4)
-             phi0]                                      # flow angle (1)
-            Note: Transport coefficients labeled "D0", "D_offset" in code
+            14-parameter array for heterodyne model with structure:
+            reference transport (3), sample transport (3), velocity (3),
+            fraction (4), flow angle (1). Note: Transport coefficients
+            labeled "D0", "D_offset" in code.
 
         Raises
         ------
@@ -1270,12 +1267,8 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            14-parameter array:
-            [J0_ref, alpha_ref, J_offset_ref,           # reference transport (3)
-             J0_sample, alpha_sample, J_offset_sample,  # sample transport (3)
-             v0, beta, v_offset,                        # velocity (3)
-             f0, f1, f2, f3,                            # fraction (4)
-             phi0]                                      # flow angle (1)
+            14-parameter array with structure: reference transport (3), sample
+            transport (3), velocity (3), fraction (4), flow angle (1).
             Note: Transport coefficients labeled "D0", "D_offset" in code
         phi_angle : float
             Scattering angle in degrees
@@ -1500,13 +1493,10 @@ class HeterodyneAnalysisCore:
         Parameters
         ----------
         parameters : np.ndarray
-            14-parameter array for heterodyne model:
-            [J0_ref, alpha_ref, J_offset_ref,           # reference transport (3)
-             J0_sample, alpha_sample, J_offset_sample,  # sample transport (3)
-             v0, beta, v_offset,                        # velocity (3)
-             f0, f1, f2, f3,                            # fraction (4)
-             phi0]                                      # flow angle (1)
-            Note: Transport coefficients labeled "D0", "D_offset" in code
+            14-parameter array for heterodyne model with structure: reference
+            transport (3), sample transport (3), velocity (3), fraction (4),
+            flow angle (1). Note: Transport coefficients labeled "D0",
+            "D_offset" in code
         phi_angles : np.ndarray
             Array of scattering angles in degrees
 
@@ -1635,46 +1625,28 @@ class HeterodyneAnalysisCore:
         Returns
         -------
         float or dict
-            If return_components=False: Reduced chi-squared value (float)
-            If return_components=True: Dictionary containing:
-                - chi_squared : float
-                    Total chi-squared value
-                - reduced_chi_squared : float
-                    Averaged reduced chi-squared from optimization angles
-                - reduced_chi_squared_uncertainty : float
-                    Standard error of reduced chi-squared across angles (uncertainty estimate)
-                - reduced_chi_squared_std : float
-                    Standard deviation of reduced chi-squared across angles
-                - n_optimization_angles : int
-                    Number of angles used for optimization
-                - degrees_of_freedom : int
-                    Degrees of freedom for statistical testing (data_points - n_parameters)
-                - angle_chi_squared : list
-                    Chi-squared values for each angle
-                - angle_chi_squared_reduced : list
-                    Reduced chi-squared values for each angle
-                - angle_data_points : list
-                    Number of data points per angle
-                - phi_angles : list
-                    Scattering angles used
-                - scaling_solutions : list
-                    Contrast and offset parameters for each angle
-                - valid : bool
-                    Whether calculation was successful
+            If return_components=False, returns reduced chi-squared value (float).
+            If return_components=True, returns dictionary with keys: chi_squared,
+            reduced_chi_squared, reduced_chi_squared_uncertainty,
+            reduced_chi_squared_std, n_optimization_angles, degrees_of_freedom,
+            angle_chi_squared, angle_chi_squared_reduced, angle_data_points,
+            phi_angles, scaling_solutions, valid
 
         Notes
         -----
-        The uncertainty calculation follows standard error of the mean:
+        The uncertainty calculation follows standard error of the mean::
 
-        reduced_chi2_uncertainty = std(angle_chi2_reduced) / sqrt(n_angles)
+            reduced_chi2_uncertainty = std(angle_chi2_reduced) / sqrt(n_angles)
 
         Interpretation of uncertainty:
+
         - Small uncertainty (< 0.1 * reduced_chi2): Consistent fit across angles
         - Large uncertainty (> 0.5 * reduced_chi2): High angle variability, potential
           systematic issues or model inadequacy
 
-        The method uses averaged (not summed) chi-squared for better angle weighting:
-        reduced_chi2 = mean(chi2_reduced_per_angle) for optimization angles only
+        The method uses averaged (not summed) chi-squared for better angle weighting::
+
+            reduced_chi2 = mean(chi2_reduced_per_angle) for optimization angles only
 
         Quality assessment guidelines:
         - Excellent: reduced_chi2 ≤ 2.0
@@ -2337,23 +2309,10 @@ class HeterodyneAnalysisCore:
         Returns
         -------
         dict[str, Any]
-            Comprehensive analysis results containing:
-                - method : str
-                    Analysis method name
-                - overall_reduced_chi_squared : float
-                    Average reduced chi-squared across optimization angles
-                - reduced_chi_squared_uncertainty : float
-                    Standard error of reduced chi-squared (uncertainty measure)
-                - quality_assessment : dict
-                    Overall and per-angle quality evaluation with thresholds
-                - angle_categorization : dict
-                    Classification of angles into good, unacceptable, and outlier groups
-                - per_angle_analysis : dict
-                    Detailed per-angle chi-squared values and statistics
-                - statistical_summary : dict
-                    Summary statistics including means, medians, and percentiles
-                - recommendations : list
-                    Specific recommendations based on quality assessment
+            Comprehensive analysis results dictionary with keys: method,
+            overall_reduced_chi_squared, reduced_chi_squared_uncertainty,
+            quality_assessment, angle_categorization, per_angle_analysis,
+            statistical_summary, recommendations
 
         Notes
         -----
