@@ -21,7 +21,7 @@ The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):
         2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
     ]
 
-    where: f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
 Two-time correlation structure:
 - xₛ(t₁), xₛ(t₂): Sample fraction at time t₁ and t₂ (each in [0,1])
@@ -1224,63 +1224,63 @@ class HeterodyneAnalysisCore:
         precomputed_v_t: np.ndarray | None = None,
     ) -> np.ndarray:
         """
-        Calculate 2-component heterodyne two-time correlation function.
+                Calculate 2-component heterodyne two-time correlation function.
 
-        Implements **Equation S-95** from He et al. PNAS 2024, using separate transport
-        coefficients for reference and sample components.
+                Implements **Equation S-95** from He et al. PNAS 2024, using separate transport
+                coefficients for reference and sample components.
 
-        **Theoretical Equation S-95:**
+                **Theoretical Equation S-95:**
 
-        c₂(q⃗,t₁,t₂,φ) = 1 + β/f² [
-            [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
-            [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
-            2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
-        ]
+                c₂(q⃗,t₁,t₂,φ) = 1 + β/f² [
+                    [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
+                    [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
+                    2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
+                ]
 
-        where: f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+        where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
-        **Two-Time Correlation Structure:**
+                **Two-Time Correlation Structure:**
 
-        The correlation function is computed as a matrix where each element (i,j)
-        represents the correlation between times t₁[i] and t₂[j]:
+                The correlation function is computed as a matrix where each element (i,j)
+                represents the correlation between times t₁[i] and t₂[j]:
 
-        - Fractions: xₛ(t₁), xₛ(t₂) evaluated at each time (meshgrid)
-        - Reference: xᵣ(t) = 1 - xₛ(t) at each time
-        - Normalization: f² computed from fractions at BOTH times
-        - Integrals: ∫ₜ₁^ₜ₂ computed over time interval for each (t₁,t₂) pair
-        - Angle: φ in cos(φ) = φ₀ - φ_scattering (relative angle between flow and scattering)
+                - Fractions: xₛ(t₁), xₛ(t₂) evaluated at each time (meshgrid)
+                - Reference: xᵣ(t) = 1 - xₛ(t) at each time
+                - Normalization: f² computed from fractions at BOTH times
+                - Integrals: ∫ₜ₁^ₜ₂ computed over time interval for each (t₁,t₂) pair
+                - Angle: φ in cos(φ) = φ₀ - φ_scattering (relative angle between flow and scattering)
 
-        **Implementation Using Field Correlations:**
+                **Implementation Using Field Correlations:**
 
-        The implementation uses:
-            g₁_r(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ Jᵣ(t)dt)  # Reference field correlation
-            g₁_s(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ Jₛ(t)dt)  # Sample field correlation
+                The implementation uses:
+                    g₁_r(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ Jᵣ(t)dt)  # Reference field correlation
+                    g₁_s(t₁,t₂) = exp(-q²/2 ∫ₜ₁^ₜ₂ Jₛ(t)dt)  # Sample field correlation
 
-        Note: g₁² = exp(-q²∫ Jdt) and g₁_r·g₁_s = exp(-½q²∫[Jₛ+Jᵣ]dt)
+                Note: g₁² = exp(-q²∫ Jdt) and g₁_r·g₁_s = exp(-½q²∫[Jₛ+Jᵣ]dt)
 
-        **Transport Coefficient Model:**
-        - Separate transport: Jᵣ(t) and Jₛ(t) for reference and sample
-        - Power-law form: J(t) = J₀·t^α + J_offset
-        - Equilibrium limit: J = 6D (Wiener process)
-        - Legacy naming: Parameters labeled "D" are transport coefficients J
+                **Transport Coefficient Model:**
+                - Separate transport: Jᵣ(t) and Jₛ(t) for reference and sample
+                - Power-law form: J(t) = J₀·t^α + J_offset
+                - Equilibrium limit: J = 6D (Wiener process)
+                - Legacy naming: Parameters labeled "D" are transport coefficients J
 
-        Parameters
-        ----------
-        parameters : np.ndarray
-            14-parameter array with structure: reference transport (3), sample
-            transport (3), velocity (3), fraction (4), flow angle (1).
-            Note: Transport coefficients labeled "D0", "D_offset" in code
-        phi_angle : float
-            Scattering angle in degrees
-        precomputed_D_t : np.ndarray, optional
-            Pre-computed transport coefficient array (labeled "D" for legacy compatibility)
-        precomputed_v_t : np.ndarray, optional
-            Pre-computed velocity array
+                Parameters
+                ----------
+                parameters : np.ndarray
+                    14-parameter array with structure: reference transport (3), sample
+                    transport (3), velocity (3), fraction (4), flow angle (1).
+                    Note: Transport coefficients labeled "D0", "D_offset" in code
+                phi_angle : float
+                    Scattering angle in degrees
+                precomputed_D_t : np.ndarray, optional
+                    Pre-computed transport coefficient array (labeled "D" for legacy compatibility)
+                precomputed_v_t : np.ndarray, optional
+                    Pre-computed velocity array
 
-        Returns
-        -------
-        np.ndarray
-            Heterodyne correlation matrix c2(t1, t2)
+                Returns
+                -------
+                np.ndarray
+                    Heterodyne correlation matrix c2(t1, t2)
         """
         # Validate parameters
         self.validate_heterodyne_parameters(parameters)

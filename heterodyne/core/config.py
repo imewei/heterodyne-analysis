@@ -1,6 +1,6 @@
 """
 Configuration Management for Heterodyne Scattering Analysis
-=========================================================
+===============================================================
 
 Centralized configuration system for XPCS analysis under nonequilibrium conditions.
 Provides JSON-based configuration management with validation, hierarchical parameter
