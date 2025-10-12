@@ -2,8 +2,8 @@
 
 ## Overview
 
-This guide covers the revolutionary distributed computing and machine learning
-acceleration features added to the heterodyne-analysis package. These features provide:
+This guide covers the distributed computing and machine learning acceleration features
+added to the heterodyne-analysis package. These features provide:
 
 - **10-100x speedup** through multi-node distributed optimization
 - **5-50x faster convergence** with ML-accelerated parameter prediction

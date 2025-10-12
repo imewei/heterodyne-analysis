@@ -56,25 +56,38 @@ notes.
 ```python
 from heterodyne.analysis.core import HeterodyneAnalysisCore
 from heterodyne.optimization.classical import ClassicalOptimizer
+import json
 import numpy as np
 
 # Initialize analysis core
 config_file = "config_heterodyne.json"
 core = HeterodyneAnalysisCore(config_file)
 
+# Load config for optimizer
+with open(config_file, 'r') as f:
+    config = json.load(f)
+
 # Load experimental data
 phi_angles = np.array([0, 36, 72, 108, 144])
 c2_data = core.load_experimental_data(phi_angles, len(phi_angles))
 
-# Run optimization
+# Run optimization (uses 14-parameter heterodyne model)
 optimizer = ClassicalOptimizer(core, config)
 params, results = optimizer.run_classical_optimization_optimized(
     phi_angles=phi_angles,
     c2_experimental=c2_data
 )
 
-print(f"Optimal D₀: {params[0]:.3e} Å²/s")
-print(f"Chi-squared: {results['chi_squared']:.6e}")
+# Extract 14 parameters
+D0_ref, alpha_ref, D_offset_ref = params[0:3]
+D0_sample, alpha_sample, D_offset_sample = params[3:6]
+v0, beta, v_offset = params[6:9]
+f0, f1, f2, f3 = params[9:13]
+phi0 = params[13]
+
+print(f"Reference D₀: {D0_ref:.3e} Å²/s")
+print(f"Sample D₀: {D0_sample:.3e} Å²/s")
+print(f"Chi-squared: {results.fun:.6e}")
 ```
 
 ### Frame Counting Utilities
@@ -98,29 +111,49 @@ data_slice = full_data[:, python_start:python_end, python_start:python_end]
 
 ```python
 from heterodyne.optimization.robust import RobustHeterodyneOptimizer
+import numpy as np
 
-# Initialize robust optimizer
+# Initialize robust optimizer with 14-parameter heterodyne model
 robust = RobustHeterodyneOptimizer(core, config)
 
-# Wasserstein DRO
-params_dro, results_dro = robust.optimize_wasserstein_robust(
+# Initial parameters for 14-parameter heterodyne model
+initial_params = np.array([
+    100.0, -0.5, 10.0,       # D0_ref, alpha_ref, D_offset_ref
+    100.0, -0.5, 10.0,       # D0_sample, alpha_sample, D_offset_sample
+    0.1, 0.0, 0.01,          # v0, beta, v_offset
+    0.5, 0.0, 50.0, 0.3,     # f0, f1, f2, f3
+    0.0                      # phi0
+])
+
+# Wasserstein DRO (Distributionally Robust Optimization)
+params_dro, info_dro = robust.run_robust_optimization(
+    initial_parameters=initial_params,
     phi_angles=phi_angles,
     c2_experimental=c2_data,
-    epsilon=0.1  # Uncertainty radius
+    method="wasserstein",
+    uncertainty_radius=0.05  # 5% uncertainty radius
 )
 
 # Scenario-based optimization
-params_scenario, results_scenario = robust.optimize_scenario_based(
+params_scenario, info_scenario = robust.run_robust_optimization(
+    initial_parameters=initial_params,
     phi_angles=phi_angles,
     c2_experimental=c2_data,
-    n_scenarios=50
+    method="scenario",
+    n_scenarios=15
 )
 
 # Ellipsoidal uncertainty
-params_ellip, results_ellip = robust.optimize_ellipsoidal_robust(
+params_ellip, info_ellip = robust.run_robust_optimization(
+    initial_parameters=initial_params,
     phi_angles=phi_angles,
-    c2_experimental=c2_data
+    c2_experimental=c2_data,
+    method="ellipsoidal"
 )
+
+# Access results
+print(f"DRO final chi²: {info_dro['final_chi_squared']:.6e}")
+print(f"Scenario method: {info_scenario['method']}")
 ```
 
 ### Data Loading (APS and APS-U)
@@ -128,17 +161,19 @@ params_ellip, results_ellip = robust.optimize_ellipsoidal_robust(
 ```python
 from heterodyne.data.xpcs_loader import load_xpcs_data, load_xpcs_config
 
-# Load configuration
+# Load configuration from file
 config = load_xpcs_config("config.json")
+print(f"Loaded config with {len(config)} settings")
 
 # Load XPCS data (auto-detects APS vs APS-U format)
-data = load_xpcs_data(config)
+# Returns: (c2_experimental, n_times, phi_angles, n_angles)
+c2_experimental, n_times, phi_angles, n_angles = load_xpcs_data("config.json")
 
 # Access loaded data
-q_list = data['q_list']
-phi_list = data['phi_list']
-time_array = data['time_array']
-c2_experimental = data['c2_experimental']
+print(f"Data shape: {c2_experimental.shape}")  # (n_angles, n_times, n_times)
+print(f"Number of angles: {n_angles}")
+print(f"Number of time points: {n_times}")
+print(f"Phi angles: {phi_angles}")
 ```
 
 ## API Conventions

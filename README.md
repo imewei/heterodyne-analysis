@@ -117,15 +117,16 @@ import numpy as np
 import json
 from heterodyne.analysis.core import HeterodyneAnalysisCore
 from heterodyne.optimization.classical import ClassicalOptimizer
+from heterodyne.data.xpcs_loader import load_xpcs_data
 
 # Load config and initialize
-with open("my_config.json", 'r') as f:
+config_file = "my_config.json"
+with open(config_file, 'r') as f:
     config = json.load(f)
 core = HeterodyneAnalysisCore(config)
 
-# Load your experimental data
-phi_angles = np.array([0, 36, 72, 108, 144])
-c2_data = load_your_data()  # Your data loading function
+# Load experimental XPCS data using the data loader
+c2_data, time_length, phi_angles, num_angles = load_xpcs_data(config_file)
 
 # Run optimization
 optimizer = ClassicalOptimizer(core, config)
@@ -325,7 +326,7 @@ where:
    Jᵣ(t) = J₀_ref × t^(α_ref) + J_offset_ref
    Jₛ(t) = J₀_sample × t^(α_sample) + J_offset_sample
    ```
-   Note: Parameters labeled "D" are transport coefficients J. For equilibrium: J = 6D.
+   Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: J = 6D.
 
 2. **Velocity Coefficient** (shared between components):
    ```
@@ -334,24 +335,55 @@ where:
 
 3. **Sample Fraction Function**:
    ```
-   fₛ(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
+   xₛ(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
    ```
+   where 0 ≤ xₛ(t) ≤ 1, and xᵣ(t) = 1 - xₛ(t)
 
-#### 14-Parameter Structure
+#### 14-Parameter Complete Reference
 
-- **Reference transport** (3): J₀_ref, α_ref, J_offset_ref - Reference component transport [Å²/s]
-- **Sample transport** (3): J₀_sample, α_sample, J_offset_sample - Sample component transport [Å²/s]
-- **Velocity** (3): v₀, β, v_offset - Time-dependent flow velocity [nm/s]
-- **Fraction** (4): f₀, f₁, f₂, f₃ - Time-dependent mixing fraction (dimensionless)
-- **Flow angle** (1): φ₀ - Angle between flow direction and scattering vector [degrees]
+| # | Parameter | Symbol | Units | Physical Meaning | Typical Range |
+|---|-----------|--------|-------|------------------|---------------|
+| **Reference Transport** (3 parameters) |||||
+| 1 | D₀_ref | J₀_ref | Å²/s | Reference transport coefficient at t=1s | 1 - 10⁶ |
+| 2 | α_ref | α_ref | - | Reference transport exponent (power-law) | -2.0 - 2.0 |
+| 3 | D_offset_ref | J_offset_ref | Å²/s | Reference baseline transport | -100 - 100 |
+| **Sample Transport** (3 parameters) |||||
+| 4 | D₀_sample | J₀_sample | Å²/s | Sample transport coefficient at t=1s | 1 - 10⁶ |
+| 5 | α_sample | α_sample | - | Sample transport exponent (power-law) | -2.0 - 2.0 |
+| 6 | D_offset_sample | J_offset_sample | Å²/s | Sample baseline transport | -100 - 100 |
+| **Velocity** (3 parameters) |||||
+| 7 | v₀ | v₀ | nm/s | Velocity coefficient at t=1s | -10 - 10 |
+| 8 | β | β | - | Velocity time-dependence exponent | -2.0 - 2.0 |
+| 9 | v_offset | v_offset | nm/s | Baseline velocity | -1.0 - 1.0 |
+| **Fraction** (4 parameters) |||||
+| 10 | f₀ | f₀ | - | Fraction amplitude (exponential) | 0 - 1.0 |
+| 11 | f₁ | f₁ | s⁻¹ | Fraction rate (exponential) | -1.0 - 1.0 |
+| 12 | f₂ | f₂ | s | Fraction time offset | 0 - 200 |
+| 13 | f₃ | f₃ | - | Fraction baseline | 0 - 1.0 |
+| **Flow Angle** (1 parameter) |||||
+| 14 | φ₀ | φ₀ | degrees | Flow direction angle | -360 - 360 |
+
+**Parameter Implementation:**
+```python
+# Extract 14 parameters
+D0_ref, alpha_ref, D_offset_ref = parameters[0:3]           # Reference transport
+D0_sample, alpha_sample, D_offset_sample = parameters[3:6]  # Sample transport
+v0, beta, v_offset = parameters[6:9]                        # Velocity
+f0, f1, f2, f3 = parameters[9:13]                           # Fraction
+phi0 = parameters[13]                                        # Flow angle
+```
 
 #### Key Physical Features
 
-- **Independent transport dynamics**: Reference and sample components can exhibit different diffusive behaviors
-- **Three correlation terms**: Reference-reference, sample-sample, and reference-sample cross-correlation
-- **Cross-term velocity modulation**: Cosine factor captures flow-induced decorrelation
-- **Time-dependent mixing**: Exponential fraction evolution captures compositional changes
-- **Power-law transport**: Generalizes equilibrium diffusion to nonequilibrium regimes (α ≠ 0)
+- **Independent transport dynamics**: Reference and sample components exhibit different diffusive behaviors (separate Jᵣ and Jₛ)
+- **Three correlation terms**:
+  - Reference autocorrelation: [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫Jᵣdt)
+  - Sample autocorrelation: [xₛ(t₁)xₛ(t₂)]² exp(-q²∫Jₛdt)
+  - Cross-correlation: 2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫[Jₛ+Jᵣ]dt) cos[q cos(φ)∫vdt]
+- **Cross-term velocity modulation**: Cosine factor captures flow-induced decorrelation between components
+- **Time-dependent mixing**: Exponential fraction evolution xₛ(t) captures compositional changes
+- **Power-law transport**: Generalizes equilibrium diffusion to nonequilibrium regimes (α ≠ 0, superdiffusion/subdiffusion)
+- **Two-time correlation**: Full c₂(t₁,t₂) matrix structure preserves nonequilibrium dynamics
 
 ## Frame Counting Convention
 
@@ -526,13 +558,8 @@ with open(config_file, 'r') as f:
 # Initialize analysis core
 core = HeterodyneAnalysisCore(config)
 
-# Load experimental XPCS data
-phi_angles = np.array([0, 36, 72, 108, 144])  # Example angles in degrees
-c2_data = load_xpcs_data(
-    data_path=config['experimental_data']['data_folder_path'],
-    phi_angles=phi_angles,
-    n_angles=len(phi_angles)
-)
+# Load experimental XPCS data using config file
+c2_data, time_length, phi_angles, num_angles = load_xpcs_data(config_file)
 
 # Run classical optimization
 classical = ClassicalOptimizer(core, config)
@@ -564,13 +591,8 @@ with open(config_file, 'r') as f:
 # Initialize analysis core
 core = HeterodyneAnalysisCore(config)
 
-# Load XPCS correlation data
-phi_angles = np.array([0, 36, 72, 108, 144])  # Scattering angles in degrees
-c2_data = load_xpcs_data(
-    data_path=config['experimental_data']['data_folder_path'],
-    phi_angles=phi_angles,
-    n_angles=len(phi_angles)
-)
+# Load XPCS correlation data using config file
+c2_data, time_length, phi_angles, num_angles = load_xpcs_data(config_file)
 
 # Classical analysis for clean data
 classical = ClassicalOptimizer(core, config)
@@ -589,7 +611,7 @@ robust_result_dict = robust.optimize(
 )
 
 # Extract results
-robust_params = robust_result_dict['optimal_params']
+robust_params = robust_result_dict['parameters']
 robust_chi2 = robust_result_dict['chi_squared']
 
 print(f"Classical D₀_ref: {classical_params[0]:.3e} Å²/s")
@@ -615,12 +637,7 @@ with open(config_file, 'r') as f:
 
 # Initialize
 core = HeterodyneAnalysisCore(config)
-phi_angles = np.array([0, 36, 72, 108, 144])
-c2_data = load_xpcs_data(
-    data_path=config['experimental_data']['data_folder_path'],
-    phi_angles=phi_angles,
-    n_angles=len(phi_angles)
-)
+c2_data, time_length, phi_angles, num_angles = load_xpcs_data(config_file)
 
 # Benchmark classical optimization
 classical = ClassicalOptimizer(core, config)

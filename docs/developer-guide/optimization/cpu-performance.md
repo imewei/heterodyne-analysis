@@ -115,7 +115,7 @@ optimizer = EnhancedClassicalOptimizer()
 ### Backward Compatibility
 
 - All existing functionality preserved
-- Existing workflows continue seamlessly
+- Existing workflows continue without modification
 - Performance improvements are transparent
 - Optional advanced features available
 

@@ -148,8 +148,12 @@ c2_theoretical = core.calculate_correlation_function(
 
 **Parameters:**
 
-- `params` (np.ndarray): Model parameters
-  - Heterodyne mode (14 params): `[D0_ref, alpha_ref, D_offset_ref, D0_sample, alpha_sample, D_offset_sample, v0, beta, v_offset, f0, f1, f2, f3, phi0]`
+- `params` (np.ndarray): Model parameters (14-parameter heterodyne model)
+  - Reference transport (3): `D0_ref, alpha_ref, D_offset_ref` - params[0:3]
+  - Sample transport (3): `D0_sample, alpha_sample, D_offset_sample` - params[3:6]
+  - Velocity (3): `v0, beta, v_offset` - params[6:9]
+  - Fraction mixing (4): `f0, f1, f2, f3` - params[9:13]
+  - Flow angle (1): `phi0` - params[13]
 - `phi_angles` (np.ndarray): Scattering angles [degrees]
 - `time_array` (np.ndarray | None): Time points [seconds] (default: use
   `self.time_array`)
@@ -175,15 +179,20 @@ $$c_2(\\phi, t_1, t_2) = 1 + \\exp\\left[-q^2 \\int\_{t_1}^{t_2} D(t)dt\\right] 
 **Example:**
 
 ```python
-# Static isotropic parameters
-params = np.array([1e-12, 1.0, 0.0])  # [D₀, α, D_offset]
-phi_angles = np.array([0, 45, 90])
+# 14-parameter heterodyne model
+params = np.array([
+    100.0, -0.5, 10.0,       # D0_ref, alpha_ref, D_offset_ref
+    100.0, -0.5, 10.0,       # D0_sample, alpha_sample, D_offset_sample
+    0.1, 0.0, 0.01,          # v0, beta, v_offset
+    0.5, 0.0, 50.0, 0.3,     # f0, f1, f2, f3
+    0.0                      # phi0
+])
 
+phi_angles = np.array([0, 36, 72, 108, 144])
+
+# Calculate theoretical correlation
 c2_theory = core.calculate_correlation_function(params, phi_angles)
-
-# Laminar flow parameters
-params_flow = np.array([1e-12, 1.0, 0.0, 5.0, 0.5, 0.0, 45.0])
-c2_flow = core.calculate_correlation_function(params_flow, phi_angles)
+print(f"Correlation shape: {c2_theory.shape}")  # (5, 600, 600)
 ```
 
 #### `calculate_chi_squared_optimized`
@@ -270,9 +279,18 @@ is_valid = core.validate_parameters(params: np.ndarray) -> bool
 **Example:**
 
 ```python
-params = np.array([1e-12, 1.0, 0.0])
+# Validate 14-parameter heterodyne model
+params = np.array([
+    100.0, -0.5, 10.0,       # D0_ref, alpha_ref, D_offset_ref
+    100.0, -0.5, 10.0,       # D0_sample, alpha_sample, D_offset_sample
+    0.1, 0.0, 0.01,          # v0, beta, v_offset
+    0.5, 0.0, 50.0, 0.3,     # f0, f1, f2, f3
+    0.0                      # phi0
+])
+
 if core.validate_parameters(params):
     chi2 = core.calculate_chi_squared_optimized(params, phi_angles, c2_data)
+    print(f"Chi-squared: {chi2:.6e}")
 else:
     print("Invalid parameters!")
 ```
@@ -355,20 +373,38 @@ For production analysis, regenerate cache files to match configuration exactly.
 
 ## Analysis Modes
 
-### Heterodyne Mode
+### Heterodyne Mode (14 Parameters)
 
-**Parameters**: 14 (reference transport: 3, sample transport: 3, velocity: 3, fraction: 4, flow angle: 1)
+**Parameters**: 14 total, organized in 5 groups
 **Use Case**: Two-component heterodyne scattering with time-dependent fraction mixing
 
 ```python
-config = {
-    "analysis_settings": {
-        "static_mode": false
-    }
-}
-
+# Initialize heterodyne analysis
 core = HeterodyneAnalysisCore("config_heterodyne.json")
 assert core.n_params == 14
+
+# 14-parameter structure:
+# params[0:3]   - Reference transport: D0_ref, alpha_ref, D_offset_ref
+# params[3:6]   - Sample transport: D0_sample, alpha_sample, D_offset_sample
+# params[6:9]   - Velocity: v0, beta, v_offset
+# params[9:13]  - Fraction mixing: f0, f1, f2, f3
+# params[13]    - Flow angle: phi0
+
+# Example parameter extraction
+params = np.array([
+    100.0, -0.5, 10.0,       # Reference transport
+    100.0, -0.5, 10.0,       # Sample transport
+    0.1, 0.0, 0.01,          # Velocity
+    0.5, 0.0, 50.0, 0.3,     # Fraction mixing
+    0.0                      # Flow angle
+])
+
+# Extract parameters by group
+D0_ref, alpha_ref, D_offset_ref = params[0:3]
+D0_sample, alpha_sample, D_offset_sample = params[3:6]
+v0, beta, v_offset = params[6:9]
+f0, f1, f2, f3 = params[9:13]
+phi0 = params[13]
 ```
 
 ## Performance Optimizations
@@ -429,6 +465,7 @@ except json.JSONDecodeError as e:
 
 ```python
 import numpy as np
+import json
 from heterodyne.analysis.core import HeterodyneAnalysisCore
 from heterodyne.optimization.classical import ClassicalOptimizer
 
@@ -436,7 +473,11 @@ from heterodyne.optimization.classical import ClassicalOptimizer
 config_file = "config_heterodyne.json"
 core = HeterodyneAnalysisCore(config_file)
 
-print(f"Analysis mode: {'Static' if core.static_mode else 'Laminar Flow'}")
+# Load config for optimizer
+with open(config_file, 'r') as f:
+    config = json.load(f)
+
+print(f"Analysis mode: Heterodyne (14 parameters)")
 print(f"Parameters: {core.n_params}")
 print(f"Time length: {core.time_length}")
 print(f"Time step: {core.dt} s/frame")
@@ -447,11 +488,14 @@ c2_experimental = core.load_experimental_data(phi_angles, len(phi_angles))
 
 print(f"Data shape: {c2_experimental.shape}")
 
-# Calculate correlation for test parameters
-if core.static_mode:
-    test_params = np.array([1e-12, 1.0, 0.0])  # Static parameters
-else:
-    test_params = np.array([1e-12, 1.0, 0.0, 5.0, 0.5, 0.0, 45.0])  # Flow parameters
+# Test parameters for 14-parameter heterodyne model
+test_params = np.array([
+    100.0, -0.5, 10.0,       # D0_ref, alpha_ref, D_offset_ref
+    100.0, -0.5, 10.0,       # D0_sample, alpha_sample, D_offset_sample
+    0.1, 0.0, 0.01,          # v0, beta, v_offset
+    0.5, 0.0, 50.0, 0.3,     # f0, f1, f2, f3
+    0.0                      # phi0
+])
 
 c2_theoretical = core.calculate_correlation_function(test_params, phi_angles)
 
@@ -464,14 +508,22 @@ print(f"Chi-squared: {chi2_details['chi_squared']:.6e}")
 print(f"Contrast parameters: {chi2_details['contrast_params']}")
 
 # Run optimization
-optimizer = ClassicalOptimizer(core, core.config)
+optimizer = ClassicalOptimizer(core, config)
 optimal_params, results = optimizer.run_classical_optimization_optimized(
     phi_angles=phi_angles,
     c2_experimental=c2_experimental
 )
 
-print(f"Optimal parameters: {optimal_params}")
-print(f"Final chi-squared: {results['chi_squared']:.6e}")
+# Extract optimized parameters
+D0_ref, alpha_ref, D_offset_ref = optimal_params[0:3]
+D0_sample, alpha_sample, D_offset_sample = optimal_params[3:6]
+v0, beta, v_offset = optimal_params[6:9]
+f0, f1, f2, f3 = optimal_params[9:13]
+phi0 = optimal_params[13]
+
+print(f"Optimal D0_ref: {D0_ref:.3e} Å²/s")
+print(f"Optimal D0_sample: {D0_sample:.3e} Å²/s")
+print(f"Final chi-squared: {results.fun:.6e}")
 ```
 
 ## See Also

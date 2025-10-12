@@ -9,8 +9,9 @@ including vectorization improvements, BLAS integration, and caching strategies.
 
 ### Vectorization Improvements
 
-**Target**: 5-10x speedup through NumPy vectorization **Achieved**: 53x to 32,765x
-speedup across operations
+**Target**: 5-10x speedup through NumPy vectorization
+
+**Achieved**: 53x to 32,765x speedup across operations
 
 #### Time Integral Matrix Creation
 
@@ -33,8 +34,9 @@ speedup across operations
 
 ### BLAS Optimization
 
-**Target**: 10-20x speedup for mathematical operations **Achieved**: 19.2x geometric
-mean improvement
+**Target**: 10-20x speedup for mathematical operations
+
+**Achieved**: 19.2x geometric mean improvement
 
 #### Key Changes
 
@@ -45,8 +47,9 @@ mean improvement
 
 ### Caching Implementation
 
-**Target**: 100-500x cumulative improvement **Achieved**: 100-500x speedup with 80-95%
-hit rates
+**Target**: 100-500x cumulative improvement
+
+**Achieved**: 100-500x speedup with 80-95% hit rates
 
 #### Cache Types
 
