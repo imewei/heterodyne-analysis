@@ -2317,11 +2317,13 @@ class HeterodyneAnalysisCore:
         Notes
         -----
         Quality Assessment Criteria:
-        - Overall reduced chi-squared uncertainty indicates fit consistency:
-          * Small uncertainty (< 10% of chi2): Consistent across angles
-          * Large uncertainty (> 50% of chi2): High variability, investigate systematically
+
+        - Overall reduced chi-squared uncertainty indicates fit consistency
+        - Small uncertainty (< 10% of chi2): Consistent fit across angles
+        - Large uncertainty (> 50% of chi2): High variability, investigate systematically
 
         Angle Classification:
+
         - Good angles: reduced_chi2 ≤ acceptable_threshold (default 5.0)
         - Unacceptable angles: reduced_chi2 > acceptable_threshold
         - Statistical outliers: reduced_chi2 > mean + 2.5*std
