@@ -13,7 +13,7 @@ Optimized for fast startup with lazy loading of heavy computational modules.
 from .lazy_imports import HeavyDependencyLoader
 
 # Lazy-loaded kernel functions
-_kernels_loader = HeavyDependencyLoader(".kernels", required=True)
+_kernels_loader = HeavyDependencyLoader("heterodyne.core.kernels", required=True)
 
 # Provide lazy-loaded access to kernel functions
 calculate_diffusion_coefficient_numba = (
@@ -42,7 +42,7 @@ memory_efficient_cache = lambda *args, **kwargs: _kernels_loader.memory_efficien
 )
 
 # Lazy-loaded config manager
-ConfigManager = HeavyDependencyLoader(".config", "ConfigManager", required=True)
+ConfigManager = HeavyDependencyLoader("heterodyne.core.config", "ConfigManager", required=True)
 
 __all__ = [
     "ConfigManager",

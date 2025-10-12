@@ -7,11 +7,6 @@ from pathlib import Path
 # Add the parent directory (containing heterodyne package) to Python path
 sys.path.insert(0, str(Path("..").resolve()))
 
-# Also add the heterodyne package directory itself
-heterodyne_path = Path("..").resolve() / "heterodyne"
-if heterodyne_path.exists():
-    sys.path.insert(0, str(heterodyne_path))
-
 # -- Project information -----------------------------------------------------
 project = "Heterodyne Analysis: Research Documentation"
 copyright = "2025, Wei Chen, Hongrui He - Argonne National Laboratory"

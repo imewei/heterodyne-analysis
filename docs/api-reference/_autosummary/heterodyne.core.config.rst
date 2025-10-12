@@ -3,4 +3,4 @@ heterodyne.core.config
 
 .. currentmodule:: heterodyne.core
 
-.. automodule:: config
+.. automodule:: heterodyne.core.config

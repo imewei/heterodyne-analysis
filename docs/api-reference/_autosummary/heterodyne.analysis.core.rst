@@ -3,4 +3,4 @@ heterodyne.analysis.core
 
 .. currentmodule:: heterodyne.analysis
 
-.. automodule:: core
+.. automodule:: heterodyne.analysis.core

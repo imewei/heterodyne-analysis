@@ -4,7 +4,7 @@ Core API
 The core API provides the main classes and functions for heterodyne analysis.
 
 HeterodyneAnalysisCore
---------------------
+----------------------
 
 The main analysis class that orchestrates the entire heterodyne analysis workflow.
 
