@@ -35,11 +35,11 @@ fluids, colloids, and active matter.
 
 - **Heterodyne Scattering Model** (14 parameters): Two-component heterodyne with
   separate reference and sample correlations
-  - **Reference transport** (3 params): D₀_ref, α_ref, D_offset_ref
-  - **Sample transport** (3 params): D₀_sample, α_sample, D_offset_sample
-  - **Velocity** (3 params): v₀, β, v_offset
-  - **Fraction** (4 params): f₀, f₁, f₂, f₃
-  - **Flow angle** (1 param): φ₀
+  - **Reference transport** (3 params): $D_{0,\text{ref}}$, $\alpha_{\text{ref}}$, $D_{\text{offset,ref}}$
+  - **Sample transport** (3 params): $D_{0,\text{sample}}$, $\alpha_{\text{sample}}$, $D_{\text{offset,sample}}$
+  - **Velocity** (3 params): $v_0$, $\beta$, $v_{\text{offset}}$
+  - **Fraction** (4 params): $f_0$, $f_1$, $f_2$, $f_3$
+  - **Flow angle** (1 param): $\phi_0$
 - **Multiple optimization methods**: Classical (Nelder-Mead, Powell), Robust
   (Wasserstein DRO, Scenario-based, Ellipsoidal)
 - **Parameter validation**: Physical constraints ensure valid heterodyne parameters
@@ -306,79 +306,88 @@ with separate reference and sample field correlations under nonequilibrium condi
 
 The two-time correlation function for heterodyne scattering:
 
-```
-c₂(q⃗,t₁,t₂,φ) = 1 + (β/f²) [
-    [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁ᵗ² Jᵣ(t)dt) +
-    [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁ᵗ² Jₛ(t)dt) +
-    2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁ᵗ²[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁ᵗ² v(t)dt]
-]
+$$
+c_2(\vec{q}, t_1, t_2, \phi) = 1 + \frac{\beta}{f^2} \left[
+    \left[x_r(t_1) x_r(t_2)\right]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J_r(t) \, dt\right) +
+    \left[x_s(t_1) x_s(t_2)\right]^2 \exp\left(-q^2 \int_{t_1}^{t_2} J_s(t) \, dt\right) +
+    2 x_r(t_1) x_r(t_2) x_s(t_1) x_s(t_2) \exp\left(-\frac{1}{2} q^2 \int_{t_1}^{t_2} [J_s(t) + J_r(t)] \, dt\right) \cos\left[q \cos(\phi) \int_{t_1}^{t_2} v(t) \, dt\right]
+\right]
+$$
 
 where:
-    f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
-```
+
+$$
+f^2 = \left[x_s(t_1)^2 + x_r(t_1)^2\right] \left[x_s(t_2)^2 + x_r(t_2)^2\right]
+$$
 
 **Key Notation:**
 
-- **Two-time structure**: Fractions evaluated at BOTH t₁ and t₂
-  - `xₛ(t₁)`, `xₛ(t₂)`: Sample fraction at time 1 and time 2
-  - `xᵣ(t₁) = 1 - xₛ(t₁)`: Reference fraction at time 1
-  - `xᵣ(t₂) = 1 - xₛ(t₂)`: Reference fraction at time 2
-- **Normalization**: f² uses fractions at both times
-- **Integrals**: All integrals from t₁ to t₂
-- **Transport coefficients**: Jᵣ(t), Jₛ(t) for reference and sample
-- **Velocity**: v(t) for flow-induced decorrelation
+- **Two-time structure**: Fractions evaluated at BOTH $t_1$ and $t_2$
+  - $x_s(t_1)$, $x_s(t_2)$: Sample fraction at time 1 and time 2
+  - $x_r(t_1) = 1 - x_s(t_1)$: Reference fraction at time 1
+  - $x_r(t_2) = 1 - x_s(t_2)$: Reference fraction at time 2
+- **Normalization**: $f^2$ uses fractions at both times
+- **Integrals**: All integrals from $t_1$ to $t_2$
+- **Transport coefficients**: $J_r(t)$, $J_s(t)$ for reference and sample
+- **Velocity**: $v(t)$ for flow-induced decorrelation
 - **Angles**:
-  - φ in equation represents relative angle between flow and scattering directions
-  - Implementation: φ = φ₀ - φ_scattering (flow angle minus scattering angle)
-  - φ₀: Flow direction parameter (14th parameter)
-- **Contrast**: β (implicit in experimental measurements)
+  - $\phi$ in equation represents relative angle between flow and scattering directions
+  - Implementation: $\phi = \phi_0 - \phi_{\text{scattering}}$ (flow angle minus scattering angle)
+  - $\phi_0$: Flow direction parameter (14th parameter)
+- **Contrast**: $\beta$ (implicit in experimental measurements)
 - **Baseline**: 1 (zero-delay limit)
 
 **Physical Components:**
 
 1. **Transport Coefficients** (separate for reference and sample):
 
-   ```
-   Jᵣ(t) = J₀_ref × t^(α_ref) + J_offset_ref
-   Jₛ(t) = J₀_sample × t^(α_sample) + J_offset_sample
-   ```
+   $$
+   J_r(t) = J_{0,\text{ref}} \times t^{\alpha_{\text{ref}}} + J_{\text{offset,ref}}
+   $$
 
-   Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: J
-   = 6D.
+   $$
+   J_s(t) = J_{0,\text{sample}} \times t^{\alpha_{\text{sample}}} + J_{\text{offset,sample}}
+   $$
+
+   Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: $J = 6D$.
 
 2. **Velocity Coefficient** (shared between components):
 
-   ```
-   v(t) = v₀ × t^β + v_offset
-   ```
+   $$
+   v(t) = v_0 \times t^\beta + v_{\text{offset}}
+   $$
 
 3. **Sample Fraction Function**:
 
-   ```
-   xₛ(t) = f₀ × exp(f₁ × (t - f₂)) + f₃
-   ```
+   $$
+   x_s(t) = f_0 \times \exp\left[f_1 \times (t - f_2)\right] + f_3
+   $$
 
-   where 0 ≤ xₛ(t) ≤ 1, and xᵣ(t) = 1 - xₛ(t)
+   where $0 \leq x_s(t) \leq 1$, and $x_r(t) = 1 - x_s(t)$
 
 #### 14-Parameter Complete Reference
 
 | # | Parameter | Symbol | Units | Physical Meaning | Typical Range |
-|---|-----------|--------|-------|------------------|---------------| | **Reference
-Transport** (3 parameters) ||||| | 1 | D₀_ref | J₀_ref | Å²/s | Reference transport
-coefficient at t=1s | 1 - 10⁶ | | 2 | α_ref | α_ref | - | Reference transport exponent
-(power-law) | -2.0 - 2.0 | | 3 | D_offset_ref | J_offset_ref | Å²/s | Reference baseline
-transport | -100 - 100 | | **Sample Transport** (3 parameters) ||||| | 4 | D₀_sample |
-J₀_sample | Å²/s | Sample transport coefficient at t=1s | 1 - 10⁶ | | 5 | α_sample |
-α_sample | - | Sample transport exponent (power-law) | -2.0 - 2.0 | | 6 |
-D_offset_sample | J_offset_sample | Å²/s | Sample baseline transport | -100 - 100 | |
-**Velocity** (3 parameters) ||||| | 7 | v₀ | v₀ | nm/s | Velocity coefficient at t=1s |
--10 - 10 | | 8 | β | β | - | Velocity time-dependence exponent | -2.0 - 2.0 | | 9 |
-v_offset | v_offset | nm/s | Baseline velocity | -1.0 - 1.0 | | **Fraction** (4
-parameters) ||||| | 10 | f₀ | f₀ | - | Fraction amplitude (exponential) | 0 - 1.0 | | 11
-| f₁ | f₁ | s⁻¹ | Fraction rate (exponential) | -1.0 - 1.0 | | 12 | f₂ | f₂ | s |
-Fraction time offset | 0 - 200 | | 13 | f₃ | f₃ | - | Fraction baseline | 0 - 1.0 | |
-**Flow Angle** (1 parameter) ||||| | 14 | φ₀ | φ₀ | degrees | Flow direction angle |
--360 - 360 |
+|:---|:----------|:-------|:------|:-----------------|:--------------|
+| **Reference Transport** (3 parameters) | | | | | |
+| 1 | D₀_ref | $J_{0,\text{ref}}$ | Ų/s | Reference transport coefficient at t=1s | 1 – 10⁶ |
+| 2 | α_ref | $\alpha_{\text{ref}}$ | – | Reference transport exponent (power-law) | -2.0 – 2.0 |
+| 3 | D_offset_ref | $J_{\text{offset,ref}}$ | Ų/s | Reference baseline transport | -100 – 100 |
+| **Sample Transport** (3 parameters) | | | | | |
+| 4 | D₀_sample | $J_{0,\text{sample}}$ | Ų/s | Sample transport coefficient at t=1s | 1 – 10⁶ |
+| 5 | α_sample | $\alpha_{\text{sample}}$ | – | Sample transport exponent (power-law) | -2.0 – 2.0 |
+| 6 | D_offset_sample | $J_{\text{offset,sample}}$ | Ų/s | Sample baseline transport | -100 – 100 |
+| **Velocity** (3 parameters) | | | | | |
+| 7 | v₀ | $v_0$ | nm/s | Velocity coefficient at t=1s | -10 – 10 |
+| 8 | β | $\beta$ | – | Velocity time-dependence exponent | -2.0 – 2.0 |
+| 9 | v_offset | $v_{\text{offset}}$ | nm/s | Baseline velocity | -1.0 – 1.0 |
+| **Fraction** (4 parameters) | | | | | |
+| 10 | f₀ | $f_0$ | – | Fraction amplitude (exponential) | 0 – 1.0 |
+| 11 | f₁ | $f_1$ | s⁻¹ | Fraction rate (exponential) | -1.0 – 1.0 |
+| 12 | f₂ | $f_2$ | s | Fraction time offset | 0 – 200 |
+| 13 | f₃ | $f_3$ | – | Fraction baseline | 0 – 1.0 |
+| **Flow Angle** (1 parameter) | | | | | |
+| 14 | φ₀ | $\phi_0$ | degrees | Flow direction angle | -360 – 360 |
 
 **Parameter Implementation:**
 
@@ -394,18 +403,18 @@ phi0 = parameters[13]                                        # Flow angle
 #### Key Physical Features
 
 - **Independent transport dynamics**: Reference and sample components exhibit different
-  diffusive behaviors (separate Jᵣ and Jₛ)
+  diffusive behaviors (separate $J_r$ and $J_s$)
 - **Three correlation terms**:
-  - Reference autocorrelation: [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫Jᵣdt)
-  - Sample autocorrelation: [xₛ(t₁)xₛ(t₂)]² exp(-q²∫Jₛdt)
-  - Cross-correlation: 2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫[Jₛ+Jᵣ]dt) cos[q cos(φ)∫vdt]
+  - Reference autocorrelation: $[x_r(t_1) x_r(t_2)]^2 \exp(-q^2 \int J_r \, dt)$
+  - Sample autocorrelation: $[x_s(t_1) x_s(t_2)]^2 \exp(-q^2 \int J_s \, dt)$
+  - Cross-correlation: $2 x_r(t_1) x_r(t_2) x_s(t_1) x_s(t_2) \exp(-\frac{1}{2} q^2 \int [J_s + J_r] \, dt) \cos[q \cos(\phi) \int v \, dt]$
 - **Cross-term velocity modulation**: Cosine factor captures flow-induced decorrelation
   between components
-- **Time-dependent mixing**: Exponential fraction evolution xₛ(t) captures compositional
+- **Time-dependent mixing**: Exponential fraction evolution $x_s(t)$ captures compositional
   changes
 - **Power-law transport**: Generalizes equilibrium diffusion to nonequilibrium regimes
-  (α ≠ 0, superdiffusion/subdiffusion)
-- **Two-time correlation**: Full c₂(t₁,t₂) matrix structure preserves nonequilibrium
+  ($\alpha \neq 0$, superdiffusion/subdiffusion)
+- **Two-time correlation**: Full $c_2(t_1, t_2)$ matrix structure preserves nonequilibrium
   dynamics
 
 ## Frame Counting Convention
@@ -721,10 +730,10 @@ The package uses the **14-parameter heterodyne model** for all analyses:
 
 **XPCS Correlation Data Format:**
 
-- Time correlation functions: `c2(q, φ, t1, t2)` as HDF5 or NumPy arrays
-- Scattering angles: φ values in degrees \[0°, 360°)
-- Time delays: τ = t2 - t1 in seconds
-- Wavevector magnitude: q in Å⁻¹
+- Time correlation functions: $c_2(q, \phi, t_1, t_2)$ as HDF5 or NumPy arrays
+- Scattering angles: $\phi$ values in degrees [0°, 360°)
+- Time delays: $\tau = t_2 - t_1$ in seconds
+- Wavevector magnitude: $q$ in Ų⁻¹
 
 **Configuration Schema:**
 
@@ -869,15 +878,18 @@ export HETERODYNE_PERFORMANCE_MODE=1
 **Performance Comparison (Intel Xeon, 8 cores):**
 
 | Data Size | Pure Python | Numba JIT | Speedup |
-|-----------|-------------|-----------|---------| | 100 points | 2.3 s | 0.7 s | 3.3× |
-| 500 points | 12.1 s | 3.2 s | 3.8× | | 1000 points | 45.2 s | 8.9 s | 5.1× | | 5000
-points | 892 s | 178 s | 5.0× |
+|:----------|------------:|----------:|--------:|
+| 100 points | 2.3 s | 0.7 s | 3.3× |
+| 500 points | 12.1 s | 3.2 s | 3.8× |
+| 1000 points | 45.2 s | 8.9 s | 5.1× |
+| 5000 points | 892 s | 178 s | 5.0× |
 
 **Memory Optimization:**
 
 | Dataset Size | Before | After | Improvement |
-|--------------|--------|-------|-------------| | 8M data points | Memory error | 90%
-limit success | Enabled | | 4M data points | 85% usage | 75% usage | 12% reduction |
+|:-------------|:---------|:-----------------|:------------|
+| 8M data points | Memory error | 90% limit success | Enabled |
+| 4M data points | 85% usage | 75% usage | 12% reduction |
 
 ## Testing
 
