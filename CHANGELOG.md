@@ -6,6 +6,42 @@ this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2025-10-12
+
+### Shell Completion System Enhancement
+
+This patch release updates the shell completion system with corrected alias naming to match the heterodyne-analysis project branding.
+
+### Changed
+
+- **Shell Completion Aliases**: Updated all CLI aliases from homodyne to heterodyne naming convention
+  - `hm` → `hr` (heterodyne base command)
+  - `hmc` → `hrc` (heterodyne classical method)
+  - `hmr` → `hrr` (heterodyne robust method)
+  - `hma` → `hra` (heterodyne all methods)
+  - Retained: `hconfig`, `hexp`, `hsim` (unchanged)
+
+- **System-wide Consistency**: Updated aliases across all completion components
+  - Shell scripts (bash, zsh): `venv/etc/heterodyne/completion/scripts/`
+  - Plugin system: `heterodyne/ui/completion/plugins.py`
+  - Installer: `heterodyne/ui/completion/installer.py`
+  - Documentation: README.md, install_completion.py, uninstall_completion.py
+
+### Technical Details
+
+- All 7 aliases verified consistent across completion engine, shell scripts, and documentation
+- Completion system maintains backward compatibility for non-alias commands
+- No breaking changes to core functionality or API
+- Installation successfully tested with new aliases in virtual environment
+
+### Migration Notes
+
+Users with existing completion installations should:
+1. Uninstall current completion: `python -m heterodyne.ui.completion.uninstall_completion --force`
+2. Reinstall with new aliases: `python -m heterodyne.ui.completion.install_completion`
+3. Reactivate virtual environment: `deactivate && source path/to/venv/bin/activate`
+4. New aliases are immediately available: `hr`, `hrc`, `hrr`, `hra`
+
 ## [1.0.0] - 2025-10-06
 
 ### Major Release - 14-Parameter Heterodyne Model
