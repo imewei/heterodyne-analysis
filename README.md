@@ -341,29 +341,29 @@ $$
 
 1. **Transport Coefficients** (separate for reference and sample):
 
-   $$
-   J_r(t) = J_{0,\text{ref}} \times t^{\alpha_{\text{ref}}} + J_{\text{offset,ref}}
-   $$
+$$
+J_r(t) = J_{0,\text{ref}} \times t^{\alpha_{\text{ref}}} + J_{\text{offset,ref}}
+$$
 
-   $$
-   J_s(t) = J_{0,\text{sample}} \times t^{\alpha_{\text{sample}}} + J_{\text{offset,sample}}
-   $$
+$$
+J_s(t) = J_{0,\text{sample}} \times t^{\alpha_{\text{sample}}} + J_{\text{offset,sample}}
+$$
 
-   Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: $J = 6D$.
+Note: Parameters labeled "D" in code are transport coefficients J. For equilibrium: $J = 6D$.
 
 2. **Velocity Coefficient** (shared between components):
 
-   $$
-   v(t) = v_0 \times t^\beta + v_{\text{offset}}
-   $$
+$$
+v(t) = v_0 \times t^\beta + v_{\text{offset}}
+$$
 
 3. **Sample Fraction Function**:
 
-   $$
-   x_s(t) = f_0 \times \exp\left[f_1 \times (t - f_2)\right] + f_3
-   $$
+$$
+x_s(t) = f_0 \times \exp\left[f_1 \times (t - f_2)\right] + f_3
+$$
 
-   where $0 \leq x_s(t) \leq 1$, and $x_r(t) = 1 - x_s(t)$
+where $0 \leq x_s(t) \leq 1$, and $x_r(t) = 1 - x_s(t)$
 
 #### 14-Parameter Complete Reference
 
