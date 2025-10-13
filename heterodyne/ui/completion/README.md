@@ -63,9 +63,9 @@ heterodyne --method <TAB>
 heterodyne --config <TAB>
 
 # Quick aliases
-hmc <TAB>    # heterodyne --method classical
-hmr <TAB>    # heterodyne --method robust
-hma <TAB>    # heterodyne --method all
+hrc <TAB>    # heterodyne --method classical
+hrr <TAB>    # heterodyne --method robust
+hra <TAB>    # heterodyne --method all
 ```
 
 ### Uninstallation
@@ -109,7 +109,7 @@ python heterodyne/ui/completion/uninstall_completion.py --force
 ### Plugin Types
 
 - **HeterodyneCommandPlugin**: Core heterodyne command completions
-- **AliasPlugin**: Command alias completions (hmc, hmr, hma, etc.)
+- **AliasPlugin**: Command alias completions (hr, hrc, hrr, hra, etc.)
 - **ProjectPlugin**: Project-aware completions
 
 ## Configuration

@@ -874,13 +874,13 @@ end
         return """
 # Heterodyne command aliases
 if [[ -n "$BASH_VERSION" ]] || [[ -n "$ZSH_VERSION" ]]; then
-    alias hmc='heterodyne --method classical' # Classical optimization methods
-    alias hmr='heterodyne --method robust'    # Robust optimization methods
-    alias hma='heterodyne --method all'       # All optimization methods
+    alias hrc='heterodyne --method classical' # Classical optimization methods
+    alias hrr='heterodyne --method robust'    # Robust optimization methods
+    alias hra='heterodyne --method all'       # All optimization methods
     alias hconfig='heterodyne-config'         # Configuration generator
     alias hexp='heterodyne --plot-experimental-data'   # Plot experimental data
     alias hsim='heterodyne --plot-simulated-data'      # Plot simulated data
-    alias hm='heterodyne'                     # Short form
+    alias hr='heterodyne'                     # Short form
 fi
 """
 

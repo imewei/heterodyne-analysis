@@ -316,7 +316,7 @@ class HeterodyneCommandPlugin(CompletionPlugin):
 
 
 class AliasPlugin(CompletionPlugin):
-    """Plugin for completion of heterodyne aliases (hmc, hmr, hma, etc.)."""
+    """Plugin for completion of heterodyne aliases (hr, hrc, hrr, hra, etc.)."""
 
     @property
     def info(self) -> PluginInfo:
@@ -330,20 +330,20 @@ class AliasPlugin(CompletionPlugin):
 
     def can_complete(self, context: CompletionContext) -> bool:
         """Can complete heterodyne aliases."""
-        aliases = ["hmc", "hmr", "hma", "hconfig", "hexp", "hsim", "hm"]
+        aliases = ["hrc", "hrr", "hra", "hconfig", "hexp", "hsim", "hr"]
         return context.command in aliases
 
     def complete(self, context: CompletionContext) -> list[CompletionResult]:
         """Complete alias commands."""
         # Map aliases to their full equivalents
         alias_map = {
-            "hmc": "heterodyne --method classical",
-            "hmr": "heterodyne --method robust",
-            "hma": "heterodyne --method all",
+            "hrc": "heterodyne --method classical",
+            "hrr": "heterodyne --method robust",
+            "hra": "heterodyne --method all",
             "hconfig": "heterodyne-config",
             "hexp": "heterodyne --plot-experimental-data",
             "hsim": "heterodyne --plot-simulated-data",
-            "hm": "heterodyne",
+            "hr": "heterodyne",
         }
 
         if context.command in alias_map:

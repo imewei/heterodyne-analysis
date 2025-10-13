@@ -177,7 +177,7 @@ def confirm_uninstall(installer: CompletionInstaller, force: bool = False) -> bo
     print("\n⚠️  This will remove the Heterodyne Advanced Completion System:")
     print("   • All completion scripts and activation hooks")
     print("   • Cached completion data")
-    print("   • Command aliases (hma, hmc, hmr, etc.)")
+    print("   • Command aliases (hr, hrc, hrr, hra, etc.)")
     print("   • Environment-specific integration")
 
     print(f"\n📍 Installation location: {info['install_base']}")
@@ -378,7 +378,7 @@ def main() -> int:
                     "   2. Check that 'heterodyne <TAB>' no longer provides completions"
                 )
                 print(
-                    "   3. Aliases (hma, hmc, hmr, etc.) should no longer be available"
+                    "   3. Aliases (hr, hrc, hrr, hra, etc.) should no longer be available"
                 )
 
             return 0

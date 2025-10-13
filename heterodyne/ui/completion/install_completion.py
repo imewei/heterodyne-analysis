@@ -88,7 +88,7 @@ Performance Options:
 Advanced Features:
   --enable-project    Enable project-aware completions (default)
   --enable-smart      Enable smart context-aware completions (default)
-  --enable-aliases    Enable command aliases (hma, hmc, hmr, etc.) (default)
+  --enable-aliases    Enable command aliases (hr, hrc, hrr, hra, etc.) (default)
         """,
     )
 
@@ -118,7 +118,7 @@ Advanced Features:
     parser.add_argument(
         "--no-aliases",
         action="store_true",
-        help="Disable command aliases (hma, hmc, hmr, etc.)",
+        help="Disable command aliases (hr, hrc, hrr, hra, etc.)",
     )
 
     parser.add_argument(
@@ -347,7 +347,7 @@ def main() -> int:
                 print("   1. Deactivate and reactivate your virtual environment:")
                 print("      $ deactivate && source /path/to/venv/bin/activate")
                 print("   2. Try: heterodyne <TAB> to test completion")
-                print("   3. Use aliases: hmc, hmr, hma for quick analysis")
+                print("   3. Use aliases: hr, hrc, hrr, hra for quick analysis")
                 print(
                     "\n💡 Note: Completions activate automatically when you activate the venv"
                 )
