@@ -1,0 +1,113 @@
+{
+  "version": "1.0.0",
+  "created": "2025-10-13T00:40:00Z",
+  "description": "fix-commit-errors learned patterns knowledge base",
+  "patterns": [
+    {
+      "pattern_id": "sphinx-rst-literal-block-marker-001",
+      "pattern_name": "Sphinx reST Definition List False Positive",
+      "error_signature": "Definition list ends without a blank line; unexpected unindent. [docutils]",
+      "error_regex": "Definition list ends without a blank line.*unexpected unindent",
+      "tool": "sphinx-build",
+      "error_type": "docutils",
+      "confidence": 99,
+      "success_count": 1,
+      "failure_count": 3,
+      "last_success": "2025-10-13T00:40:00Z",
+      "root_cause": "Sphinx reST parser interprets indented blocks as definition lists when not explicitly marked as literal blocks",
+      "description": "When formula blocks or code snippets are indented in docstrings without explicit literal block markers (::), Sphinx's reST parser incorrectly attempts to parse them as definition lists, leading to 'unexpected unindent' warnings when the indentation pattern doesn't match definition list syntax.",
+      "symptoms": [
+        "Warning message contains 'Definition list ends without a blank line'",
+        "Warning message contains 'unexpected unindent'",
+        "Error occurs in docstrings with indented mathematical formulas",
+        "Error occurs after indented code-like blocks",
+        "Blank lines or indentation adjustments don't resolve the issue"
+      ],
+      "solution": {
+        "type": "rst_markup_correction",
+        "risk_level": "minimal",
+        "steps": [
+          {
+            "step": 1,
+            "action": "Identify introductory text before indented block",
+            "example": "The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):"
+          },
+          {
+            "step": 2,
+            "action": "Add double colon (::) at end of introductory text to create literal block marker",
+            "example": "The heterodyne correlation function (He et al. PNAS 2024, Equation S-95)::"
+          },
+          {
+            "step": 3,
+            "action": "Ensure all formula content including 'where' clauses remain indented within literal block",
+            "example": "    c₂(...) = ...\n    where f² = ..."
+          },
+          {
+            "step": 4,
+            "action": "Verify blank line separates literal block from following content",
+            "example": "    where f² = ...\n\nNext section:"
+          }
+        ],
+        "prevention": "Always use :: syntax when including indented code blocks, formulas, or structured content in reST docstrings"
+      },
+      "failed_approaches": [
+        {
+          "attempt": 1,
+          "commit": "a42c9cf",
+          "approach": "Indented 'where' statements to match formula indentation",
+          "reason_failed": "Did not address root cause - Sphinx still attempted definition list parsing"
+        },
+        {
+          "attempt": 2,
+          "commit": "6586353",
+          "approach": "Added blank lines after indented blocks",
+          "reason_failed": "Blank lines insufficient without explicit literal block marker"
+        },
+        {
+          "attempt": 3,
+          "commit": "c24cd82",
+          "approach": "Unindented 'where' statements to base docstring level",
+          "reason_failed": "Changed formatting but didn't prevent definition list interpretation of formula block"
+        }
+      ],
+      "successful_approach": {
+        "commit": "7b215cc",
+        "approach": "Added :: literal block marker and kept formulas fully indented within literal blocks",
+        "verification": "Zero Sphinx definition list warnings in subsequent build",
+        "workflow_run": 18451815964,
+        "build_result": "success"
+      },
+      "file_patterns": [
+        "*.py docstrings with mathematical formulas",
+        "*.py docstrings with indented code examples",
+        "reStructuredText files with complex indented content"
+      ],
+      "tags": [
+        "sphinx",
+        "restructuredtext",
+        "docstrings",
+        "documentation",
+        "literal-blocks",
+        "definition-lists",
+        "indentation"
+      ],
+      "related_patterns": [],
+      "references": [
+        "https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#literal-blocks",
+        "https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_patterns": 1,
+    "total_fixes": 1,
+    "success_rate": 0.25,
+    "avg_attempts_to_fix": 4,
+    "most_common_error_types": [
+      {
+        "type": "docutils",
+        "count": 1
+      }
+    ]
+  }
+}
