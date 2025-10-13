@@ -367,27 +367,27 @@ where $0 \leq x_s(t) \leq 1$, and $x_r(t) = 1 - x_s(t)$
 
 #### 14-Parameter Complete Reference
 
-| # | Parameter | Symbol | Units | Physical Meaning | Typical Range |
-|:---|:----------|:-------|:------|:-----------------|:--------------|
-| **Reference Transport** (3 parameters) | | | | | |
-| 1 | D₀_ref | $J_{0,\text{ref}}$ | Å²/s | Reference transport coefficient at t=1s | 1 – 10⁶ |
-| 2 | α_ref | $\alpha_{\text{ref}}$ | – | Reference transport exponent (power-law) | -2.0 – 2.0 |
-| 3 | D_offset_ref | $J_{\text{offset,ref}}$ | Å²/s | Reference baseline transport | -100 – 100 |
-| **Sample Transport** (3 parameters) | | | | | |
-| 4 | D₀_sample | $J_{0,\text{sample}}$ | Å²/s | Sample transport coefficient at t=1s | 1 – 10⁶ |
-| 5 | α_sample | $\alpha_{\text{sample}}$ | – | Sample transport exponent (power-law) | -2.0 – 2.0 |
-| 6 | D_offset_sample | $J_{\text{offset,sample}}$ | Å²/s | Sample baseline transport | -100 – 100 |
-| **Velocity** (3 parameters) | | | | | |
-| 7 | v₀ | $v_0$ | Å/s | Velocity coefficient at t=1s | -10 – 10 |
-| 8 | β | $\beta$ | – | Velocity time-dependence exponent | -2.0 – 2.0 |
-| 9 | v_offset | $v_{\text{offset}}$ | Å/s | Baseline velocity | -1.0 – 1.0 |
-| **Fraction** (4 parameters) | | | | | |
-| 10 | f₀ | $f_0$ | – | Fraction amplitude (exponential) | 0 – 1.0 |
-| 11 | f₁ | $f_1$ | s⁻¹ | Fraction rate (exponential) | -1.0 – 1.0 |
-| 12 | f₂ | $f_2$ | s | Fraction time offset | 0 – 200 |
-| 13 | f₃ | $f_3$ | – | Fraction baseline | 0 – 1.0 |
-| **Flow Angle** (1 parameter) | | | | | |
-| 14 | φ₀ | $\phi_0$ | degrees | Flow direction angle | -360 – 360 |
+| # | Parameter | Symbol | Units |
+|:---|:----------|:-------|:------|
+| **Reference Transport** (3 parameters) | | | |
+| 1 | D₀_ref | $J_{0,\text{ref}}$ | Å²/s |
+| 2 | α_ref | $\alpha_{\text{ref}}$ | – |
+| 3 | D_offset_ref | $J_{\text{offset,ref}}$ | Å²/s |
+| **Sample Transport** (3 parameters) | | | |
+| 4 | D₀_sample | $J_{0,\text{sample}}$ | Å²/s |
+| 5 | α_sample | $\alpha_{\text{sample}}$ | – |
+| 6 | D_offset_sample | $J_{\text{offset,sample}}$ | Å²/s |
+| **Velocity** (3 parameters) | | | |
+| 7 | v₀ | $v_0$ | Å/s |
+| 8 | β | $\beta$ | – |
+| 9 | v_offset | $v_{\text{offset}}$ | Å/s |
+| **Fraction** (4 parameters) | | | |
+| 10 | f₀ | $f_0$ | – |
+| 11 | f₁ | $f_1$ | s⁻¹ |
+| 12 | f₂ | $f_2$ | s |
+| 13 | f₃ | $f_3$ | – |
+| **Flow Angle** (1 parameter) | | | |
+| 14 | φ₀ | $\phi_0$ | degrees |
 
 **Parameter Implementation:**
 
