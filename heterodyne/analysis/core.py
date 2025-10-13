@@ -23,6 +23,7 @@ The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):
 
     where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
+
 Two-time correlation structure:
 - xₛ(t₁), xₛ(t₂): Sample fraction at time t₁ and t₂ (each in [0,1])
 - xᵣ(t₁) = 1 - xₛ(t₁): Reference fraction at time t₁
@@ -1238,6 +1239,7 @@ class HeterodyneAnalysisCore:
                 ]
 
                     where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+
 
                 **Two-Time Correlation Structure:**
 
