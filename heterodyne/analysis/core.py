@@ -13,15 +13,14 @@ The heterodyne scattering model describes the two-time correlation function
 c₂(t₁,t₂,φ) for X-ray photon correlation spectroscopy (XPCS) measurements of
 two-component systems (reference + sample) under nonequilibrium conditions.
 
-The heterodyne correlation function (He et al. PNAS 2024, Equation S-95):
+The heterodyne correlation function (He et al. PNAS 2024, Equation S-95)::
 
     c₂(q⃗,t₁,t₂,φ) = 1 + (β/f²)[
         [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
         [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
         2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
     ]
-
-where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+    where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
 Two-time correlation structure:
 - xₛ(t₁), xₛ(t₂): Sample fraction at time t₁ and t₂ (each in [0,1])
@@ -1229,15 +1228,14 @@ class HeterodyneAnalysisCore:
                 Implements **Equation S-95** from He et al. PNAS 2024, using separate transport
                 coefficients for reference and sample components.
 
-                **Theoretical Equation S-95:**
+                **Theoretical Equation S-95:**::
 
-                c₂(q⃗,t₁,t₂,φ) = 1 + β/f² [
-                    [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
-                    [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
-                    2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
-                ]
-
-                where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
+                    c₂(q⃗,t₁,t₂,φ) = 1 + β/f² [
+                        [xᵣ(t₁)xᵣ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jᵣ(t)dt) +
+                        [xₛ(t₁)xₛ(t₂)]² exp(-q²∫ₜ₁^ₜ₂ Jₛ(t)dt) +
+                        2xᵣ(t₁)xᵣ(t₂)xₛ(t₁)xₛ(t₂) exp(-½q²∫ₜ₁^ₜ₂[Jₛ(t)+Jᵣ(t)]dt) cos[q cos(φ)∫ₜ₁^ₜ₂ v(t)dt]
+                    ]
+                    where f² = [xₛ(t₁)² + xᵣ(t₁)²][xₛ(t₂)² + xᵣ(t₂)²]
 
                 **Two-Time Correlation Structure:**
 
