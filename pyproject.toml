@@ -167,11 +167,11 @@ cpu_optimized = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/imewei/heterodyne"
+Homepage = "https://github.com/imewei/heterodyne-analysis"
 Documentation = "https://heterodyne-analysis.readthedocs.io"
-Repository = "https://github.com/imewei/heterodyne"
-Issues = "https://github.com/imewei/heterodyne/issues"
-Changelog = "https://github.com/imewei/heterodyne/blob/main/CHANGELOG.md"
+Repository = "https://github.com/imewei/heterodyne-analysis"
+Issues = "https://github.com/imewei/heterodyne-analysis/issues"
+Changelog = "https://github.com/imewei/heterodyne-analysis/blob/main/CHANGELOG.md"
 
 [project.scripts]
 heterodyne = "heterodyne.cli.run_heterodyne:main"

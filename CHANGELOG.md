@@ -6,6 +6,23 @@ this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-10-13
+
+### Changed
+
+- **Package Homepage Update**: Updated all project URLs from `github.com/imewei/heterodyne` to `github.com/imewei/heterodyne-analysis`
+  - Homepage: `https://github.com/imewei/heterodyne-analysis`
+  - Repository: `https://github.com/imewei/heterodyne-analysis`
+  - Issues: `https://github.com/imewei/heterodyne-analysis/issues`
+  - Changelog: `https://github.com/imewei/heterodyne-analysis/blob/main/CHANGELOG.md`
+  - Updated in pyproject.toml project.urls section
+
+### Technical Details
+
+- All package metadata now correctly points to the heterodyne-analysis repository
+- No breaking changes to functionality or API
+- Documentation URLs remain consistent with project branding
+
 ## [1.0.0] - 2025-10-12
 
 ### Shell Completion System Enhancement
