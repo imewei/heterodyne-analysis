@@ -370,13 +370,13 @@ where $0 \leq x_s(t) \leq 1$, and $x_r(t) = 1 - x_s(t)$
 | # | Parameter | Symbol | Units | Physical Meaning | Typical Range |
 |:---|:----------|:-------|:------|:-----------------|:--------------|
 | **Reference Transport** (3 parameters) | | | | | |
-| 1 | D₀_ref | $J_{0,\text{ref}}$ | Ų/s | Reference transport coefficient at t=1s | 1 – 10⁶ |
+| 1 | D₀_ref | $J_{0,\text{ref}}$ | Å²/s | Reference transport coefficient at t=1s | 1 – 10⁶ |
 | 2 | α_ref | $\alpha_{\text{ref}}$ | – | Reference transport exponent (power-law) | -2.0 – 2.0 |
-| 3 | D_offset_ref | $J_{\text{offset,ref}}$ | Ų/s | Reference baseline transport | -100 – 100 |
+| 3 | D_offset_ref | $J_{\text{offset,ref}}$ | Å²/s | Reference baseline transport | -100 – 100 |
 | **Sample Transport** (3 parameters) | | | | | |
-| 4 | D₀_sample | $J_{0,\text{sample}}$ | Ų/s | Sample transport coefficient at t=1s | 1 – 10⁶ |
+| 4 | D₀_sample | $J_{0,\text{sample}}$ | Å²/s | Sample transport coefficient at t=1s | 1 – 10⁶ |
 | 5 | α_sample | $\alpha_{\text{sample}}$ | – | Sample transport exponent (power-law) | -2.0 – 2.0 |
-| 6 | D_offset_sample | $J_{\text{offset,sample}}$ | Ų/s | Sample baseline transport | -100 – 100 |
+| 6 | D_offset_sample | $J_{\text{offset,sample}}$ | Å²/s | Sample baseline transport | -100 – 100 |
 | **Velocity** (3 parameters) | | | | | |
 | 7 | v₀ | $v_0$ | Å/s | Velocity coefficient at t=1s | -10 – 10 |
 | 8 | β | $\beta$ | – | Velocity time-dependence exponent | -2.0 – 2.0 |
@@ -733,7 +733,7 @@ The package uses the **14-parameter heterodyne model** for all analyses:
 - Time correlation functions: $c_2(q, \phi, t_1, t_2)$ as HDF5 or NumPy arrays
 - Scattering angles: $\phi$ values in degrees [0°, 360°)
 - Time delays: $\tau = t_2 - t_1$ in seconds
-- Wavevector magnitude: $q$ in Ų⁻¹
+- Wavevector magnitude: $q$ in Å⁻¹
 
 **Configuration Schema:**
 
