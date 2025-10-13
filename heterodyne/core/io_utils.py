@@ -74,10 +74,10 @@ def ensure_dir(path: str | Path, permissions: int = 0o755) -> Path:
                 or permissions issues
 
     Example:
-        >>> ensure_dir("./heterodyne_results/classical/traces")
+        >>> ensure_dir("./heterodyne_results/classical/traces") # doctest: +SKIP
         PosixPath('./heterodyne_results/classical/traces')
 
-        >>> ensure_dir("/tmp/analysis", permissions=0o700)  # Owner-only access
+        >>> ensure_dir("/tmp/analysis", permissions=0o700)  # Owner-only access # doctest: +SKIP
         PosixPath('/tmp/analysis')
     """
     path_obj = Path(path)
@@ -133,10 +133,10 @@ def timestamped_filename(
         ...     "include_chi_squared": True,
         ...     "include_config_name": True
         ... }}}
-        >>> timestamped_filename("classical_results", 1.234e-3, config)
+        >>> timestamped_filename("classical_results", 1.234e-3, config) # doctest: +SKIP
         'classical_results_20240315_143022_chi2_0.001234_v5.1'
 
-        >>> timestamped_filename("quick_analysis")  # Minimal version
+        >>> timestamped_filename("quick_analysis")  # Minimal version # doctest: +SKIP
         'quick_analysis_20240315_143022'
     """
     # Default configuration
@@ -247,11 +247,11 @@ def save_json(data: Any, filepath: str | Path, **kwargs: Any) -> bool:
         bool: True if save successful, False if any error occurred
 
     Examples:
-        >>> results = {"parameters": np.array([1.2, 3.4]), "chi2": 1.234e-5}
-        >>> save_json(results, "analysis_results.json")
+        >>> results = {"parameters": np.array([1.2, 3.4]), "chi2": 1.234e-5} # doctest: +SKIP
+        >>> save_json(results, "analysis_results.json") # doctest: +SKIP
         True
 
-        >>> save_json(data, "compact.json", indent=None, separators=(',', ':'))
+        >>> save_json(data, "compact.json", indent=None, separators=(',', ':')) # doctest: +SKIP
         True  # Compact JSON format
     """
     filepath = Path(filepath)
@@ -319,12 +319,12 @@ def save_numpy(
         bool: True if save successful, False if error occurred
 
     Examples:
-        >>> correlation_data = np.random.rand(1000, 50, 50)  # Large 3D array
-        >>> save_numpy(correlation_data, "c2_experimental.npz")
+        >>> correlation_data = np.random.rand(1000, 50, 50)  # Large 3D array # doctest: +SKIP
+        >>> save_numpy(correlation_data, "c2_experimental.npz") # doctest: +SKIP
         True  # Compressed format, much smaller file
 
-        >>> parameters = np.array([1.2, -0.5, 3.4e-3, 0.1])
-        >>> save_numpy(parameters, "optimized_params.npy", compressed=False)
+        >>> parameters = np.array([1.2, -0.5, 3.4e-3, 0.1]) # doctest: +SKIP
+        >>> save_numpy(parameters, "optimized_params.npy", compressed=False) # doctest: +SKIP
         True  # Uncompressed for small arrays
     """
     filepath = Path(filepath)

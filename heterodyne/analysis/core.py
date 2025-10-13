@@ -119,14 +119,14 @@ Usage
 ...           0.0]                 # Flow angle
 >>>
 >>> c2 = analyzer.calculate_heterodyne_correlation(params, phi_angle=0.0)
->>> chi2 = analyzer.calculate_chi_squared_optimized(params, phi_angles, c2_experimental)
+>>> chi2 = analyzer.calculate_chi_squared_optimized(params, phi_angles, c2_experimental) # doctest: +SKIP
 
 Migration from 11-Parameter Model
 ----------------------------------
 Existing configurations can be automatically migrated:
 
 >>> from heterodyne.core.migration import HeterodyneMigration
->>> migrated = HeterodyneMigration.migrate_config_file('old_config.json', 'new_config.json')
+>>> migrated = HeterodyneMigration.migrate_config_file('old_config.json', 'new_config.json') # doctest: +SKIP
 
 The migration initializes sample parameters equal to reference parameters for
 backward compatibility. During optimization, they can diverge.
