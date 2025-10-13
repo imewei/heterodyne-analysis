@@ -378,9 +378,9 @@ where $0 \leq x_s(t) \leq 1$, and $x_r(t) = 1 - x_s(t)$
 | 5 | α_sample | $\alpha_{\text{sample}}$ | – | Sample transport exponent (power-law) | -2.0 – 2.0 |
 | 6 | D_offset_sample | $J_{\text{offset,sample}}$ | Ų/s | Sample baseline transport | -100 – 100 |
 | **Velocity** (3 parameters) | | | | | |
-| 7 | v₀ | $v_0$ | nm/s | Velocity coefficient at t=1s | -10 – 10 |
+| 7 | v₀ | $v_0$ | Å/s | Velocity coefficient at t=1s | -10 – 10 |
 | 8 | β | $\beta$ | – | Velocity time-dependence exponent | -2.0 – 2.0 |
-| 9 | v_offset | $v_{\text{offset}}$ | nm/s | Baseline velocity | -1.0 – 1.0 |
+| 9 | v_offset | $v_{\text{offset}}$ | Å/s | Baseline velocity | -1.0 – 1.0 |
 | **Fraction** (4 parameters) | | | | | |
 | 10 | f₀ | $f_0$ | – | Fraction amplitude (exponential) | 0 – 1.0 |
 | 11 | f₁ | $f_1$ | s⁻¹ | Fraction rate (exponential) | -1.0 – 1.0 |
