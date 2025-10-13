@@ -610,7 +610,7 @@ def save_individual_method_results(
         else:
             specific_method = method_name
 
-        # Create method hierarchy: classical/ or robust/ → specific_method/
+        # Create method hierarchy: classical/ or robust/ -> specific_method/
         method_category_dir = output_dir / method_name
         method_category_dir.mkdir(parents=True, exist_ok=True)
 
