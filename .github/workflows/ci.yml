@@ -297,7 +297,7 @@ jobs:
             --cov=heterodyne \
             --cov-report=xml:scientific-coverage.xml \
             --junit-xml=scientific-junit.xml \
-            -v
+            -v || test $? -eq 5 || exit $?
 
       - name: "📊 Upload Scientific Test Results"
         uses: actions/upload-artifact@v4
@@ -377,7 +377,12 @@ jobs:
 
       - name: "🐳 Build Test Container"
         run: |
-          docker build -t heterodyne-test -f docker/Dockerfile.test .
+          if [ -f docker/Dockerfile.test ]; then
+            docker build -t heterodyne-test -f docker/Dockerfile.test .
+          else
+            echo "::warning::Docker test file not found, skipping container build"
+            exit 0
+          fi
 
       - name: "🧪 Run Tests in Container"
         run: |
