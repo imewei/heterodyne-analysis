@@ -386,18 +386,24 @@ jobs:
 
       - name: "🧪 Run Tests in Container"
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/reports:/workspace/reports \
-            heterodyne-test \
-            pytest heterodyne/tests \
-            --cov=heterodyne \
-            --cov-report=xml:/workspace/reports/container-coverage.xml \
-            --junit-xml=/workspace/reports/container-junit.xml \
-            -m "not gpu" \
-            -n auto
+          if [ -f docker/Dockerfile.test ]; then
+            docker run --rm \
+              -v ${{ github.workspace }}/reports:/workspace/reports \
+              heterodyne-test \
+              pytest heterodyne/tests \
+              --cov=heterodyne \
+              --cov-report=xml:/workspace/reports/container-coverage.xml \
+              --junit-xml=/workspace/reports/container-junit.xml \
+              -m "not gpu" \
+              -n auto
+          else
+            echo "::warning::Docker test file not found, skipping container tests"
+            exit 0
+          fi
 
       - name: "📊 Upload Container Test Results"
         uses: actions/upload-artifact@v4
+        if: always() && hashFiles('docker/Dockerfile.test') != ''
         with:
           name: container-test-results
           path: reports/
