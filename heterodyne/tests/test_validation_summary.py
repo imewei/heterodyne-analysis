@@ -56,8 +56,6 @@ def test_mathematical_correctness():
     assert abs(mean_computed - mean_expected) < 1e-15
     print("✓ Statistical computations verified")
 
-    return True
-
 
 def test_numerical_stability():
     """Test numerical stability across different scales."""
@@ -85,8 +83,6 @@ def test_numerical_stability():
     # For mixed scales, we expect some precision loss but should be reasonable
     assert abs(result_mixed - expected_mixed) / expected_mixed < 1e-12
     print("✓ Mixed scale stability verified")
-
-    return True
 
 
 def test_error_handling_consistency():
@@ -118,8 +114,6 @@ def test_error_handling_consistency():
         raise AssertionError("Should have raised exception")
     except ValueError:
         print("✓ Array shape mismatch handling working")
-
-    return True
 
 
 def test_function_composition_integrity():
@@ -170,11 +164,8 @@ def test_function_composition_integrity():
         assert result.value == 10
         print("✓ Pipeline framework working")
 
-        return True
-
     except ImportError:
         print("ℹ Function composition framework not available (skipping)")
-        return True
 
 
 def test_workflow_components():
@@ -205,11 +196,8 @@ def test_workflow_components():
         assert np.max(normalized) == 1.0
         print("✓ Data processor normalization working")
 
-        return True
-
     except ImportError:
         print("ℹ Workflow components not available (skipping)")
-        return True
 
 
 def test_refactored_functions_exist():
@@ -273,8 +261,6 @@ def test_refactored_functions_exist():
             print("✓ Optimization gradient estimation method exists")
     except ImportError:
         print("ℹ Optimization functions not available")
-
-    return True
 
 
 def run_comprehensive_validation():

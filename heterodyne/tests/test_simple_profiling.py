@@ -301,7 +301,6 @@ def test_profiling_system():
         f"📈 {monitoring_summary.get('metrics_collected', 0)} system metrics collected"
     )
 
-    return combined_results
 
 
 if __name__ == "__main__":

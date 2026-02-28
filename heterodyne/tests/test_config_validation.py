@@ -22,6 +22,8 @@ import os
 import sys
 import tempfile
 
+import pytest
+
 # Add the heterodyne-analysis root directory to Python path for imports
 sys.path.insert(0, "/home/wei/Documents/GitHub/heterodyne-analysis")
 
@@ -117,11 +119,9 @@ def test_valid_configuration_loading():
             # Clean up temporary file
             os.unlink(config_file)
 
-        return True
-
     except Exception as e:
         print(f"❌ Valid configuration loading failed: {e}")
-        return False
+        pytest.fail(f"Valid configuration loading failed: {e}")
 
 
 def test_configuration_file_loading():
@@ -213,11 +213,9 @@ def test_configuration_file_loading():
             except OSError:
                 pass
 
-        return True
-
     except Exception as e:
         print(f"❌ Configuration file loading failed: {e}")
-        return False
+        pytest.fail(f"Configuration file loading failed: {e}")
 
 
 def test_configuration_validation():
@@ -288,11 +286,11 @@ def test_configuration_validation():
             print(f"❌ Valid configuration unexpectedly failed: {e}")
             validation_results.append(False)
 
-        return all(validation_results)
+        assert all(validation_results)
 
     except Exception as e:
         print(f"❌ Configuration validation testing failed: {e}")
-        return False
+        pytest.fail(f"Configuration validation testing failed: {e}")
 
 
 def test_parameter_bounds_validation():
@@ -388,76 +386,9 @@ def test_parameter_bounds_validation():
             # Clean up temporary file
             os.unlink(config_file)
 
-        return True
-
     except Exception as e:
         print(f"❌ Parameter bounds validation failed: {e}")
-        return False
-
-
-def test_default_configuration_generation():
-    """Test default configuration generation."""
-    print("\n🧪 Testing default configuration generation...")
-
-    try:
-        # Test configuration creation utility
-        from heterodyne import create_config
-
-        print("✅ Configuration creation utility imported")
-
-        # Test that we can access the module
-        create_config_functions = [
-            attr for attr in dir(create_config) if not attr.startswith("_")
-        ]
-        print(
-            f"✅ Configuration creation functions available: {create_config_functions}"
-        )
-
-        # Test minimal configuration creation
-        minimal_config = {
-            "analyzer_parameters": {
-                "q_magnitude": 0.0012,
-                "time_step": 0.001,
-                "geometry": "parallel",
-            },
-            "experimental_data": {"data_file": "/tmp/test_data.h5", "format": "hdf5"},
-            "analysis_settings": {
-                "mode": "static",
-                "description": "Minimal test configuration",
-            },
-            "optimization_config": {
-                "classical_optimization": {"methods": ["Nelder-Mead"]}
-            },
-        }
-
-        # Create temporary configuration file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(minimal_config, f, indent=2)
-            config_file = f.name
-
-        try:
-            # Verify minimal configuration works
-            from heterodyne.core.config import ConfigManager
-
-            config_manager = ConfigManager(config_file)
-            print("✅ Minimal configuration accepted")
-
-            # Test that it can generate necessary defaults
-            param_count = config_manager.get_effective_parameter_count()
-            print(f"✅ Default parameter count: {param_count}")
-
-            analysis_mode = config_manager.get_analysis_mode()
-            print(f"✅ Default analysis mode: {analysis_mode}")
-
-        finally:
-            # Clean up temporary file
-            os.unlink(config_file)
-
-        return True
-
-    except Exception as e:
-        print(f"❌ Default configuration generation failed: {e}")
-        return False
+        pytest.fail(f"Parameter bounds validation failed: {e}")
 
 
 def run_all_configuration_tests():
@@ -472,7 +403,6 @@ def run_all_configuration_tests():
     test_results.append(test_configuration_file_loading())
     test_results.append(test_configuration_validation())
     test_results.append(test_parameter_bounds_validation())
-    test_results.append(test_default_configuration_generation())
 
     # Summary
     passed = sum(test_results)

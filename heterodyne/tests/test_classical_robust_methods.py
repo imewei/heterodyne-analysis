@@ -14,6 +14,8 @@ Part of Task 5.6: Validate that classical and robust methods work correctly
 
 import sys
 
+import pytest
+
 # Add the heterodyne-analysis root directory to Python path for imports
 sys.path.insert(0, "/home/wei/Documents/GitHub/heterodyne-analysis")
 
@@ -72,14 +74,12 @@ def test_classical_optimization_imports():
         except Exception as e:
             print(f"⚠️  Could not test available methods: {e}")
 
-        return True
-
     except ImportError as e:
         print(f"❌ Failed to import classical optimization components: {e}")
-        return False
+        pytest.fail(f"Failed to import classical optimization components: {e}")
     except Exception as e:
         print(f"❌ Unexpected error testing classical imports: {e}")
-        return False
+        pytest.fail(f"Unexpected error testing classical imports: {e}")
 
 
 def test_robust_optimization_imports():
@@ -136,14 +136,12 @@ def test_robust_optimization_imports():
         except Exception as e:
             print(f"⚠️  Could not test robust methods in ClassicalOptimizer: {e}")
 
-        return True
-
     except ImportError as e:
         print(f"❌ Failed to import robust optimization components: {e}")
-        return False
+        pytest.fail(f"Failed to import robust optimization components: {e}")
     except Exception as e:
         print(f"❌ Unexpected error testing robust imports: {e}")
-        return False
+        pytest.fail(f"Unexpected error testing robust imports: {e}")
 
 
 def test_optimization_method_selection():
@@ -173,7 +171,7 @@ def test_optimization_method_selection():
 
         if not valid_methods:
             print("❌ No valid non-MCMC methods found!")
-            return False
+            pytest.fail("No valid non-MCMC methods found!")
 
         # Test method compatibility validation
         for method in valid_methods:
@@ -184,11 +182,9 @@ def test_optimization_method_selection():
         recommendations = optimizer.get_method_recommendations()
         print(f"✅ Method recommendations available: {list(recommendations.keys())}")
 
-        return True
-
     except Exception as e:
         print(f"❌ Error testing method selection: {e}")
-        return False
+        pytest.fail(f"Error testing method selection: {e}")
 
 
 def test_core_parameter_estimation():
@@ -253,14 +249,12 @@ def test_core_parameter_estimation():
         bounds = optimizer.get_parameter_bounds(effective_param_count=3)
         print(f"✅ Parameter bounds extraction: {len(bounds)} bounds found")
 
-        return True
-
     except ImportError as e:
         print(f"❌ Failed to import parameter estimation components: {e}")
-        return False
+        pytest.fail(f"Failed to import parameter estimation components: {e}")
     except Exception as e:
         print(f"❌ Unexpected error testing parameter estimation: {e}")
-        return False
+        pytest.fail(f"Unexpected error testing parameter estimation: {e}")
 
 
 def test_optimization_workflow():
@@ -334,11 +328,9 @@ def test_optimization_workflow():
         if success and hasattr(result, "x"):
             print(f"✅ Optimization result returned valid parameters: {result.x[:3]}")
 
-        return True
-
     except Exception as e:
         print(f"❌ Error testing optimization workflow: {e}")
-        return False
+        pytest.fail(f"Error testing optimization workflow: {e}")
 
 
 def run_all_tests():

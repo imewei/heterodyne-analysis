@@ -93,20 +93,6 @@ class TestRunner:
 
         return pytest.main(args)
 
-    def run_scientific_tests(self, verbose: bool = False) -> int:
-        """Run scientific computing validation tests."""
-        print("🔬 Running Scientific Validation Tests...")
-
-        args = [
-            "heterodyne/tests/test_scientific_validation.py",
-            "-v" if verbose else "-q",
-            "--tb=short",
-            "-m",
-            "scientific",
-        ]
-
-        return pytest.main(args)
-
     def run_all_tests(
         self,
         verbose: bool = False,
@@ -330,8 +316,7 @@ Examples:
   python test_runner.py --unit --coverage        # Unit tests with coverage
   python test_runner.py --fast                   # Quick tests only
   python test_runner.py --performance --benchmark # Performance benchmarks
-  python test_runner.py --scientific             # Scientific validation
-  python test_runner.py --smoke                  # Minimal smoke tests
+python test_runner.py --smoke                  # Minimal smoke tests
   python test_runner.py --check-env              # Check test environment
         """,
     )
@@ -351,9 +336,6 @@ Examples:
         "--performance", action="store_true", help="Run performance tests"
     )
     parser.add_argument("--security", action="store_true", help="Run security tests")
-    parser.add_argument(
-        "--scientific", action="store_true", help="Run scientific validation tests"
-    )
     parser.add_argument("--fast", action="store_true", help="Run fast tests only")
     parser.add_argument("--smoke", action="store_true", help="Run smoke tests")
     parser.add_argument(
@@ -426,8 +408,6 @@ Examples:
         )
     elif args.security:
         result = runner.run_security_tests(verbose=args.verbose)
-    elif args.scientific:
-        result = runner.run_scientific_tests(verbose=args.verbose)
     elif args.fast:
         result = runner.run_fast_tests(verbose=args.verbose)
     elif args.smoke:

@@ -506,50 +506,6 @@ def create_test_environment(temp_dir):
     }
 
 
-def generate_synthetic_xpcs_data(n_angles=8, n_times=10, seed=42):
-    """Generate synthetic XPCS data for testing."""
-    np.random.seed(seed)
-
-    angles = np.linspace(0, 2 * np.pi, n_angles, endpoint=False)
-    t1_array = np.linspace(0.5, 5.0, n_times)
-    t2_array = np.linspace(1.0, 5.5, n_times)
-
-    c2_data = np.ones((n_angles, n_times, n_times))
-
-    # Parameters for synthetic data
-    D0, alpha, D_offset = 1e-3, 0.9, 1e-4
-    gamma0, beta, gamma_offset = 0.02, 0.8, 0.002
-
-    for i, angle in enumerate(angles):
-        for j, t1 in enumerate(t1_array):
-            for k, t2 in enumerate(t2_array):
-                dt = abs(t2 - t1)
-
-                # Diffusion contribution
-                D_integral = D0 * (dt ** (alpha + 1)) / (alpha + 1) + D_offset * dt
-
-                # Shear contribution (simplified)
-                shear_phase = (
-                    gamma0 * (dt ** (beta + 1)) / (beta + 1) + gamma_offset * dt
-                )
-                shear_factor = np.sinc(0.1 * shear_phase * np.cos(angle)) ** 2
-
-                # Combined correlation
-                g1 = np.exp(-0.05 * D_integral) * shear_factor
-                g2 = 1.0 + 0.95 * g1**2
-
-                # Add realistic noise
-                noise = 0.01 * np.random.randn()
-                c2_data[i, j, k] = g2 + noise
-
-    return {
-        "c2_data": c2_data,
-        "angles": angles,
-        "t1_array": t1_array,
-        "t2_array": t2_array,
-    }
-
-
 # Pytest hooks for custom test execution
 def pytest_runtest_setup(item):
     """Setup for individual test runs."""

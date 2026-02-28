@@ -409,7 +409,7 @@ class TestNumericalIntegrationAccuracy:
         y = np.sin(x)
 
         # Trapezoidal rule
-        integral_trap = np.trapz(y, x)
+        integral_trap = np.trapezoid(y, x)
 
         # Should be very close to 2
         np.testing.assert_allclose(integral_trap, 2.0, rtol=1e-6)
@@ -418,7 +418,7 @@ class TestNumericalIntegrationAccuracy:
         x_poly = np.linspace(0, 1, 1000)
         y_poly = x_poly**2
 
-        integral_poly = np.trapz(y_poly, x_poly)
+        integral_poly = np.trapezoid(y_poly, x_poly)
         np.testing.assert_allclose(integral_poly, 1.0 / 3.0, rtol=1e-6)
 
         print("✓ Trapezoidal integration accuracy verified")

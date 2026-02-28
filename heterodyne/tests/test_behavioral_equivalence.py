@@ -547,7 +547,7 @@ class TestNumericalAccuracyValidation:
         integral_manual *= x[1] - x[0]
 
         # NumPy trapezoidal integration
-        integral_numpy = np.trapz(y, x)
+        integral_numpy = np.trapezoid(y, x)
 
         # Should be very close
         np.testing.assert_allclose(integral_manual, integral_numpy, rtol=1e-12)
