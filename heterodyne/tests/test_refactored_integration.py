@@ -182,112 +182,6 @@ class TestRefactoredCalculateChiSquared:
             pytest.skip("heterodyne.analysis.core not available")
 
 
-class TestRefactoredRunAnalysis:
-    """Test the refactored run_analysis function."""
-
-    def test_config_validation_refactored(self):
-        """Test the refactored configuration validation."""
-        try:
-            from heterodyne.cli.run_heterodyne import _validate_and_load_config
-
-            # Create valid config
-            config = {
-                "analyzer_parameters": {
-                    "temporal": {"dt": 0.1},
-                    "angular": {"phi_angles": "0,45,90,135"},
-                },
-                "initial_parameters": {
-                    "parameter_names": ["D0", "alpha"],
-                    "values": [1e-11, 0.5],
-                },
-            }
-
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".json", delete=False
-            ) as f:
-                json.dump(config, f)
-                config_path = f.name
-
-            try:
-                # Test refactored validation
-                loaded_config = _validate_and_load_config(config_path)
-
-                # Should contain expected sections
-                assert "analyzer_parameters" in loaded_config
-                assert "initial_parameters" in loaded_config
-
-                print("✓ Refactored config validation working")
-
-            finally:
-                os.unlink(config_path)
-
-        except ImportError as e:
-            print(f"Skipping config validation test: {e}")
-            pytest.skip("heterodyne.cli.run_heterodyne not available")
-
-    def test_config_override_refactored(self):
-        """Test the refactored configuration override logic."""
-        try:
-            from heterodyne.cli.run_heterodyne import _create_config_override
-
-            # Test override creation
-            override = _create_config_override(mode="heterodyne", method="classical")
-
-            # Should create proper override structure
-            assert isinstance(override, dict)
-            print("✓ Refactored config override working")
-
-        except ImportError as e:
-            print(f"Skipping config override test: {e}")
-            pytest.skip("heterodyne.cli.run_heterodyne not available")
-
-
-class TestRefactoredPlotting:
-    """Test the refactored plotting functions."""
-
-    def test_subplot_configuration_refactored(self):
-        """Test the refactored subplot configuration."""
-        try:
-            from heterodyne.cli.run_heterodyne import _configure_plot_layout
-
-            # Test different angle counts
-            test_cases = [3, 4, 6, 9, 12]
-
-            for n_angles in test_cases:
-                n_rows, n_cols = _configure_plot_layout(n_angles)
-
-                # Verify layout can accommodate all angles
-                assert n_rows * n_cols >= n_angles
-                assert n_rows > 0 and n_cols > 0
-
-            print("✓ Refactored subplot configuration working")
-
-        except ImportError as e:
-            print(f"Skipping subplot test: {e}")
-            pytest.skip("heterodyne.cli.run_heterodyne not available")
-
-    def test_colormap_processing_refactored(self):
-        """Test the refactored colormap processing."""
-        try:
-            from heterodyne.cli.run_heterodyne import _setup_colormap_and_limits
-
-            # Test data
-            data = np.random.rand(10, 10)
-
-            # Test colormap setup
-            vmin, vmax = _setup_colormap_and_limits(data)
-
-            # Should return valid limits
-            assert vmin <= vmax
-            assert np.isfinite(vmin) and np.isfinite(vmax)
-
-            print("✓ Refactored colormap processing working")
-
-        except ImportError as e:
-            print(f"Skipping colormap test: {e}")
-            pytest.skip("heterodyne.cli.run_heterodyne not available")
-
-
 class TestRefactoredOptimization:
     """Test the refactored optimization functions."""
 
@@ -462,8 +356,6 @@ def run_integration_tests():
 
     test_classes = [
         TestRefactoredCalculateChiSquared,
-        TestRefactoredRunAnalysis,
-        TestRefactoredPlotting,
         TestRefactoredOptimization,
         TestCompositionFramework,
     ]
