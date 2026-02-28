@@ -694,99 +694,6 @@ def refresh_kernel_functions():
     return False
 
 
-def compute_g1_correlation_legacy(
-    t1, t2, phi, q, D0, alpha, D_offset, gamma0, beta, gamma_offset, phi0
-):
-    """
-    Legacy compatibility wrapper for compute_g1_correlation_numba.
-
-    This function maintains backward compatibility with tests that expect
-    the old 11-parameter signature while using the new optimized 2-parameter
-    implementation internally.
-
-    Parameters
-    ----------
-    t1, t2 : float
-        Time points
-    phi : float
-        Angle (radians)
-    q : float
-        Wavevector magnitude
-    D0, alpha, D_offset : float
-        Diffusion parameters
-    gamma0, beta, gamma_offset, phi0 : float
-        Shear flow parameters
-
-    Returns
-    -------
-    float
-        Single g1 correlation value
-    """
-    # Handle zero time delay
-    dt = abs(t2 - t1)
-    if dt == 0:
-        return 1.0  # No decay at t=0
-
-    # Compute transport coefficient integral properly
-    # For transport coefficient: ∫ J(t') dt' from t1 to t2
-    # J(t) = J₀ * t^alpha + J_offset (labeled D in code for compatibility)
-    # Integral = J₀ * (t2^(alpha+1) - t1^(alpha+1))/(alpha+1) + J_offset * (t2 - t1)
-
-    t_min = min(t1, t2)
-    t_max = max(t1, t2)
-
-    if abs(alpha - (-1.0)) < 1e-10:
-        # Special case for alpha = -1 (logarithmic)
-        diffusion_integral = D0 * (np.log(t_max) - np.log(t_min)) + D_offset * (
-            t_max - t_min
-        )
-    else:
-        # General case
-        diffusion_integral = (D0 / (alpha + 1)) * (
-            t_max ** (alpha + 1) - t_min ** (alpha + 1)
-        ) + D_offset * (t_max - t_min)
-
-    # Diffusion contribution: g1_diff = exp(-q²/2 * diffusion_integral)
-    g1_diff = np.exp(-0.5 * q**2 * diffusion_integral)
-
-    # Compute shear flow contribution if gamma0 > 0
-    if abs(gamma0) > 1e-15 or abs(gamma_offset) > 1e-15:
-        # Shear rate integral: ∫ γ̇(t') dt' from t1 to t2
-        # γ̇(t) = gamma0 * t^beta + gamma_offset
-
-        if abs(beta - (-1.0)) < 1e-10:
-            # Special case for beta = -1 (logarithmic)
-            shear_integral = gamma0 * (np.log(t_max) - np.log(t_min)) + gamma_offset * (
-                t_max - t_min
-            )
-        else:
-            # General case
-            shear_integral = (gamma0 / (beta + 1)) * (
-                t_max ** (beta + 1) - t_min ** (beta + 1)
-            ) + gamma_offset * (t_max - t_min)
-
-        # Characteristic length L
-        # For XPCS experiments, typical gap sizes are 10-100 μm
-        # However, the effective length in the correlation function depends on
-        # the scattering geometry and beam coherence length
-        # Using L = 100 Å ensures shear phase stays in linear regime for typical parameters
-        L = 1e2  # Å - adjusted for numerical stability and weak shear regime
-
-        # Shear phase: Φ(φ,t₁,t₂) = (1/2π) q L cos(φ₀-φ) ∫ γ̇(t')dt'
-        phase = (1.0 / (2.0 * np.pi)) * q * L * np.cos(phi0 - phi) * shear_integral
-
-        # Shear contribution: g1_shear = sinc²(phase) where sinc is normalized
-        g1_shear = _compute_sinc_squared_single(phase)
-
-        # Combined g1 = g1_diff * g1_shear
-        g1 = g1_diff * g1_shear
-    else:
-        # No shear, only transport coefficient contribution
-        g1 = g1_diff
-
-    return float(g1)
-
-
 # Create a flexible wrapper that handles both single values and matrices
 def compute_sinc_squared_numba_flexible(x, prefactor=None):
     """
@@ -841,43 +748,14 @@ def compute_g1_correlation_vectorized(D_integral, wavevector_q_squared_half_dt):
 
     Notes
     -----
-    This is the vectorized version optimized for batch processing.
-    For full 11-parameter calculations, use compute_g1_correlation_legacy.
+    This is the primary g1 correlation function. The transport coefficient
+    integral should be pre-computed via _create_time_integral_matrix_impl.
     """
     return np.exp(-wavevector_q_squared_half_dt * D_integral)
 
 
-def compute_g1_correlation_numba_flexible(*args, **kwargs):
-    """
-    Flexible g1 correlation function supporting both legacy and vectorized signatures.
-
-    Signatures
-    ----------
-    1. Legacy (11 parameters)::
-
-        compute_g1_correlation_numba(t1, t2, phi, q, D0, alpha, D_offset,
-                                      gamma0, beta, gamma_offset, phi0)
-
-    2. Vectorized (2 parameters)::
-
-        compute_g1_correlation_numba(D_integral, wavevector_q_squared_half_dt)
-    """
-    if len(args) == 2 and not kwargs:
-        # Vectorized signature: (D_integral, wavevector_q_squared_half_dt)
-        return compute_g1_correlation_vectorized(args[0], args[1])
-    if len(args) == 11 or (len(args) + len(kwargs)) == 11:
-        # Legacy signature: 11 parameters
-        return compute_g1_correlation_legacy(*args, **kwargs)
-    raise TypeError(
-        f"compute_g1_correlation_numba() takes either 2 arguments "
-        f"(D_integral, wavevector_q_squared_half_dt) or 11 arguments "
-        f"(t1, t2, phi, q, D0, alpha, D_offset, gamma0, beta, gamma_offset, phi0), "
-        f"got {len(args)} positional and {len(kwargs)} keyword arguments"
-    )
-
-
-# Export the flexible function as the main API
-compute_g1_correlation_numba = compute_g1_correlation_numba_flexible
+# Export the vectorized function as the main API
+compute_g1_correlation_numba = compute_g1_correlation_vectorized
 
 # Export the flexible sinc function
 compute_sinc_squared_numba = compute_sinc_squared_numba_flexible
