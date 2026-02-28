@@ -441,7 +441,7 @@ class IntegrationHelper:
                     )
 
                 logger.info("Added distributed optimization capabilities")
-            except ImportError as e:
+            except (ImportError, ValueError) as e:
                 logger.warning(f"Failed to add distributed capabilities: {e}")
 
         # Add ML acceleration
@@ -460,7 +460,7 @@ class IntegrationHelper:
                     )
 
                 logger.info("Added ML acceleration capabilities")
-            except ImportError as e:
+            except (ImportError, ValueError) as e:
                 logger.warning(f"Failed to add ML capabilities: {e}")
 
         return enhanced_optimizer

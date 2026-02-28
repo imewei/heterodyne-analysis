@@ -102,10 +102,10 @@ try:
 
     CVXPY_AVAILABLE = True
 except ImportError as e:
-    import warnings
+    import logging as _logging
 
-    warnings.warn(
-        f"CVXPY not available for robust optimization: {e}", ImportWarning, stacklevel=2
+    _logging.getLogger(__name__).info(
+        "CVXPY not available for robust optimization: %s", e
     )
     CVXPY_AVAILABLE = False
     cp = None  # Explicit None assignment for missing dependency
@@ -117,9 +117,7 @@ try:
     _ = gurobipy  # Explicit unused variable to check import success
     GUROBI_AVAILABLE = True
 except ImportError as e:
-    import warnings
-
-    warnings.warn(f"Gurobi solver not available: {e}", ImportWarning, stacklevel=2)
+    _logging.getLogger(__name__).info("Gurobi solver not available: %s", e)
     GUROBI_AVAILABLE = False
 
 logger = logging.getLogger(__name__)

@@ -214,7 +214,7 @@ class ImportVerificationSuite:
             for module_name in imports.keys():
                 try:
                     importlib.import_module(module_name)
-                except ImportError as e:
+                except (ImportError, ValueError) as e:
                     # Skip known optional dependencies
                     optional_deps = [
                         "numba",
@@ -231,6 +231,8 @@ class ImportVerificationSuite:
                         "ray",
                         "dask",
                         "mpi4py",
+                        "typer",
+                        "sklearn",
                     ]
                     if any(opt in module_name.lower() for opt in optional_deps):
                         continue
@@ -249,7 +251,7 @@ class ImportVerificationSuite:
                                 full_module = importlib.import_module(
                                     module, package_name
                                 )
-                            except ImportError:
+                            except (ImportError, ValueError):
                                 # For relative imports, try resolving manually
                                 rel_path = file_path.relative_to(self.package_root)
                                 current_parts = list(
@@ -290,7 +292,7 @@ class ImportVerificationSuite:
                                         full_module = importlib.import_module(
                                             resolved_module
                                         )
-                                    except ImportError:
+                                    except (ImportError, ValueError):
                                         # Skip if we can't resolve - might be a test file or conditional import
                                         continue
                                 else:
@@ -300,7 +302,7 @@ class ImportVerificationSuite:
                     else:
                         try:
                             full_module = importlib.import_module(module)
-                        except ImportError:
+                        except (ImportError, ValueError):
                             # Skip known optional dependencies and heterodyne submodules that might not exist
                             optional_deps = [
                                 "numba",
@@ -317,6 +319,8 @@ class ImportVerificationSuite:
                                 "ray",
                                 "dask",
                                 "mpi4py",
+                                "typer",
+                                "sklearn",
                             ]
                             if (
                                 any(opt in module.lower() for opt in optional_deps)
@@ -364,7 +368,7 @@ class ImportVerificationSuite:
                             }
                         )
 
-                except ImportError as e:
+                except (ImportError, ValueError) as e:
                     # Skip known optional dependencies and relative imports that can't be resolved
                     optional_deps = [
                         "numba",
@@ -381,6 +385,8 @@ class ImportVerificationSuite:
                         "ray",
                         "dask",
                         "mpi4py",
+                        "typer",
+                        "sklearn",
                     ]
                     if (
                         any(opt in str(e).lower() for opt in optional_deps)
@@ -443,7 +449,7 @@ class ImportVerificationSuite:
                                     module, package_name
                                 )
                                 file_deps.add(resolved)
-                            except ImportError:
+                            except (ImportError, ValueError):
                                 pass
                     else:
                         file_deps.add(module)
@@ -874,7 +880,7 @@ class TestImportVerification:
 
                     importlib.import_module(module_name)
 
-                except ImportError:
+                except (ImportError, ValueError):
                     # Skip if module not available
                     continue
 
@@ -976,7 +982,7 @@ class TestImportOptimization:
         # Import heterodyne.core.kernels module
         try:
             importlib.import_module("heterodyne.core.kernels")
-        except ImportError:
+        except (ImportError, ValueError):
             pytest.skip("heterodyne.core.kernels not available")
 
         # Clear numba-related modules
@@ -994,7 +1000,7 @@ class TestImportOptimization:
                 try:
                     # Reload to ensure we're not using cached version
                     importlib.import_module("heterodyne.core.kernels")
-                except ImportError:
+                except (ImportError, ValueError):
                     # Expected when numba is not available
                     pass
 
@@ -1051,7 +1057,7 @@ class TestImportOptimization:
                 if hasattr(module, "__doc__"):
                     assert isinstance(module.__doc__, str)
 
-            except ImportError as e:
+            except (ImportError, ValueError) as e:
                 pytest.fail(f"Module {module_name} failed to import: {e}")
 
     @pytest.mark.performance
@@ -1076,7 +1082,7 @@ class TestImportOptimization:
             with PerformanceTimer(f"Import {module_name}") as timer:
                 try:
                     importlib.import_module(module_name)
-                except ImportError:
+                except (ImportError, ValueError):
                     continue  # Skip if module not available
 
             if (

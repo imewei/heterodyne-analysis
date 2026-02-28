@@ -4,6 +4,10 @@ Plotting and visualization modules for heterodyne analysis.
 This module provides backward compatibility for plotting modules moved from the root directory.
 """
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 # Import plotting functions when this module is imported
 # This enables both new-style and old-style imports to work
 
@@ -12,11 +16,7 @@ try:
     from . import enhanced_plotting
     from . import plotting
 except ImportError as e:
-    import warnings
-
-    warnings.warn(
-        f"Could not import visualization modules: {e}", ImportWarning, stacklevel=2
-    )
+    _logger.info("Could not import visualization modules: %s", e)
     # Create placeholder modules for compatibility
     import types
 
@@ -29,11 +29,7 @@ try:
     from .plotting import get_plot_config
     from .plotting import plot_c2_heatmaps
 except ImportError as e:
-    import warnings
-
-    warnings.warn(
-        f"Could not import visualization functions: {e}", ImportWarning, stacklevel=2
-    )
+    _logger.info("Could not import visualization functions: %s", e)
     plot_c2_heatmaps = None
     get_plot_config = None
     EnhancedPlottingManager = None

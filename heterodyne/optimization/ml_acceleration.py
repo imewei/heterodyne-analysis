@@ -62,7 +62,7 @@ try:
     from sklearn.preprocessing import StandardScaler
 
     _ML_BACKENDS_AVAILABLE["sklearn"] = True
-except ImportError:
+except (ImportError, ValueError):
     _ML_BACKENDS_AVAILABLE["sklearn"] = False
 
 # XGBoost

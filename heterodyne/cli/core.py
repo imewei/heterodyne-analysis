@@ -62,7 +62,7 @@ try:
     )
 
     DISTRIBUTED_AVAILABLE = True
-except ImportError:
+except (ImportError, ValueError):
     DISTRIBUTED_AVAILABLE = False
     integrate_distributed_classical = None
     integrate_distributed_robust = None
@@ -74,7 +74,7 @@ try:
     from ..optimization.ml_acceleration import get_ml_backend_info
 
     ML_ACCELERATION_AVAILABLE = True
-except ImportError:
+except (ImportError, ValueError):
     ML_ACCELERATION_AVAILABLE = False
     enhance_classical_optimizer_with_ml = None
     enhance_robust_optimizer_with_ml = None
@@ -91,7 +91,7 @@ try:
     from ..optimization.utils import setup_logging_for_optimization
 
     OPTIMIZATION_UTILS_AVAILABLE = True
-except ImportError:
+except (ImportError, ValueError):
     OPTIMIZATION_UTILS_AVAILABLE = False
     # Create dummy functions to avoid errors
     OptimizationConfig = None
